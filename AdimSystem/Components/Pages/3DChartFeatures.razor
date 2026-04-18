@@ -1,0 +1,48 @@
+﻿@page "/3dchart-features"
+@rendermode InteractiveServer
+@using Syncfusion.Blazor.Chart3D
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.DropDowns
+<PageTitle>3D Chart</PageTitle>
+<h2>3D Chart</h2>
+<br/>
+<div>
+  <h3>Selected Features:</h3>
+    <ul class="ulstyle">
+      <li class="list"> Rotation</li>
+      <li class="list"> Tooltip</li>
+      <li class="list"> 3D Chart Types - Column</li>
+      <li class="list"> Theme - Bootstrap v5</li>
+    </ul>
+</div>
+<br/>
+<div id="ControlRegion">
+    <SfChart3D EnableRotation="true" >
+        <Chart3DPrimaryXAxis ValueType="Syncfusion.Blazor.Chart3D.ValueType.Category">
+        </Chart3DPrimaryXAxis>
+        <Chart3DSeriesCollection>
+            <Chart3DSeries DataSource="@Chart3DPoints" XName="Country" YName="Sales" Type="Chart3DSeriesType.Column">
+            </Chart3DSeries>
+        </Chart3DSeriesCollection>
+       <Chart3DTooltipSettings Enable="true"></Chart3DTooltipSettings>
+    </SfChart3D>
+</div>
+@code{
+ public List<Chart3DData> Chart3DPoints { get; set; } = new List<Chart3DData>
+    {
+        new Chart3DData { Country= "Tesla", Sales= 137429 },
+        new Chart3DData { Country= "Aion", Sales= 80308 },
+        new Chart3DData { Country= "Wuling", Sales= 76418 },
+        new Chart3DData { Country= "Changan", Sales= 52849 },
+        new Chart3DData { Country= "Geely", Sales= 47234 },
+        new Chart3DData { Country= "Nio", Sales= 31041 },
+        new Chart3DData { Country= "Neta", Sales= 22449 },
+        new Chart3DData { Country= "BMW", Sales= 18733 }
+    };
+    public class Chart3DData
+    {
+        public string Country { get; set; } = string.Empty;
+        public double Sales { get; set; }
+    }
+}

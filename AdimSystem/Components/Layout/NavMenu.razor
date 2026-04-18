@@ -1,0 +1,14 @@
+<nav class="nav-menu @(IsExpanded ? "nav-menu--expanded" : "nav-menu--collapsed")" aria-label="Main navigation">
+    @foreach (var item in NavMenuItems.All)
+    {
+        <div class="nav-item">
+            <NavLink class="nav-link"
+                     href="@item.Href"
+                     Match="@(item.Match ?? NavLinkMatch.Prefix)"
+                     title="@GetItemTitle(item.Text)">
+                <span class="e-icons @item.IconCss" aria-hidden="true"></span>
+                <span class="nav-label">@item.Text</span>
+            </NavLink>
+        </div>
+    }
+</nav>

@@ -1,0 +1,28 @@
+﻿@page "/department"
+@rendermode InteractiveServer
+@using Syncfusion.Blazor.Layouts
+
+<PageTitle>Department</PageTitle>
+
+<div>
+    <SfDashboardLayout CellSpacing="@(new double[] { 10, 10 })" CellAspectRatio="2" Columns="3">
+        <DashboardLayoutPanels>
+            @* <DashboardLayoutPanel>
+                <ContentTemplate><div>0</div></ContentTemplate>
+            </DashboardLayoutPanel> *@
+            <DashboardLayoutPanel SizeX=2 SizeY=2 Column=1>
+                <ContentTemplate><div>1</div></ContentTemplate>
+            </DashboardLayoutPanel>
+            <DashboardLayoutPanel SizeY=2 SizeX=1 Column=2>
+                <ContentTemplate><div>2</div></ContentTemplate>
+            </DashboardLayoutPanel>
+            @* <DashboardLayoutPanel Row=1>
+                <ContentTemplate><div>3</div></ContentTemplate>
+            </DashboardLayoutPanel> *@
+        </DashboardLayoutPanels>
+    </SfDashboardLayout>
+</div>
+
+@code {
+    SfDashboardLayout? dashObject;
+}

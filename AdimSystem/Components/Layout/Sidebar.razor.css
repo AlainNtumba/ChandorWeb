@@ -1,0 +1,107 @@
+.sidebar-host {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    align-self: stretch;
+}
+
+.sidebar-host ::deep .e-sidebar {
+    transition: width 0.3s ease, transform 0.3s ease;
+    background-color: #212529;
+    background-image: none;
+    color: #fff;
+    border: none;
+    height: 100vh;
+    top: 0;
+    bottom: 0;
+}
+
+.sidebar-host ::deep .e-sidebar .e-icons {
+    color: #fff;
+}
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 1rem 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    white-space: nowrap;
+    min-height: 3.25rem;
+    height: 3.5rem;
+    flex-shrink: 0;
+    background-color: #590a8e;
+    color: #fff;
+}
+
+.sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0.2rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    color: inherit;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-toggle:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 2px;
+}
+
+.sidebar-toggle img {
+    display: block;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.sidebar-brand-text {
+    transition: opacity 0.25s ease, max-width 0.3s ease;
+    overflow: hidden;
+    max-width: 200px;
+    opacity: 1;
+    color: #fff;
+}
+
+.sidebar-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.sidebar-host ::deep .e-sidebar.e-close .sidebar-brand-text {
+    max-width: 0;
+    opacity: 0;
+}
+
+.sidebar-host ::deep .e-sidebar.e-close .sidebar-brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 0;
+}
+
+.sidebar-host ::deep .e-sidebar.e-open .sidebar-brand {
+    justify-content: flex-start;
+}

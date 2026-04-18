@@ -1,0 +1,35 @@
+@rendermode InteractiveServer
+@using Syncfusion.Blazor.Navigations
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject AdimSystem.Services.SidebarLayoutOptions SidebarOptions
+
+<div class="sidebar-host">
+    <SfSidebar @bind-IsOpen="IsSidebarOpen"
+               Width="250px"
+               DockSize="70px"
+               EnableDock="true"
+               CloseOnDocumentPress="false"
+               Type="@SidebarDisplayType"
+               Target="@MainContentTarget">
+        <ChildContent>
+            <div class="sidebar-inner">
+                <div class="sidebar-brand">
+                    <button type="button"
+                            class="sidebar-toggle"
+                            @onclick="OnToggleClick"
+                            aria-label="Toggle navigation menu"
+                            aria-expanded="@IsSidebarOpen">
+                        <img src="images/ToggleButton.png" width="28" height="28" alt="" />
+                    </button>
+                    <span class="sidebar-brand-text">Chandelier d'Or</span>
+                </div>
+                <div class="sidebar-scroll"
+                     @onmouseenter="OnNavScrollMouseEnter"
+                     @onmouseleave="OnNavScrollMouseLeaveAsync">
+                    <NavMenu IsExpanded="IsSidebarOpen" />
+                </div>
+            </div>
+        </ChildContent>
+    </SfSidebar>
+</div>

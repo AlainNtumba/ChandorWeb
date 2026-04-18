@@ -1,0 +1,63 @@
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    padding-top: 0.35rem;
+}
+
+.nav-item {
+    padding: 0 0.45rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.92);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, padding 0.25s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.nav-link.active {
+    background-color: rgba(13, 110, 253, 0.4);
+    color: #fff;
+}
+
+.nav-link .e-icons {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.nav-menu--collapsed .nav-label {
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0;
+    transition: opacity 0.2s ease, max-width 0.3s ease;
+    pointer-events: none;
+}
+
+.nav-menu--expanded .nav-label {
+    opacity: 1;
+    max-width: 240px;
+    transition: opacity 0.25s ease, max-width 0.3s ease;
+}
+
+.nav-menu--collapsed .nav-link {
+    justify-content: center;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+}
+
+.nav-menu--expanded .nav-link {
+    justify-content: flex-start;
+}
