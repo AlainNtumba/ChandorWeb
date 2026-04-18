@@ -29,6 +29,9 @@
 <ItemGroup>
   <Folder Include="wwwroot\styles\" />
 </ItemGroup>
+<ItemGroup>
+  <ProjectReference Include="..\..\ChandorProject\ChandorProject.Shared\ChandorProject.Shared.csproj" />
+</ItemGroup>
 
   
 
