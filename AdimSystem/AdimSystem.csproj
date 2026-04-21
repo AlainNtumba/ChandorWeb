@@ -25,6 +25,7 @@
     <PackageReference Include="Syncfusion.Blazor.SplitButtons" Version="33.1.49" />
     <PackageReference Include="Syncfusion.Blazor.Spinner" Version="33.1.49" />
     <PackageReference Include="Syncfusion.Blazor.Themes" Version="33.1.49" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
 </ItemGroup>
 <ItemGroup>
   <Folder Include="wwwroot\styles\" />
