@@ -1,3 +1,9 @@
+.c-err-msg {
+    font-size: 12px;
+    font-family: inherit;
+    color: red;
+}
+
 .e-control,
 .e-css,
 .e-error {
