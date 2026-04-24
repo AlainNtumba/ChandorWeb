@@ -1,0 +1,11 @@
+
+.c-dlg-height .e-dialog .e-dlg-content {
+    max-height: 650px !important;
+    padding: 0px !important;
+}
+
+.c-err-msg {
+    font-size: 12px;
+    font-family: inherit;
+    color: red;
+}

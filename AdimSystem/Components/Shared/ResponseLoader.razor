@@ -1,0 +1,9 @@
+﻿
+<SfDialog IsModal="true" Width="330px" CssClass="c-dlg-height" @bind-Visible="ShowSpinner">
+    <p><SfSpinner Type="spinnerType" Label="Processing..." @bind-Visible="ShowSpinner" CssClass="e-spin-overlay" /></p>
+</SfDialog>
+
+@code {
+    [Parameter] public bool ShowSpinner { get; set; }
+    public SpinnerType spinnerType { get; set; } = SpinnerType.Bootstrap5;
+}

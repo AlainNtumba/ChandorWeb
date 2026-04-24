@@ -19,10 +19,18 @@
                                          style="width: 185px;" alt="logo">
                                 </div>
 
-                                <EditForm Model="@User">
+                                <EditForm Model="@User" FormName="@LoginForm" OnValidSubmit="AuthenticateUser">
 
                                     <DataAnnotationsValidator />
+
                                     <CustomFormValidator @ref="@FormValidator" />
+
+                                    @if (!string.IsNullOrEmpty(ErrorMsg))
+                                    {
+                                        <div class="mb-4 text-center">
+                                            <span class="text-danger">@ErrorMsg</span>
+                                        </div>
+                                    }
 
                                     <div data-mdb-input-init class="form-outline mb-4">
                                         <SfTextBox @bind-Value="User.Username" Placeholder="Username" FloatLabelType="FloatLabelType.Auto" />
@@ -45,7 +53,11 @@
                                     </div>
 
                                 </EditForm>
-
+                                
+                                @if (IsProcessing)
+                                {
+                                    <ResponseLoader ShowSpinner="IsProcessing" />
+                                }
                             </div>
                         </div>
                         <div class="col-lg-6 d-flex align-items-center gradient-custom-2">
@@ -60,6 +72,7 @@
                         </div>
                     </div>
                 </div>
+                
             </div>
         </div>
     </div>
