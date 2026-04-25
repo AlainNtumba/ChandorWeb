@@ -1,9 +1,28 @@
 ﻿@page "/church-calendar"
 @rendermode InteractiveServer
 @using Syncfusion.Blazor.Schedule
+@using Syncfusion.Blazor.Data
+@using AdimSystem.Data
+@using ChandorProject.Shared.DTOs.ChurchProgram
 
 <PageTitle>Church Calendar</PageTitle>
 
-@code {
+<SfSchedule TValue="ChurchProgramDto" Height="650px">
+    <SfDataManager Adaptor="Adaptors.CustomAdaptor" AdaptorInstance="@typeof(CalendarDataAdaptor)"></SfDataManager>
 
-}
+    <ScheduleEventSettings TValue="ChurchProgramDto">
+        <ScheduleField Id="Id"
+                       Subject="Theme"
+                       StartTime="StartTime"
+                       EndTime="EndTime"
+                       Location="Lieu"
+                       Description="Description"
+                       RecurrenceRule="RecurrenceRule"
+                       RecurrenceException="RecurrenceException" />
+    </ScheduleEventSettings>
+
+    <ScheduleViews>
+        <ScheduleView Option="View.Month" DisplayName="Calendrier"></ScheduleView>
+        <ScheduleView Option="View.MonthAgenda" DisplayName="Agenda"></ScheduleView>
+    </ScheduleViews>
+</SfSchedule>

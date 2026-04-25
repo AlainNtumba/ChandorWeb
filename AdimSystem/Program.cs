@@ -1,6 +1,7 @@
 using AdimSystem;
 using AdimSystem.Components;
 using AdimSystem.Configuration;
+using AdimSystem.Data;
 using AdimSystem.Interfaces;
 using AdimSystem.Services;
 using AdimSystem.Services.Api;
@@ -23,6 +24,7 @@ builder.Services.AddHttpClient("ChandorApi.Auth", ConfigureChandorBase);
 builder.Services.AddScoped<IAuthState, AuthState>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ChandorApiHttp>();
+builder.Services.AddScoped<CalendarDataAdaptor>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IAgeGroupService, AgeGroupService>();

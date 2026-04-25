@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
-using AdimSystem.Interfaces;
+using ChandorAdmin.Interfaces.Api;
 using ChandorProject.Shared.DTOs.ChurchProgram;
 using ChandorProject.Shared.Models;
 
-namespace AdimSystem.Services.Api;
+namespace ChandorAdmin.Services.Api;
 
 public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramService
 {
@@ -14,9 +14,6 @@ public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramSer
 
     public Task<DataResponse<ChurchProgramDto>?> AddProgramAsync(NewChurchProgramDto dto, CancellationToken cancellationToken = default)
         => api.PostDataResponseAsync<ChurchProgramDto>($"{C}/add-church-program", JsonContent.Create(dto), cancellationToken);
-
-    public Task<DataResponse<ChurchProgramDto>?> AddCongregationProgramAsync(CongregationProgramDto dto, CancellationToken cancellationToken = default)
-        => api.PostDataResponseAsync<ChurchProgramDto>($"{C}/add-congregation-program", JsonContent.Create(dto), cancellationToken);
 
     public Task<DataResponse<ChurchProgramDto>?> UpdateProgramAsync(ChurchProgramDto dto, CancellationToken cancellationToken = default)
         => api.PutDataResponseAsync<ChurchProgramDto>($"{C}/update-church-program", JsonContent.Create(dto), cancellationToken);
@@ -34,5 +31,33 @@ public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramSer
     {
         var q = $"start={Uri.EscapeDataString(start.ToUniversalTime().ToString("o"))}&end={Uri.EscapeDataString(end.ToUniversalTime().ToString("o"))}";
         return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get-upcoming-events?{q}", cancellationToken);
+    }
+
+    public Task<DataResponse<ChurchProgramDto>?> AddCongregationProgramAsync(CongregationProgramDto dto, CancellationToken cancellationToken = default)
+        => api.PostDataResponseAsync<ChurchProgramDto>($"{C}/add-congregation-program", JsonContent.Create(dto), cancellationToken);
+
+    public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetPaginatedCongregationProgramsFeedAsync(
+        DateTime? fromDate,
+        DateTime? toDate,
+        int take = 10,
+        int skip = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var parts = new List<string> { $"take={take}", $"skip={skip}" };
+        if (fromDate is { } fd)
+            parts.Add($"fromDate={Uri.EscapeDataString(fd.ToUniversalTime().ToString("o"))}");
+        if (toDate is { } td)
+            parts.Add($"toDate={Uri.EscapeDataString(td.ToUniversalTime().ToString("o"))}");
+        return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get_paginatedfeed_congration_programs?{string.Join("&", parts)}", cancellationToken);
+    }
+
+    public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetCongregationProgramsByKeywordAsync(
+        string keyword,
+        int take = 10,
+        int skip = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var q = $"keyword={Uri.EscapeDataString(keyword ?? string.Empty)}&take={take}&skip={skip}";
+        return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get_congration_programs_bykeyword?{q}", cancellationToken);
     }
 }
