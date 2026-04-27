@@ -1,6 +1,10 @@
 ﻿@inherits LayoutComponentBase
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @inject IJSRuntime JS
+@inject ChandorAdmin.Services.Auth.InactivityMonitor Inactivity
 @using Syncfusion.Blazor.Navigations
+<div @onclick="@Activity" @onkeydown="@Activity" @onpointerdown="@Activity" style="min-height:100%;">
 <SfSidebar ID="Sidebar" Type="SidebarType.Push" Width="300px" DockSize="65px" EnableDock="true" @ref="Sidebar" @bind-IsOpen="SidebarToggle">
     <div class="sidebar" style="position:fixed;z-index:1200">
         <div class="topnav navbar navbar-dark">
@@ -23,6 +27,7 @@
     <div class="content px-4">
         @Body
     </div>
+</div>
 </div>
 <style>
     .sidebar {
@@ -196,7 +201,16 @@
 {
 	SfSidebar? Sidebar;
 	public bool SidebarToggle = false; 
-	public bool SidebarToggleFixed = false; 
+	public bool SidebarToggleFixed = false;
+
+	private void Activity() => Inactivity.RecordActivity();
+
+	protected override void OnAfterRender(bool firstRender)
+	{
+		if (firstRender)
+			Inactivity.Start();
+	}
+
 	public void ToggleNavMenu() 
     { 
 		SidebarToggle = !SidebarToggle; 

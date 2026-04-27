@@ -33,6 +33,12 @@ public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramSer
         return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get-upcoming-events?{q}", cancellationToken);
     }
 
+    public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetPeriodicCongregationProgramsAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default)
+    {
+        var q = $"start={Uri.EscapeDataString(start.ToUniversalTime().ToString("o"))}&end={Uri.EscapeDataString(end.ToUniversalTime().ToString("o"))}";
+        return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get_periodic_congration_programs?{q}", cancellationToken);
+    }
+
     public Task<DataResponse<ChurchProgramDto>?> AddCongregationProgramAsync(CongregationProgramDto dto, CancellationToken cancellationToken = default)
         => api.PostDataResponseAsync<ChurchProgramDto>($"{C}/add-congregation-program", JsonContent.Create(dto), cancellationToken);
 

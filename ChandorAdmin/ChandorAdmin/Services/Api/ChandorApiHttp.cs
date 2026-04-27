@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.Options;
 namespace ChandorAdmin.Services.Api;
 
 /// <summary>
-/// Scoped HTTP helper for versioned API calls. Attaches the bearer token per request (thread-safe) and unwraps <see cref="DataResponse{T}"/>.
+/// Scoped HTTP helper for versioned API calls. Attaches the bearer token per request and handles 401 with refresh+retry.
 /// </summary>
 public sealed class ChandorApiHttp
 {
@@ -61,16 +62,77 @@ public sealed class ChandorApiHttp
 
         var path = relativeVersionedPath.TrimStart('/');
         var uri = _versionedRoot.TrimEnd('/') + "/" + path;
-        using var request = new HttpRequestMessage(method, uri);
+
+        byte[]? bodyBuffer = null;
+        string? contentType = null;
         if (content is not null)
-            request.Content = content;
+        {
+            bodyBuffer = await content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+            contentType = content.Headers.ContentType?.ToString();
+        }
+
+        var response = await CreateAndSendAsync(method, uri, bodyBuffer, contentType, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (response.StatusCode == HttpStatusCode.Unauthorized
+                && !string.IsNullOrEmpty(_authState.RefreshToken)
+                && await _authService.TryRefreshTokenAsync(cancellationToken).ConfigureAwait(false))
+            {
+                response.Dispose();
+                response = await CreateAndSendAsync(method, uri, bodyBuffer, contentType, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                var hasSession = !string.IsNullOrEmpty(_authState.AccessToken) || !string.IsNullOrEmpty(_authState.RefreshToken);
+                if (hasSession)
+                    await _authService.LogoutAsync(cancellationToken, redirectToLogin: true).ConfigureAwait(false);
+
+                return await TryReadDataResponseBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
+            }
+
+            return await response.Content.ReadFromJsonAsync<DataResponse<T>>(JsonOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            response.Dispose();
+        }
+    }
+
+    private async Task<HttpResponseMessage> CreateAndSendAsync(
+        HttpMethod method,
+        string uri,
+        byte[]? bodyBuffer,
+        string? contentType,
+        CancellationToken cancellationToken)
+    {
+        var request = new HttpRequestMessage(method, uri);
+        if (bodyBuffer is not null)
+        {
+            request.Content = new ByteArrayContent(bodyBuffer);
+            if (contentType is not null)
+                request.Content!.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+        }
 
         var token = _authState.AccessToken;
         if (!string.IsNullOrEmpty(token))
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<DataResponse<T>>(JsonOptions, cancellationToken)
-            .ConfigureAwait(false);
+        return await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<DataResponse<T>?> TryReadDataResponseBodyAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<DataResponse<T>>(JsonOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

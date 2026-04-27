@@ -1,4 +1,5 @@
-﻿@layout AnonymousLayout
+﻿@attribute [AllowAnonymous]
+@layout AnonymousLayout
 @page "/login"
 @using ChandorAdmin.Configuration
 
@@ -26,6 +27,7 @@
 
                                     @if (!string.IsNullOrEmpty(ErrorMsg))
                                     {
+                                        <br/>
                                         <div class="mb-4 text-center">
                                             <span class="text-danger">@ErrorMsg</span>
                                         </div>
@@ -76,3 +78,12 @@
         </div>
     </div>
 </div>
+
+
+<style>
+    .e-btn.e-primary, .e-css.e-btn.e-primary {
+        background: rgb(89 10 142) !important;
+        border-color: rgb(244 196 53) !important;
+        color: rgb(245 197 53) !important;
+    }
+</style>

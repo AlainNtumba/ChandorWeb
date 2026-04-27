@@ -1,7 +1,5 @@
 using ChandorAdmin.Interfaces.Auth;
 
-using ChandorProject.Shared.DTOs.User;
-
 namespace ChandorAdmin.Services.Auth;
 
 public sealed class AuthState : IAuthState
@@ -9,17 +7,21 @@ public sealed class AuthState : IAuthState
     private readonly object _gate = new();
 
     public string? AccessToken { get; private set; }
+    public string? RefreshToken { get; private set; }
     public DateTimeOffset? AccessTokenExpiresAtUtc { get; private set; }
-    public LoginRequestDto? RefreshCredentials { get; private set; }
 
-    public void SetSession(string accessToken, DateTimeOffset? expiresAtUtc, LoginRequestDto? refreshCredentials)
+    public event EventHandler? AuthenticationStateChanged;
+
+    public void SetSession(string accessToken, string? refreshToken, DateTimeOffset? accessExpiresAtUtc)
     {
         lock (_gate)
         {
             AccessToken = accessToken;
-            AccessTokenExpiresAtUtc = expiresAtUtc;
-            RefreshCredentials = refreshCredentials;
+            RefreshToken = refreshToken;
+            AccessTokenExpiresAtUtc = accessExpiresAtUtc;
         }
+
+        AuthenticationStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void Clear()
@@ -27,8 +29,10 @@ public sealed class AuthState : IAuthState
         lock (_gate)
         {
             AccessToken = null;
+            RefreshToken = null;
             AccessTokenExpiresAtUtc = null;
-            RefreshCredentials = null;
         }
+
+        AuthenticationStateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

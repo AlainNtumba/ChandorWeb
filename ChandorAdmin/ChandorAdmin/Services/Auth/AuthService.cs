@@ -1,13 +1,16 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ChandorAdmin.Configuration;
 using ChandorAdmin.Interfaces.Auth;
+using ChandorAdmin.Models.Auth;
 using ChandorProject.Shared.DTOs.User;
 using ChandorProject.Shared.Models;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Options;
 
 namespace ChandorAdmin.Services.Auth;
 
-/// <summary>HTTP client for <c>Auth</c> API (POST Auth/login).</summary>
 public sealed class AuthService : IAuthService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -17,131 +20,139 @@ public sealed class AuthService : IAuthService
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IAuthState _authState;
+    private readonly IOptions<AuthOptions> _options;
     private readonly ILogger<AuthService> _logger;
-
-    /// <summary>
-    /// Serializes login and proactive refresh so two callers cannot recurse or deadlock on the same credentials flow.
-    /// </summary>
-    private readonly SemaphoreSlim _loginGate = new(1, 1);
+    private readonly NavigationManager _navigation;
+    private readonly SemaphoreSlim _refreshGate = new(1, 1);
 
     public AuthService(
         IHttpClientFactory httpClientFactory,
         IAuthState authState,
-        ILogger<AuthService> logger)
+        IOptions<AuthOptions> options,
+        ILogger<AuthService> logger,
+        NavigationManager navigation)
     {
         _httpClientFactory = httpClientFactory;
         _authState = authState;
+        _options = options;
         _logger = logger;
+        _navigation = navigation;
     }
 
-    public async Task<DataResponse<string>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<DataResponse<AuthTokenResponseDto?>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
     {
-        await _loginGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var client = _httpClientFactory.CreateClient("ChandorApi.Auth");
             using var httpResponse = await client.PostAsJsonAsync("Auth/login", request, JsonOptions, cancellationToken)
                 .ConfigureAwait(false);
-
-            var payload = await ReadDataResponseOrEmptyAsync<string>(httpResponse, cancellationToken).ConfigureAwait(false);
-
-            if (httpResponse.IsSuccessStatusCode
-                && payload is { Success: true, Data: { } token })
-            {
-                var exp = TryGetJwtExpiryUtc(token);
-                _authState.SetSession(token, exp, request);
-                return payload;
-            }
-
-            if (payload is not null)
-                return payload;
-
-            return FailureFromHttp<string>(httpResponse, "Login failed.");
+            return await ReadLoginResponseAsync(httpResponse, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Login request failed.");
-            return new DataResponse<string>
+            return new DataResponse<AuthTokenResponseDto?>
             {
                 Success = false,
                 Message = "Login could not be completed.",
                 Error = [ex.Message]
             };
         }
-        finally
-        {
-            _loginGate.Release();
-        }
     }
 
-    public void Logout() => _authState.Clear();
-
-    public async Task<DataResponse<string>?> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
+    public Task LogoutAsync(CancellationToken cancellationToken = default, bool redirectToLogin = true)
     {
-        try
-        {
-            var client = _httpClientFactory.CreateClient("ChandorApi.Auth");
-            using var httpResponse = await client.PostAsJsonAsync("Auth/refresh-token", request, JsonOptions, cancellationToken)
-                .ConfigureAwait(false);
-            return await ReadDataResponseOrEmptyAsync<string>(httpResponse, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Token refresh (explicit) request failed.");
-            return new DataResponse<string>
-            {
-                Success = false,
-                Message = "Refresh could not be completed.",
-                Error = [ex.Message]
-            };
-        }
+        _ = cancellationToken;
+        _authState.Clear();
+        if (redirectToLogin)
+            _navigation.NavigateTo("/login");
+        return Task.CompletedTask;
     }
 
     public async Task EnsureValidTokenAsync(CancellationToken cancellationToken = default)
     {
-        var creds = _authState.RefreshCredentials;
-        if (creds is null)
+        var access = _authState.AccessToken;
+        if (string.IsNullOrEmpty(access))
             return;
 
+        var refresh = _authState.RefreshToken;
         var exp = _authState.AccessTokenExpiresAtUtc;
-        var token = _authState.AccessToken;
-        if (!string.IsNullOrEmpty(token) && exp is { } at && at > DateTimeOffset.UtcNow.AddMinutes(5))
-            return;
+        var skew = TimeSpan.FromMinutes(Math.Max(0, _options.Value.AccessTokenRefreshSkewMinutes));
 
-        await _loginGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        if (string.IsNullOrEmpty(refresh))
         {
-            creds = _authState.RefreshCredentials;
-            if (creds is null)
-                return;
-
-            exp = _authState.AccessTokenExpiresAtUtc;
-            token = _authState.AccessToken;
-            if (!string.IsNullOrEmpty(token) && exp is { } at2 && at2 > DateTimeOffset.UtcNow.AddMinutes(5))
-                return;
-
-            var client = _httpClientFactory.CreateClient("ChandorApi.Auth");
-            using var httpResponse = await client.PostAsJsonAsync("Auth/login", creds, JsonOptions, cancellationToken)
-                .ConfigureAwait(false);
-
-            var payload = await ReadDataResponseOrEmptyAsync<string>(httpResponse, cancellationToken).ConfigureAwait(false);
-            if (httpResponse.IsSuccessStatusCode && payload is { Success: true, Data: { } newToken })
+            if (exp is { } e && e <= DateTimeOffset.UtcNow.Add(skew))
             {
-                _authState.SetSession(newToken, TryGetJwtExpiryUtc(newToken), creds);
-                return;
+                _logger.LogWarning("Access token expired and no refresh token is available. Logging out.");
+                await LogoutAsync(cancellationToken, redirectToLogin: true).ConfigureAwait(false);
             }
 
-            var message = DescribeFailure(payload, httpResponse);
-            _logger.LogWarning("Token refresh failed: {Message}", message);
+            return;
+        }
+
+        if (exp is { } ex && ex > DateTimeOffset.UtcNow.Add(skew))
+            return;
+
+        if (!await TryRefreshTokenCoreAsync(cancellationToken).ConfigureAwait(false))
+        {
+            _logger.LogWarning("Token refresh failed during EnsureValidToken. Logging out.");
+            await LogoutAsync(cancellationToken, redirectToLogin: true).ConfigureAwait(false);
+        }
+    }
+
+    public Task<bool> TryRefreshTokenAsync(CancellationToken cancellationToken = default) =>
+        TryRefreshTokenCoreAsync(cancellationToken);
+
+    private async Task<bool> TryRefreshTokenCoreAsync(CancellationToken cancellationToken = default)
+    {
+        var refresh = _authState.RefreshToken;
+        if (string.IsNullOrEmpty(refresh))
+            return false;
+
+        await _refreshGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            refresh = _authState.RefreshToken;
+            if (string.IsNullOrEmpty(refresh))
+                return false;
+
+            var client = _httpClientFactory.CreateClient("ChandorApi.Auth");
+            var body = new RefreshTokenRequest { Token = refresh };
+            using var httpResponse = await client
+                .PostAsJsonAsync("Auth/refresh-token", body, JsonOptions, cancellationToken)
+                .ConfigureAwait(false);
+            if (!httpResponse.IsSuccessStatusCode)
+                return false;
+
+            var result = await ReadTokenPayloadEnvelopeAsync(httpResponse, cancellationToken).ConfigureAwait(false);
+            if (!result.Success || result.Data is null)
+                return false;
+
+            var dto = result.Data;
+            if (string.IsNullOrEmpty(dto.AccessToken))
+                return false;
+
+            var newRefresh = string.IsNullOrEmpty(dto.RefreshToken) ? refresh : dto.RefreshToken;
+            var newExp = TryGetJwtExpiryUtc(dto.AccessToken);
+            _authState.SetSession(dto.AccessToken, newRefresh, newExp);
+            return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Token refresh threw.");
+            _logger.LogError(ex, "Token refresh request failed.");
+            return false;
         }
         finally
         {
-            _loginGate.Release();
+            _refreshGate.Release();
         }
+    }
+
+    public static void CommitSession(IAuthState state, AuthTokenResponseDto? dto)
+    {
+        if (dto is null || string.IsNullOrEmpty(dto.AccessToken))
+            return;
+        state.SetSession(dto.AccessToken, string.IsNullOrEmpty(dto.RefreshToken) ? null : dto.RefreshToken, TryGetJwtExpiryUtc(dto.AccessToken));
     }
 
     private static DateTimeOffset? TryGetJwtExpiryUtc(string jwt)
@@ -157,37 +168,91 @@ public sealed class AuthService : IAuthService
         }
     }
 
-    private static async Task<DataResponse<T>?> ReadDataResponseOrEmptyAsync<T>(
+    private async Task<DataResponse<AuthTokenResponseDto?>> ReadLoginResponseAsync(
         HttpResponseMessage httpResponse,
         CancellationToken cancellationToken)
     {
+        var text = await httpResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return new DataResponse<AuthTokenResponseDto?>
+            {
+                Success = false,
+                Message = "Empty response from login.",
+                Error = [$"HTTP {(int)httpResponse.StatusCode}"]
+            };
+        }
+
+        var result = ParseTokenEnvelopeJson(text, httpResponse);
+        if (result is { Success: true, Data.AccessToken: { Length: > 0 } })
+            CommitSession(_authState, result.Data);
+        return result;
+    }
+
+    private static DataResponse<AuthTokenResponseDto?> ParseTokenEnvelopeJson(
+        string text,
+        HttpResponseMessage httpResponse)
+    {
         try
         {
-            return await httpResponse.Content.ReadFromJsonAsync<DataResponse<T>>(JsonOptions, cancellationToken)
-                .ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(text);
+            var root = doc.RootElement;
+            var result = new DataResponse<AuthTokenResponseDto?>();
+            if (root.TryGetProperty("success", out var s))
+                result.Success = s.GetBoolean();
+            if (root.TryGetProperty("message", out var m))
+                result.Message = m.GetString();
+            if (root.TryGetProperty("error", out var e) && e.ValueKind is JsonValueKind.Array)
+            {
+                var err = e.EnumerateArray()
+                    .Select(x => x.GetString() ?? string.Empty)
+                    .Where(t => t.Length > 0)
+                    .ToArray();
+                if (err.Length > 0)
+                    result.Error = err;
+            }
+
+            if (root.TryGetProperty("data", out var d))
+            {
+                if (d.ValueKind is JsonValueKind.String)
+                {
+                    var t = d.GetString() ?? string.Empty;
+                    result.Data = new AuthTokenResponseDto { AccessToken = t, RefreshToken = null };
+                }
+                else if (d.ValueKind is JsonValueKind.Object)
+                {
+                    var dto = JsonSerializer.Deserialize<AuthTokenResponseDto>(d.GetRawText(), JsonOptions);
+                    result.Data = dto;
+                }
+            }
+
+            return result;
         }
         catch
         {
-            return null;
+            return new DataResponse<AuthTokenResponseDto?>
+            {
+                Success = false,
+                Message = "Could not read login response.",
+                Error = [$"HTTP {(int)httpResponse.StatusCode}"]
+            };
         }
     }
 
-    private static DataResponse<T> FailureFromHttp<T>(HttpResponseMessage httpResponse, string fallback)
+    private static async Task<DataResponse<AuthTokenResponseDto?>> ReadTokenPayloadEnvelopeAsync(
+        HttpResponseMessage httpResponse,
+        CancellationToken cancellationToken)
     {
-        return new DataResponse<T>
+        var text = await httpResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(text))
         {
-            Success = false,
-            Message = string.IsNullOrWhiteSpace(httpResponse.ReasonPhrase) ? fallback : httpResponse.ReasonPhrase,
-            Error = [$"HTTP {(int)httpResponse.StatusCode}"]
-        };
-    }
+            return new DataResponse<AuthTokenResponseDto?>
+            {
+                Success = false,
+                Message = "Empty response from refresh."
+            };
+        }
 
-    private static string DescribeFailure<T>(DataResponse<T>? payload, HttpResponseMessage httpResponse)
-    {
-        if (payload?.Error is { Length: > 0 } errors)
-            return string.Join("; ", errors.Where(e => !string.IsNullOrWhiteSpace(e)));
-        if (!string.IsNullOrWhiteSpace(payload?.Message))
-            return payload.Message!;
-        return $"HTTP {(int)httpResponse.StatusCode} {httpResponse.ReasonPhrase}";
+        return ParseTokenEnvelopeJson(text, httpResponse);
     }
 }

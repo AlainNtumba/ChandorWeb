@@ -1,6 +1,37 @@
 ﻿@page "/church-calendar"
-
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.Schedule
+@using ChandorAdmin.Data
+@using ChandorProject.Shared.DTOs.ChurchProgram
 
 <PageTitle>Calendrier | Chandelier</PageTitle>
 
+@if (!string.IsNullOrEmpty(_userMessage))
+{
+    <div class="alert alert-@(_isError ? "danger" : "info") mb-2" style="max-width: 100%;" role="status" aria-live="polite">
+        @_userMessage
+    </div>
+}
 
+<div class="control-section" style="padding: 0 0 1rem 0">
+    <SfSchedule TValue="ChurchProgramDto"
+                Height="650px"
+                ShowQuickInfo="true"
+                AllowDragAndDrop="false" AllowResizing="false"
+                @bind-CurrentView="CurrentView"
+                @bind-SelectedDate="SelectedDate">
+        <ScheduleEventSettings TValue="ChurchProgramDto" AllowAdding="true" AllowEditing="true" AllowDeleting="true" EnableIndicator="true" EnableTooltip="true">
+            <SfDataManager AdaptorInstance="@typeof(CalendarDataAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+            <ScheduleField>
+                <FieldSubject Name="Theme" Title="Thème" Validation="@ValidationRules" />
+                <FieldLocation Name="Lieu" Title="Lieu" Validation="@LocationValidationRules" />
+                <FieldDescription Name="Description" Title="Détails" Validation="@DescriptionValidationRules"></FieldDescription>
+            </ScheduleField>
+        </ScheduleEventSettings>
+        <ScheduleEvents TValue="ChurchProgramDto" OnActionFailure="OnScheduleActionFailure" ActionCompleted="OnScheduleActionCompleted" />
+        <ScheduleViews>
+            <ScheduleView Option="View.Month" DisplayName="Calendrier"></ScheduleView>
+            <ScheduleView Option="View.MonthAgenda" DisplayName="Agenda"></ScheduleView>
+        </ScheduleViews>
+    </SfSchedule>
+</div>

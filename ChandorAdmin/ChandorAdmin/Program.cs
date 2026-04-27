@@ -1,13 +1,15 @@
 ﻿using ChandorAdmin;
 using ChandorAdmin.Configuration;
+using ChandorAdmin.Services.Auth;
+using ChandorAdmin.Data;
 using ChandorAdmin.Interfaces.Api;
 using ChandorAdmin.Interfaces.Auth;
 using ChandorAdmin.Services.Api;
-using ChandorAdmin.Services.Auth;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components.Authorization;
 using Syncfusion.Blazor;
 
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1JHaF5cWWdCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdlWXtednVVRWddWUN3V0dWYEo=");
@@ -19,6 +21,11 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddSyncfusionBlazor();
 
 builder.Services.Configure<ChandorApiOptions>(builder.Configuration.GetSection(ChandorApiOptions.SectionName));
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
+builder.Services.AddAuthorizationCore();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<InactivityMonitor>();
 
 void ConfigureChandorBase(HttpClient client)
 {
@@ -39,6 +46,7 @@ builder.Services.AddScoped<IAgeGroupService, AgeGroupService>();
 builder.Services.AddScoped<IAppUserService, AppUserService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IChurchProgramService, ChurchProgramService>();
+builder.Services.AddScoped<CalendarDataAdaptor>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDepartmentTeamService, DepartmentTeamService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

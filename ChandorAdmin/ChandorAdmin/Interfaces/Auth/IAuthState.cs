@@ -1,20 +1,16 @@
-using ChandorProject.Shared.DTOs.User;
-
 namespace ChandorAdmin.Interfaces.Auth;
 
 /// <summary>
-/// Holds the current JWT and optional credentials for the same Blazor circuit (server session analogue).
+/// In-memory session: access and refresh tokens are never written to <c>localStorage</c> or other persistent browser storage.
 /// </summary>
 public interface IAuthState
 {
     string? AccessToken { get; }
+    string? RefreshToken { get; }
     DateTimeOffset? AccessTokenExpiresAtUtc { get; }
 
-    /// <summary>
-    /// When set, used to obtain a new JWT before expiry while the user remains active.
-    /// </summary>
-    LoginRequestDto? RefreshCredentials { get; }
+    event EventHandler? AuthenticationStateChanged;
 
-    void SetSession(string accessToken, DateTimeOffset? expiresAtUtc, LoginRequestDto? refreshCredentials);
+    void SetSession(string accessToken, string? refreshToken, DateTimeOffset? accessExpiresAtUtc);
     void Clear();
 }

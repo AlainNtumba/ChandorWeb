@@ -1,0 +1,24 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (_state is null)
+{
+    <p class="m-3" role="status">Checking access…</p>
+}
+else if (_state.User.Identity is { IsAuthenticated: true })
+{
+    <p class="m-3" role="status">You do not have access to this page.</p>
+}
+else
+{
+    <RedirectToLogin />
+}
+
+@code {
+    private AuthenticationState? _state;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    }
+}
