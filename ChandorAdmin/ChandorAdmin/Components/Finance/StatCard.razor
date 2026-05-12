@@ -1,0 +1,17 @@
+<div class="stat-card">
+    <div class="stat-card__label">@Title</div>
+    <div class="stat-card__value" style="@ValueColorStyle">@Value</div>
+    @if (!string.IsNullOrWhiteSpace(Hint))
+    {
+        <div class="stat-card__hint">@Hint</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public string? ValueColor { get; set; }
+
+    string? ValueColorStyle => string.IsNullOrWhiteSpace(ValueColor) ? null : $"color: {ValueColor}";
+}

@@ -35,8 +35,29 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
+    <script>
+        (function () {
+            function loadBlazor() {
+                var s = document.createElement('script');
+                s.src = '_framework/blazor.webassembly.js';
+                document.body.appendChild(s);
+            }
+            if (!('serviceWorker' in navigator)) {
+                loadBlazor();
+                return;
+            }
+            var isLocalHost = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+            if (isLocalHost) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
+                    .catch(function () { })
+                    .finally(loadBlazor);
+            } else {
+                loadBlazor();
+                navigator.serviceWorker.register('service-worker.js').catch(function () { });
+            }
+        })();
+    </script>
 	<script>
         function isSidebar(x, y) {
             var sidebarEle = document.elementFromPoint(x, y);

@@ -18,6 +18,7 @@ public sealed class CustomAuthenticationStateProvider : AuthenticationStateProvi
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        _authState.RestorePersistedSessionIfNeeded();
         return Task.FromResult(BuildState());
     }
 

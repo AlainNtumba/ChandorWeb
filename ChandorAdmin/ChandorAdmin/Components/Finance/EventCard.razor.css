@@ -1,0 +1,77 @@
+.event-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.65rem 0.85rem;
+    align-items: flex-start;
+    padding: 0.65rem 0.7rem;
+    border-radius: 6px;
+    background: var(--fd-event-bg);
+    border: 1px solid var(--fd-border-subtle);
+}
+
+.event-card__timeline {
+    padding-top: 0.35rem;
+}
+
+.event-card__dot {
+    display: block;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: var(--fd-muted);
+}
+
+.event-card__dot--income {
+    background: var(--fd-accent-positive);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--fd-accent-positive) 22%, transparent);
+}
+
+.event-card__dot--expense {
+    background: var(--fd-accent-negative);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--fd-accent-negative) 22%, transparent);
+}
+
+.event-card__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.35rem 0.75rem;
+}
+
+.event-card__title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--fd-text);
+    letter-spacing: -0.01em;
+}
+
+.event-card__time {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--fd-muted);
+    white-space: nowrap;
+}
+
+.event-card__subtitle {
+    font-size: 0.78rem;
+    color: var(--fd-muted);
+    margin-top: 0.15rem;
+    line-height: 1.35;
+}
+
+.event-card__amount {
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    padding-top: 0.2rem;
+}
+
+.event-card__amount--income {
+    color: var(--fd-accent-positive);
+}
+
+.event-card__amount--expense {
+    color: var(--fd-accent-negative);
+}

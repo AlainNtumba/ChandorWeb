@@ -1,0 +1,162 @@
+@using System.ComponentModel.DataAnnotations
+@using ChandorAdmin.Configuration
+@using ChandorProject.Shared.DTOs.User
+
+<section class="modern-login" aria-label="Login">
+    <div class="modern-login__bg" aria-hidden="true">
+        <div class="modern-login__orb modern-login__orb--one"></div>
+        <div class="modern-login__orb modern-login__orb--two"></div>
+        <div class="modern-login__orb modern-login__orb--three"></div>
+    </div>
+
+    <div class="modern-login__container">
+        <div class="modern-login__card" role="region" aria-label="Login form">
+            <div class="modern-login__shine" aria-hidden="true"></div>
+
+            <div class="modern-login__header">
+                <div class="modern-login__logo" aria-hidden="true">
+                    @if (!string.IsNullOrWhiteSpace(LogoSrc))
+                    {
+                        <img class="modern-login__logo-img" src="@LogoSrc" alt="" />
+                    }
+                    else
+                    {
+                        <span class="modern-login__logo-mark"></span>
+                    }
+                </div>
+                <h1 class="modern-login__title">Login</h1>
+                <p class="modern-login__subtitle">@Subtitle</p>
+            </div>
+
+            <EditForm Model="@Model" FormName="@FormName" OnValidSubmit="@OnValidSubmit">
+                <DataAnnotationsValidator />
+                <CustomFormValidator @ref="_formValidatorRef" />
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <div class="modern-login__error" role="alert">
+                        @ErrorMessage
+                    </div>
+                }
+
+                <div class="modern-login__field">
+                    <label class="modern-login__label" for="@EmailInputId">Email</label>
+                    <div class="modern-login__control">
+                        <span class="modern-login__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5L4 8V6l8 5 8-5v2Z" />
+                            </svg>
+                        </span>
+                        <input id="@EmailInputId"
+                               class="modern-login__input"
+                               autocomplete="username"
+                               inputmode="email"
+                               aria-describedby="@EmailHelpId"
+                               placeholder="Email"
+                               @bind="Model.Username" />
+                    </div>
+                    <div id="@EmailHelpId" class="modern-login__validation">
+                        <ValidationMessage For="@(() => Model.Username)" />
+                    </div>
+                </div>
+
+                <div class="modern-login__field">
+                    <label class="modern-login__label" for="@PasswordInputId">Password</label>
+                    <div class="modern-login__control">
+                        <span class="modern-login__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M17 8h-1V6a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V6a2 2 0 1 1 4 0v2h-4Z" />
+                            </svg>
+                        </span>
+                        <input id="@PasswordInputId"
+                               class="modern-login__input modern-login__input--password"
+                               type="@PasswordType"
+                               autocomplete="current-password"
+                               placeholder="Password"
+                               @bind="Model.Password" />
+                        <button type="button"
+                                class="modern-login__toggle"
+                                aria-label="@ToggleAriaLabel"
+                                aria-pressed="@(_showPassword ? "true" : "false")"
+                                @onclick="TogglePassword">
+                            <span class="modern-login__toggle-ic" aria-hidden="true">
+                                @if (_showPassword)
+                                {
+                                    <svg viewBox="0 0 24 24" focusable="false">
+                                        <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" />
+                                    </svg>
+                                }
+                                else
+                                {
+                                    <svg viewBox="0 0 24 24" focusable="false">
+                                        <path d="M2.1 3.5 3.5 2.1 21.9 20.5 20.5 21.9l-3-3A11.8 11.8 0 0 1 12 19C5 19 2 12 2 12a17.4 17.4 0 0 1 5.2-6.7L2.1 3.5ZM12 7c4.7 0 7.4 4.4 7.9 5.2a16 16 0 0 1-2.2 2.7l-2-2a4 4 0 0 0-5.6-5.6l-1.7-1.7c1.1-.4 2.3-.6 3.6-.6Z" />
+                                    </svg>
+                                }
+                            </span>
+                        </button>
+                    </div>
+                    <div class="modern-login__validation">
+                        <ValidationMessage For="@(() => Model.Password)" />
+                    </div>
+                </div>
+
+                <div class="modern-login__row">
+                    <a class="modern-login__link" href="@ForgotPasswordHref">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="modern-login__button" disabled="@IsBusy">
+                    <span class="modern-login__button-label">@ButtonText</span>
+                    @if (IsBusy)
+                    {
+                        <span class="modern-login__spinner" aria-hidden="true"></span>
+                    }
+                </button>
+            </EditForm>
+
+            @if (ShowProcessingOverlay)
+            {
+                <div class="modern-login__overlay" aria-live="polite" aria-busy="true">
+                    <ResponseLoader ShowSpinner="true" />
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public LoginRequestDto Model { get; set; } = new();
+    [Parameter, EditorRequired] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback<CustomFormValidator> OnFormValidatorReady { get; set; }
+
+    [Parameter] public string FormName { get; set; } = "login-form";
+    [Parameter] public string Subtitle { get; set; } = "Nouvelle Cité de David, Chandelier d'or";
+    [Parameter] public string ButtonText { get; set; } = "Login";
+    [Parameter] public string ForgotPasswordHref { get; set; } = "/forgot-password";
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public bool IsBusy { get; set; }
+    [Parameter] public bool ShowProcessingOverlay { get; set; }
+    [Parameter] public string? LogoSrc { get; set; }
+
+    private bool _showPassword;
+    private CustomFormValidator? _formValidatorRef;
+
+    private string EmailInputId { get; } = $"login-email-{Guid.NewGuid():N}";
+    private string PasswordInputId { get; } = $"login-password-{Guid.NewGuid():N}";
+    private string EmailHelpId { get; } = $"login-email-help-{Guid.NewGuid():N}";
+
+    private string PasswordType => _showPassword ? "text" : "password";
+    private string ToggleAriaLabel => _showPassword ? "Hide password" : "Show password";
+
+    private void TogglePassword()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _formValidatorRef is not null && OnFormValidatorReady.HasDelegate)
+        {
+            await OnFormValidatorReady.InvokeAsync(_formValidatorRef);
+        }
+    }
+}

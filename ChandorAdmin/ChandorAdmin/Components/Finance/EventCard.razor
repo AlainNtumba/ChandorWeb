@@ -1,0 +1,22 @@
+<div class="event-card">
+    <div class="event-card__timeline">
+        <span class="event-card__dot @(Item.IsExpense ? "event-card__dot--expense" : "event-card__dot--income")"></span>
+    </div>
+    <div class="event-card__body">
+        <div class="event-card__title-row">
+            <span class="event-card__title">@Item.Title</span>
+            <time class="event-card__time" datetime="@Item.OccurredAt.ToString("o")">@Item.OccurredAt.ToLocalTime().ToString("MMM d · HH:mm")</time>
+        </div>
+        <div class="event-card__subtitle">@Item.Subtitle</div>
+    </div>
+    <div class="event-card__amount @(Item.IsExpense ? "event-card__amount--expense" : "event-card__amount--income")">
+        @(Item.IsExpense ? "-" : "+")@FormatAmount(Item.Amount)
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public FinanceActivityItem Item { get; set; } = default!;
+
+    static string FormatAmount(decimal amount) => amount.ToString("N0");
+}

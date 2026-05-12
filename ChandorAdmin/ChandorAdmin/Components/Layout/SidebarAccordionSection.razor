@@ -1,0 +1,56 @@
+<li class="nav-item px-3 sidebar-accordion-section">
+    <button type="button"
+            class="sidebar-accordion-trigger"
+            aria-expanded="@AriaExpanded"
+            aria-controls="@PanelDomId"
+            id="@TriggerDomId"
+            @onclick="HandleToggle">
+        @if (!string.IsNullOrWhiteSpace(IconCssClass))
+        {
+            <span class="@IconCssClass sidebar-accordion-trigger-icon" aria-hidden="true"></span>
+        }
+        <span class="displayText sidebar-accordion-title">@Title</span>
+        <span class="sidebar-accordion-chevron @(IsExpanded ? "is-expanded" : string.Empty)" aria-hidden="true"></span>
+    </button>
+    <div id="@PanelDomId"
+         role="region"
+         aria-labelledby="@TriggerDomId"
+         class="sidebar-accordion-panel @(IsExpanded ? "is-open" : string.Empty)">
+        <div class="sidebar-accordion-panel-inner"
+             @attributes="CollapsedInertAttributes">
+            <ul class="sidebar-accordion-subnav">
+                @ChildContent
+            </ul>
+        </div>
+    </div>
+</li>
+
+@code {
+    [CascadingParameter] public SidebarAccordionNav? Accordion { get; set; }
+
+    /// <summary>Stable id for this section (must be unique within the accordion).</summary>
+    [Parameter, EditorRequired] public string SectionId { get; set; } = string.Empty;
+
+    [Parameter] public string Title { get; set; } = string.Empty;
+
+    /// <summary>Optional icon classes (e.g. Syncfusion icon span classes).</summary>
+    [Parameter] public string? IconCssClass { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string TriggerDomId => $"{SectionId}-accordion-trigger";
+
+    private string PanelDomId => $"{SectionId}-accordion-panel";
+
+    private bool IsExpanded => Accordion?.IsSectionExpanded(SectionId) ?? false;
+
+    private string AriaExpanded => IsExpanded ? "true" : "false";
+
+    private IReadOnlyDictionary<string, object>? CollapsedInertAttributes =>
+        IsExpanded ? null : new Dictionary<string, object>(StringComparer.Ordinal) { ["inert"] = "" };
+
+    private void HandleToggle()
+    {
+        Accordion?.ToggleSection(SectionId);
+    }
+}

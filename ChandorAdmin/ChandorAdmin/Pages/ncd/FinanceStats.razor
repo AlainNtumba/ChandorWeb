@@ -1,0 +1,279 @@
+@page "/finance-stats"
+@using ChandorAdmin.ViewModels
+@using ChandorAdmin.Components.Finance
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Charts
+
+<PageTitle>Finance | Chandelier d'Or</PageTitle>
+
+<div class="finance-dashboard">
+    <header class="finance-dash-header">
+        <div class="finance-dash-header__titles">
+            <p class="finance-dash-header__eyebrow">Aperçu des finances</p>
+            <h1 class="finance-dash-header__title">Statistiques Financières</h1>
+            <p class="finance-dash-header__sub">
+                Statistiques et analyse des revenus et des dépenses
+            </p>
+        </div>
+        <div class="finance-dash-header__actions">
+            <div class="finance-dash-daterange" title="@_model.Period.Label">
+                @if (_renderRangePicker)
+                {
+                    <SfDateRangePicker TValue="DateTime"
+                                       Width="100%"
+                                       CssClass="finance-dash-daterange__control"
+                                       AllowEdit="false"
+                                       ShowClearButton="false"
+                                       Format="MM/dd/yyyy"
+                                       Placeholder="Select period"
+                                       StartDate="@_pickerStart"
+                                       EndDate="@_pickerEnd"
+                                       Min="@PickerMinDate"
+                                       Max="@PickerMaxDate">
+                        <DateRangePickerEvents TValue="DateTime" ValueChange="OnDateRangeChangeAsync"></DateRangePickerEvents>
+                        <DateRangePickerPresets>
+                            <DateRangePickerPreset Label="This Month" Start="@ThisMonthPresetStart" End="@ThisMonthPresetEnd"></DateRangePickerPreset>
+                            <DateRangePickerPreset Label="Last Month" Start="@LastMonthPresetStart" End="@LastMonthPresetEnd"></DateRangePickerPreset>
+                            <DateRangePickerPreset Label="Last 3 Months" Start="@Last3MonthsPresetStart" End="@Last3MonthsPresetEnd"></DateRangePickerPreset>
+                        </DateRangePickerPresets>
+                    </SfDateRangePicker>
+                }
+            </div>
+        </div>
+    </header>
+
+    <section class="fd-grid" aria-label="Finance dashboard grid">
+        <div class="fd-kpi">
+            <StatCard Title="Revenu"
+                      Value="@FormatMoney(_model.Summary.TotalIncome)"
+                      Hint="Dîmes, offrandes et transferts enregistrés"
+                      ValueColor="#4D80F3" />
+        </div>
+
+        <div class="fd-kpi">
+            <StatCard Title="Dépenses"
+                      Value="@FormatMoney(_model.Summary.TotalExpenses)"
+                      Hint="Dépenses opérationnelles"
+                      ValueColor="#FB6D9D" />
+        </div>
+
+        <div class="fd-kpi">
+            <StatCard Title="Balance"
+                      Value="@FormatMoney(_model.Summary.Balance)"
+                      Hint="Revenus moins dépenses (période)"
+                      ValueColor="#81C868" />
+        </div>
+
+        <div class="fd-kpi">
+            <StatCard Title="Transactions"
+                      Value="@_model.Summary.TransactionCount.ToString("N0")"
+                      Hint="Somme des transactions"
+                      ValueColor="#34D3EB" />
+        </div>
+
+        <section class="fd-card fd-card--chart" aria-label="Income vs expenses chart">
+            <div class="dash-panel-heading">
+                <h2 class="dash-panel-heading__title">Revenus vs dépenses</h2>
+                <span class="dash-panel-heading__meta">Six derniers mois (@_model.BarChartPeriodHint) · totaux mensuels</span>
+            </div>
+            <div class="dash-chart-host">
+                <SfChart @key="ChartRefreshKey"
+                         Width="100%"
+                         Height="300px"
+                         Theme="Theme.Material">
+                    <ChartMargin Left="8" Right="36" Top="12" Bottom="8"></ChartMargin>
+                    <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
+                                        RangePadding="ChartRangePadding.Additional">
+                        <ChartAxisMajorGridLines Width="0"></ChartAxisMajorGridLines>
+                        <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+                        <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+                    </ChartPrimaryXAxis>
+                    <ChartPrimaryYAxis LabelFormat="C0">
+                        <ChartAxisMajorGridLines Width="1" DashArray="4"></ChartAxisMajorGridLines>
+                        <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+                        <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+                    </ChartPrimaryYAxis>
+                    <ChartTooltipSettings Enable="true" Shared="true"></ChartTooltipSettings>
+                    <ChartLegendSettings Visible="true" Position="LegendPosition.Top" Alignment="@Syncfusion.Blazor.Charts.Alignment.Far"></ChartLegendSettings>
+                    <ChartSeriesCollection>
+                        <ChartSeries DataSource="@_model.Cashflow"
+                                     Name="Income"
+                                     XName="@nameof(CashflowSeriesPoint.MonthLabel)"
+                                     YName="@nameof(CashflowSeriesPoint.Income)"
+                                     Type="ChartSeriesType.Column"
+                                     Fill="@IncomeSeriesFill">
+                            <ChartMarker Visible="false"></ChartMarker>
+                        </ChartSeries>
+                        <ChartSeries DataSource="@_model.Cashflow"
+                                     Name="Expenses"
+                                     XName="@nameof(CashflowSeriesPoint.MonthLabel)"
+                                     YName="@nameof(CashflowSeriesPoint.Expenses)"
+                                     Type="ChartSeriesType.Column"
+                                     Fill="@ExpenseSeriesFill">
+                            <ChartMarker Visible="false"></ChartMarker>
+                        </ChartSeries>
+                    </ChartSeriesCollection>
+                </SfChart>
+            </div>
+        </section>
+
+        <section class="fd-card fd-card--activity" aria-label="Recent activity">
+            <div class="dash-panel-heading dash-panel-heading--row">
+                <div>
+                    <h2 class="dash-panel-heading__title">Activités financières</h2>
+                    <span class="dash-panel-heading__meta">Dernières écritures du registre fictif</span>
+                </div>
+                <span class="dash-chip">Live-ready adapters</span>
+            </div>
+            <div class="finance-feed">
+                @foreach (var row in _model.RecentActivity)
+                {
+                    <EventCard Item="row" />
+                }
+            </div>
+        </section>
+
+        <div class="fd-pie-row" aria-label="Composition charts">
+            <section class="fd-card fd-card--donut" aria-label="Expense composition">
+                <div class="dash-panel-heading">
+                    <h2 class="dash-panel-heading__title">Expense composition</h2>
+                    <span class="dash-panel-heading__meta">Share by category · @_model.Period.Label</span>
+                </div>
+                <div class="dash-donut-host">
+                    <SfAccumulationChart @key="@($"exp-pie-{ChartRefreshKey}")"
+                                         Width="100%"
+                                         Height="300px"
+                                         Theme="Theme.Material">
+                        <AccumulationChartMargin Left="8" Right="8" Top="8" Bottom="8"></AccumulationChartMargin>
+                        <AccumulationChartLegendSettings Visible="true"
+                                                         Position="LegendPosition.Right"
+                                                         Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></AccumulationChartLegendSettings>
+                        <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
+                        <AccumulationChartSeriesCollection>
+                            <AccumulationChartSeries DataSource="@_model.ExpenseByCategory"
+                                                     XName="@nameof(ExpenseCategorySlice.Category)"
+                                                     YName="@nameof(ExpenseCategorySlice.Amount)"
+                                                     InnerRadius="50%"
+                                                     Palettes="@DashboardViewModel.ExpenseCompositionPalette">
+                                <AccumulationDataLabelSettings Visible="true"
+                                                               Position="AccumulationLabelPosition.Outside"></AccumulationDataLabelSettings>
+                            </AccumulationChartSeries>
+                        </AccumulationChartSeriesCollection>
+                    </SfAccumulationChart>
+                </div>
+            </section>
+
+            <section class="fd-card fd-card--donut" aria-label="Income composition">
+                <div class="dash-panel-heading">
+                    <h2 class="dash-panel-heading__title">Income composition</h2>
+                    <span class="dash-panel-heading__meta">Total income by category · @_model.Period.Label</span>
+                </div>
+                <div class="dash-donut-host">
+                    <SfAccumulationChart @key="@($"inc-pie-{ChartRefreshKey}")"
+                                         Width="100%"
+                                         Height="300px"
+                                         Theme="Theme.Material">
+                        <AccumulationChartMargin Left="8" Right="8" Top="8" Bottom="8"></AccumulationChartMargin>
+                        <AccumulationChartLegendSettings Visible="true"
+                                                         Position="LegendPosition.Right"
+                                                         Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></AccumulationChartLegendSettings>
+                        <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
+                        <AccumulationChartSeriesCollection>
+                            <AccumulationChartSeries DataSource="@_model.IncomeByCategory"
+                                                     XName="@nameof(IncomeCategorySlice.Category)"
+                                                     YName="@nameof(IncomeCategorySlice.Amount)"
+                                                     InnerRadius="50%"
+                                                     Palettes="@DashboardViewModel.IncomeCompositionPalette">
+                                <AccumulationDataLabelSettings Visible="true"
+                                                               Position="AccumulationLabelPosition.Outside"></AccumulationDataLabelSettings>
+                            </AccumulationChartSeries>
+                        </AccumulationChartSeriesCollection>
+                    </SfAccumulationChart>
+                </div>
+            </section>
+        </div>
+    </section>
+</div>
+
+@code {
+    static readonly DateTime PickerMinDate = new DateTime(2015, 1, 1);
+
+    DateTime _pickerStart;
+    DateTime _pickerEnd;
+    DashboardViewModel _model = null!;
+    bool _renderRangePicker;
+
+    DateTime PickerMaxDate => new DateTime(DateTime.Today.Year + 5, 12, 31);
+
+    string ChartRefreshKey => $"{_model.Period.End:yyyyMM}-{_model.Period.Start:yyyyMMdd}-{_model.Period.End:yyyyMMdd}";
+
+    DateTime ThisMonthPresetStart
+    {
+        get
+        {
+            var t = DateTime.Today;
+            return new DateTime(t.Year, t.Month, 1);
+        }
+    }
+
+    DateTime ThisMonthPresetEnd => ThisMonthPresetStart.AddMonths(1).AddDays(-1);
+
+    DateTime LastMonthPresetEnd => ThisMonthPresetStart.AddDays(-1);
+
+    DateTime LastMonthPresetStart => new DateTime(LastMonthPresetEnd.Year, LastMonthPresetEnd.Month, 1);
+
+    /// <summary>Rolling three calendar months ending on the last day of the current month (same window as “This Month” end).</summary>
+    DateTime Last3MonthsPresetStart => ThisMonthPresetStart.AddMonths(-2);
+
+    DateTime Last3MonthsPresetEnd => ThisMonthPresetEnd;
+
+    static string IncomeSeriesFill => "#A16EE5";
+    static string ExpenseSeriesFill => "#4472C4";
+
+    protected override void OnInitialized()
+    {
+        var (start, end) = DashboardViewModel.GetCurrentMonthRange();
+        _pickerStart = start;
+        _pickerEnd = end;
+        _model = DashboardViewModel.CreateForDateRange(start, end);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(1);
+            _renderRangePicker = true;
+            StateHasChanged();
+        }
+    }
+
+    async Task OnDateRangeChangeAsync(RangePickerEventArgs<DateTime> args)
+    {
+        if (args.StartDate == default || args.EndDate == default)
+        {
+            return;
+        }
+
+        var start = args.StartDate.Date;
+        var end = args.EndDate.Date;
+        if (start > end)
+        {
+            return;
+        }
+
+        await LoadDashboardForRangeAsync(start, end);
+    }
+
+    async Task LoadDashboardForRangeAsync(DateTime start, DateTime end)
+    {
+        await Task.Yield();
+        _model = DashboardViewModel.CreateForDateRange(start, end);
+        _pickerStart = _model.Period.Start;
+        _pickerEnd = _model.Period.End;
+        StateHasChanged();
+    }
+
+    static string FormatMoney(decimal value) => value.ToString("C0");
+}

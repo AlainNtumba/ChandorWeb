@@ -1,0 +1,90 @@
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Navigations
+@implements IDisposable
+@inject FinanceTransactionDataService Data
+
+<div id="expense-grid-wrapper">
+    @if (_renderGrid)
+    {
+        <SfGrid @ref="TransactGridRef"
+                TValue="FinanceTransaction"
+                Width="100%"
+                Height="100%"
+                AllowSelection="true"
+                AllowPaging="true"
+                AllowTextWrap="false"
+                AllowExcelExport="true"
+                Toolbar="@Toolbaritems"
+                DataSource="@GridData">
+            <GridEvents TValue="FinanceTransaction"
+                        RowSelected="OnRowSelectChanged"
+                        RowDeselected="OnRowDeselectChanged"
+                        OnToolbarClick="ToolbarClickHandler">
+            </GridEvents>
+            <GridEditSettings AllowEditing="true" AllowEditOnDblClick="false"></GridEditSettings>
+            <GridPageSettings PageSize="11"></GridPageSettings>
+            <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
+            <GridColumns>
+                <GridColumn Type="ColumnType.CheckBox" Width="40"></GridColumn>
+                <GridColumn Field="@nameof(FinanceTransaction.Category)" HeaderText="Category" Width="178" ClipMode="ClipMode.EllipsisWithTooltip" ValidationRules="@_rules">
+                    <Template>
+                        @{
+                            var row = (FinanceTransaction)context;
+                            <div class="normalRes">
+                                <div class="category-icon @row.Category"></div>
+                                <div class="category-text">@row.Category</div>
+                            </div>
+                            <div class="mediumRes">
+                                <div>
+                                    <div class="category-icon @row.Category"></div>
+                                </div>
+                                <div>
+                                    <div>@row.Category</div>
+                                    <div class="description-section">@row.Description</div>
+                                </div>
+                            </div>
+                            <div class="smallRes">
+                                <div class="sm-category sm-icon"><div class="category-icon @row.Category"></div></div>
+                                <div class="sm-category category-content">
+                                    <div>@row.Category</div>
+                                    <div class="description-section">@row.Description</div>
+                                    <div>@row.PaymentMode</div>
+                                </div>
+                            </div>
+                        }
+                    </Template>
+                </GridColumn>
+                <GridColumn Field="@nameof(FinanceTransaction.DateTime)" HeaderText="Date" Format="d" Width="112" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(FinanceTransaction.PaymentMode)" HeaderText="Payment Mode" Width="140" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(FinanceTransaction.Description)" HeaderText="Description" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(FinanceTransaction.UniqueId)" HeaderText="Unique Id" IsPrimaryKey="true" Visible="false"></GridColumn>
+                <GridColumn Field="@nameof(FinanceTransaction.Amount)" HeaderText="Amount" Width="120" Format="C0" TextAlign="TextAlign.Right" ValidationRules="@_rules">
+                    <Template>
+                        @{
+                            var row = (FinanceTransaction)context;
+                            <div class="normalRes">
+                                <div class="amt-payment @row.TransactionType">
+                                    <span>$</span> <span>@row.Amount</span>
+                                </div>
+                            </div>
+                            <div class="mediumRes">
+                                <div class="amt-payment @row.TransactionType">
+                                    <span>$</span> <span>@row.Amount</span>
+                                </div>
+                                <div>@row.DateTime.ToString("dd/MM/yyyy")</div>
+                            </div>
+                            <div class="smallRes">
+                                <div class="amt-payment @row.TransactionType">
+                                    <span>$</span> <span>@row.Amount</span>
+                                </div>
+                                <div>@row.DateTime.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        }
+                    </Template>
+                </GridColumn>
+            </GridColumns>
+        </SfGrid>
+    }
+</div>
+
+

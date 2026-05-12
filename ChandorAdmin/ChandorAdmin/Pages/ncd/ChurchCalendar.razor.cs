@@ -17,7 +17,7 @@ public partial class ChurchCalendar
     public DateTime SelectedDate { get; set; } = DateTime.Today;
 
     // Form validation
-    static readonly Dictionary<string, object> ValidationMessages = new() { { "regex", "Caractres spciaux non autoriss dans ce champ" } };
+    static readonly Dictionary<string, object> ValidationMessages = new() { { "regex", "Caractï¿½res spï¿½ciaux non autorisï¿½s dans ce champ" } };
     ValidationRules ValidationRules { get; set; } = new ValidationRules { Required = true };
     readonly ValidationRules LocationValidationRules = new ValidationRules { Required = true, RegexPattern = "^[A-Za-z-0-9-,()-/& ]{5,80}$", Messages = ValidationMessages };
     readonly ValidationRules DescriptionValidationRules = new ValidationRules { Required = true, MinLength = 5, MaxLength = 500 };

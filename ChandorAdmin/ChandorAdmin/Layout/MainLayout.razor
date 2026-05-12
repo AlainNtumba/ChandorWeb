@@ -1,9 +1,13 @@
 ﻿@inherits LayoutComponentBase
 @attribute [Authorize]
+@using ChandorAdmin.Components.Layout
 @using Microsoft.AspNetCore.Authorization
 @inject IJSRuntime JS
 @inject ChandorAdmin.Services.Auth.InactivityMonitor Inactivity
 @using Syncfusion.Blazor.Navigations
+
+<PageTitle>Home | Chandelier d'Or</PageTitle>
+
 <div @onclick="@Activity" @onkeydown="@Activity" @onpointerdown="@Activity" style="min-height:100%;">
 <SfSidebar ID="Sidebar" Type="SidebarType.Push" Width="300px" DockSize="65px" EnableDock="true" @ref="Sidebar" @bind-IsOpen="SidebarToggle">
     <div class="sidebar" style="position:fixed;z-index:1200">
@@ -11,17 +15,15 @@
             <button class="navbar-toggler" @onclick="ToggleNavMenu" />
             <a class="navbar-brand" href=""><span class="displayText" style="margin-right:15px">Chandelier d'Or</span></a>
         </div>
-        <div @onmouseover="MouseIn" @onmouseout="MouseOut">
+        <div class="sidebar-body" @onmouseover="MouseIn" @onmouseout="MouseOut">
             <NavMenu />
         </div>
     </div>
 </SfSidebar>
 
 <div class="main">
-   <div class="top-row px-4" style="z-index:1111;padding-top:0px">
-        <a href="https://www.syncfusion.com/blazor-components/" target="_blank">Blazor Components</a>
-        <a href="https://blazor.syncfusion.com/documentation/" target="_blank">User Guide</a>
-        <a href="http://blazor.syncfusion.com/" target="_blank">View Demos</a>
+   <div class="top-row top-row-bar px-4" style="z-index:1111;padding-top:0px">
+        <UserProfileMenu />
     </div>
 
     <div class="content px-4">
@@ -37,10 +39,19 @@
 
     .topnav {
         background-color: rgba(0, 0, 0, 0.4) !important;
+        height: 3.5rem;
+        min-height: 3.5rem;
+        max-height: 3.5rem;
+        box-sizing: border-box;
+        padding-top: 0;
+        padding-bottom: 0;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
     }
 
     .sidebar {
-        background-image: linear-gradient(180deg, rgb(23 14 69) 0%, #2A1C4B 70%) !important;
+        background-image: linear-gradient(145deg, #6a239d 0%, #542080 100%) !important;
     }
     .e-sidebar {
         background: #f8f9fa !important;
@@ -62,6 +73,26 @@
         color: #ffffff;
     }
 
+    .e-sidebar.e-open .topnav {
+        position: relative;
+    }
+
+    .e-sidebar.e-open .navbar-toggler {
+        position: relative;
+        z-index: 2;
+    }
+
+    .e-sidebar.e-open .navbar-brand {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+        margin: 0;
+    }
+
+    .e-sidebar.e-open .navbar-brand .displayText {
+        margin-right: 0 !important;
+    }
 
     /* Content area styles */
     .title {
@@ -115,15 +146,90 @@
     }
 
     .e-sidebar.e-dock.e-close .nav.flex-column {
-        margin-left: -8px;
+        margin-left: 0;
     }
 
     .e-sidebar.e-dock.e-close .displayText {
         display: none;
     }
 
+    .e-sidebar.e-dock.e-close .sidebar {
+        width: 65px;
+        min-width: 0 !important;
+        max-width: 65px;
+        box-sizing: border-box;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        max-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .e-sidebar.e-dock.e-close .sidebar-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .e-sidebar.e-dock.e-close .sidebar-body > div {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .e-sidebar.e-dock.e-close .sidebar-body > div > ul:first-of-type,
+    .e-sidebar.e-dock.e-close .sidebar-body .separator {
+        flex-shrink: 0;
+    }
+
     .e-sidebar.e-dock.e-close .nav-item.px-3 {
-        width: 80px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+    }
+
+    .e-sidebar.e-dock.e-close .nav-item .nav-link {
+        justify-content: flex-start;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .e-sidebar.e-dock.e-close .bi {
+        margin-right: 0 !important;
+        flex-shrink: 0;
+    }
+
+    .e-sidebar.e-dock.e-close .scroller {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        flex: 1 1 auto;
+        min-height: 0;
+        height: unset !important;
+        max-height: none !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 0;
+    }
+
+    .e-sidebar.e-dock.e-close .scroller::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+
+    .e-sidebar.e-dock.e-close .sidebar-body .nav-item:last-child {
+        padding-bottom: 0 !important;
+    }
+
+    .e-sidebar.e-dock.e-close .scroller > ul {
+        margin-bottom: 0;
     }
 
     .e-sidebar.e-dock.e-close .separator {
@@ -141,6 +247,18 @@
 
     .e-sidebar.e-dock.e-close .syncfusion-blazor-icons {
         margin-left: -1px;
+    }
+
+    /* Accordion: hide expand chevron in docked/icon-only mode (matches hidden labels) */
+    .e-sidebar.e-dock.e-close .sidebar-accordion-chevron {
+        display: none !important;
+    }
+
+    /* Match collapsed .nav-link rows (flex-start + same horizontal inset); avoid centering/zero-padding — it misaligns vs Syncfusion icons */
+    .e-sidebar.e-dock.e-close .sidebar-accordion-trigger {
+        justify-content: flex-start;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .e-sidebar.e-dock.e-open span.e-text {

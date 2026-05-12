@@ -5,6 +5,8 @@ using ChandorAdmin.Data;
 using ChandorAdmin.Interfaces.Api;
 using ChandorAdmin.Interfaces.Auth;
 using ChandorAdmin.Services.Api;
+using ChandorAdmin.Services.Finance;
+using Syncfusion.Blazor.Popups;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +21,8 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnCh
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddSyncfusionBlazor();
+builder.Services.AddScoped<SfDialogService>();
+builder.Services.AddScoped<FinanceTransactionDataService>();
 
 builder.Services.Configure<ChandorApiOptions>(builder.Configuration.GetSection(ChandorApiOptions.SectionName));
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));

@@ -12,7 +12,7 @@ public partial class Login
     [Inject] public IAuthService AuthService { get; set; } = null!;
     [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
     public LoginRequestDto User { get; set; } = new();
-    public CustomFormValidator FormValidator { get; set; } = new();
+    public CustomFormValidator? FormValidator { get; set; }
     public Dictionary<string, List<string>> Errors { get; set; } = new();
     public string LoginForm { get; set; } = "login-form";
     public string ErrorMsg { get; set; } = string.Empty;
@@ -29,14 +29,14 @@ public partial class Login
     {
         ErrorMsg = "";
         Errors.Clear();
-        FormValidator.ClearFormErrors();
+        FormValidator?.ClearFormErrors();
 
         if (string.IsNullOrEmpty(User.Username) || string.IsNullOrEmpty(User.Password))
         {
             ErrorMsg = "Invalid username or password";
             Errors.Add(nameof(User.Username), new List<string> { "" });
             Errors.Add(nameof(User.Password), new List<string> { "" });
-            FormValidator.DisplayFormErrors(Errors);
+            FormValidator?.DisplayFormErrors(Errors);
             StateHasChanged();
         }
         else
@@ -58,7 +58,7 @@ public partial class Login
                     ErrorMsg = authUser.Message is not null ? authUser.Message : "Failed authentication";
                     Errors.Add(nameof(User.Username), new List<string> { "" });
                     Errors.Add(nameof(User.Password), new List<string> { "" });
-                    FormValidator.DisplayFormErrors(Errors);
+                    FormValidator?.DisplayFormErrors(Errors);
                     StateHasChanged();
                 }
             }
@@ -67,9 +67,14 @@ public partial class Login
                 ErrorMsg = "Failed authentication";
                 Errors.Add(nameof(User.Username), new List<string> { "" });
                 Errors.Add(nameof(User.Password), new List<string> { "" });
-                FormValidator.DisplayFormErrors(Errors);
+                FormValidator?.DisplayFormErrors(Errors);
                 StateHasChanged();
             }
         }
+    }
+
+    public void CaptureValidator(CustomFormValidator validator)
+    {
+        FormValidator = validator;
     }
 }

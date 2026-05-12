@@ -1,0 +1,119 @@
+.sidebar-accordion-section {
+    list-style: none;
+}
+
+.sidebar-accordion-trigger {
+    width: 100%;
+    min-height: 3rem;
+    /* Match Bootstrap .nav-link horizontal inset so labels line up with other sidebar rows */
+    padding: 0.5rem 1rem;
+    margin: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #d7d7d7;
+    font-size: 0.9rem;
+    font-family: inherit;
+    line-height: 1.25;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.sidebar-accordion-trigger:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar-accordion-trigger:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.55);
+    outline-offset: 2px;
+}
+
+.sidebar-accordion-trigger-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* .syncfusion-blazor-icons already uses padding-right for gap before text — avoid doubling with margin */
+.sidebar-accordion-trigger-icon:not(.syncfusion-blazor-icons) {
+    margin-right: 0.75rem;
+}
+
+.sidebar-accordion-title {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sidebar-accordion-chevron {
+    margin-left: 0.5rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.sidebar-accordion-chevron.is-expanded {
+    transform: rotate(-135deg);
+}
+
+.sidebar-accordion-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s ease-out;
+}
+
+.sidebar-accordion-panel.is-open {
+    grid-template-rows: 1fr;
+}
+
+.sidebar-accordion-panel-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sidebar-accordion-subnav {
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem 0 0.35rem 0;
+}
+
+.sidebar-accordion-subitem {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+::deep .sidebar-accordion-sublink {
+    color: #d7d7d7;
+    border-radius: 4px;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 1rem 0.35rem 2.25rem;
+    text-decoration: none;
+}
+
+::deep .sidebar-accordion-sublink:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+::deep .sidebar-accordion-sublink.active {
+    background-color: rgba(255, 255, 255, 0.37);
+    color: white;
+}
+
+::deep .sidebar-accordion-sublink:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.55);
+    outline-offset: 2px;
+}

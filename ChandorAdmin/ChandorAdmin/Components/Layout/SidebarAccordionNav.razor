@@ -1,0 +1,42 @@
+<CascadingValue Value="this" IsFixed="true">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    /// <summary>
+    /// When true (default), opening a section closes any other open section.
+    /// </summary>
+    [Parameter] public bool ExclusiveExpand { get; set; } = true;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string? _exclusiveExpandedId;
+
+    private readonly HashSet<string> _multiExpandedIds = new(StringComparer.Ordinal);
+
+    public bool IsSectionExpanded(string sectionId)
+    {
+        if (ExclusiveExpand)
+        {
+            return string.Equals(_exclusiveExpandedId, sectionId, StringComparison.Ordinal);
+        }
+
+        return _multiExpandedIds.Contains(sectionId);
+    }
+
+    public void ToggleSection(string sectionId)
+    {
+        if (ExclusiveExpand)
+        {
+            _exclusiveExpandedId = string.Equals(_exclusiveExpandedId, sectionId, StringComparison.Ordinal)
+                ? null
+                : sectionId;
+        }
+        else if (!_multiExpandedIds.Add(sectionId))
+        {
+            _multiExpandedIds.Remove(sectionId);
+        }
+
+        StateHasChanged();
+    }
+}

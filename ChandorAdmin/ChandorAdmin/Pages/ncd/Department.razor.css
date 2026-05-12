@@ -1,0 +1,80 @@
+/* Main page wrapper */
+.page-wrapper {
+	height: 100vh;
+	overflow: hidden;
+	/*background-color: #f8f9fa;*/
+}
+
+/* Main bordered container */
+.main-container {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Header + Footer fixed size */
+.header-section,
+.footer-section {
+	flex-shrink: 0;
+}
+
+/* Middle content */
+.content-area {
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Each row shares remaining height equally */
+.content-row-top,
+.content-row-bottom {
+	flex: 1;
+	min-height: 0;
+}
+
+/* Inner boxes */
+.content-box {
+	height: 100%;
+	overflow: auto; /* Internal scroll only */
+	background-color: #f7f7f7;
+}
+
+/* Better scrolling behavior */
+.content-box {
+	padding: 1rem;
+}
+
+/* Mobile / tablet behavior */
+@media (max-width: 768px) {
+
+	.page-wrapper {
+		height: auto;
+		overflow: visible;
+	}
+
+	.main-container {
+		height: auto;
+	}
+
+	.border {
+		border: 1px solid #dee2e600 !important;
+	}
+
+	.content-area {
+		overflow: visible;
+	}
+
+	.content-row-top,
+	.content-row-bottom {
+		flex: none;
+		height: auto;
+	}
+
+	.content-box {
+		min-height: 250px;
+		overflow: auto;
+	}
+}
+

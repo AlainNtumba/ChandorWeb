@@ -1,0 +1,190 @@
+@using ChandorAdmin.Interfaces.Auth
+@using ChandorAdmin.Services.Auth
+@implements IDisposable
+
+<div class="user-profile">
+    @if (_open)
+    {
+        <button type="button"
+                class="user-profile-backdrop"
+                aria-hidden="true"
+                tabindex="-1"
+                @onclick="Close"></button>
+    }
+
+    <div class="user-profile-anchor">
+        <button type="button"
+                class="user-profile-trigger"
+                aria-haspopup="true"
+                aria-expanded="@_open"
+                aria-controls="@_panelId"
+                id="@_buttonId"
+                @onclick="Toggle"
+                @onclick:stopPropagation="true"
+                @onkeydown="OnTriggerKeyDown">
+            @if (!string.IsNullOrEmpty(_profile.PhotoUrl))
+            {
+                <img src="@_profile.PhotoUrl" alt="" class="user-profile-photo" width="40" height="40" loading="lazy" referrerpolicy="no-referrer" />
+            }
+            else
+            {
+                <span class="user-profile-initials" aria-hidden="true">@_profile.Initials</span>
+            }
+            <span class="visually-hidden">Account menu for @_profile.DisplayName</span>
+        </button>
+
+        @if (_open)
+        {
+            <div class="user-profile-panel"
+                 id="@_panelId"
+                 role="region"
+                 aria-labelledby="@_buttonId"
+                 tabindex="-1"
+                 @ref="_panelRef"
+                 @onkeydown="OnPanelKeyDown"
+                 @onclick:stopPropagation="true">
+                <div class="user-profile-panel-header">
+                    @if (!string.IsNullOrEmpty(_profile.PhotoUrl))
+                    {
+                        <img src="@_profile.PhotoUrl" alt="" class="user-profile-panel-photo" width="56" height="56" loading="lazy" referrerpolicy="no-referrer" />
+                    }
+                    else
+                    {
+                        <span class="user-profile-panel-initials" aria-hidden="true">@_profile.Initials</span>
+                    }
+                    <p class="user-profile-name">@_profile.DisplayName</p>
+                </div>
+
+                <div class="user-profile-actions">
+                    <a class="user-profile-link" href="/forgot-password" @onclick="Close">
+                        <span class="bi bi-key" aria-hidden="true"></span>
+                        Reset password
+                    </a>
+                    <button type="button" class="user-profile-logout" @onclick="LogoutAsync" disabled="@_loggingOut">
+                        <span class="bi bi-box-arrow-right" aria-hidden="true"></span>
+                        @(_loggingOut ? "Signing out…" : "Log out")
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    [Inject]
+    public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    [Inject]
+    public IAuthService AuthService { get; set; } = null!;
+
+    private readonly string _panelId = $"user-profile-panel-{Guid.NewGuid():N}";
+    private readonly string _buttonId = $"user-profile-btn-{Guid.NewGuid():N}";
+
+    private ElementReference _panelRef;
+
+    private UserProfileClaimsMapper.UserDisplayProfile _profile =
+        UserProfileClaimsMapper.FromClaimsPrincipal(null);
+
+    private bool _open;
+    private bool _loggingOut;
+    private bool _focusPanelAfterRender;
+
+    protected override void OnInitialized() =>
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+    protected override async Task OnParametersSetAsync() => await RefreshProfileAsync();
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> task) =>
+        _ = ApplyAuthenticationStateAsync(task);
+
+    private async Task ApplyAuthenticationStateAsync(Task<AuthenticationState> task)
+    {
+        var state = await task;
+        _profile = UserProfileClaimsMapper.FromClaimsPrincipal(state.User);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RefreshProfileAsync()
+    {
+        if (AuthenticationStateTask is null)
+            return;
+
+        var state = await AuthenticationStateTask.ConfigureAwait(false);
+        _profile = UserProfileClaimsMapper.FromClaimsPrincipal(state.User);
+    }
+
+    private void Toggle()
+    {
+        _open = !_open;
+        _focusPanelAfterRender = _open;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        if (!_open)
+            return;
+
+        _open = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focusPanelAfterRender || !_open)
+            return;
+
+        _focusPanelAfterRender = false;
+        try
+        {
+            await _panelRef.FocusAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            // Panel may not support programmatic focus in some hosts.
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        if (_loggingOut)
+            return;
+
+        _loggingOut = true;
+        try
+        {
+            await AuthService.LogoutAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _loggingOut = false;
+        }
+    }
+
+    private void OnTriggerKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "ArrowDown" or "Enter" or " ")
+        {
+            if (!_open)
+            {
+                _open = true;
+                _focusPanelAfterRender = true;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void OnPanelKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+            Close();
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+}

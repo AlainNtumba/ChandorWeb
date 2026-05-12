@@ -1,0 +1,153 @@
+@page "/finance-transactions"
+@implements IDisposable
+@using ChandorAdmin.Components.Finance.Transactions
+@using Microsoft.AspNetCore.Components.Web
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Notifications
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Buttons
+
+<PageTitle>Finance | Transactions</PageTitle>
+
+<HeadContent>
+    <link href="css/finance-transactions.css" rel="stylesheet" />
+</HeadContent>
+
+<style>
+    #et-transactions-host.transactions-page-root {
+        overflow: hidden;
+        background: linear-gradient(-141deg, #EEF5F7 14%, #EEF2FB 100%);
+    }
+
+    .et-content.container-fluid {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Reserve space only for the main column; the filter SfSidebar is position:fixed (not in flow). */
+    @@media (min-width: 1100px) {
+        #et-transactions-host .transactions-main-pane {
+            margin-right: 270px;
+        }
+    }
+
+    @@media (max-width: 1100px) {
+        #et-transactions-host .transactions-main-pane {
+            margin-right: 0;
+        }
+    }
+
+    @@media (min-width: 768px) {
+        .et-content .content-wrapper {
+            padding: 0;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .et-content .content-wrapper {
+            padding: 0 8px 8px 8px;
+            margin-top: 0;
+        }
+    }
+
+    .e-skeleton.e-skeleton-text, .e-skeleton.e-skeleton-square, .e-skeleton.e-skeleton-rectangle, .e-skeleton.e-skeleton-circle {
+        background-color: #83808014;
+    }
+
+    .search-skeleton {
+        height: 30px;
+        width: 100%;
+        margin: 40px 15px 15px 15px;
+    }
+
+    .expense-grid-skeleton {
+        height: 80%;
+        width: 100%;
+        margin: 0px 10px 10px 15px;
+    }
+
+    .filter-skeleton {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        width: 251px;
+        height: 100%;
+    }
+
+    @@media (max-width:1101px) {
+        .filter-skeleton {
+            display: none;
+        }
+    }
+
+    @@media (max-width:768px) {
+        .search-skeleton {
+            margin: 106px 0px 10px 0px;
+        }
+
+        .expense-grid-skeleton {
+            margin: 10px 0px 10px;
+        }
+    }
+</style>
+
+<div id="et-transactions-host" class="expense-page transactions-page-root">
+    @if (_isDataLoaded)
+    {
+        <div class="exp-content-container transactions-main-pane">
+                <div class="transactions-title-row">
+                    <p class="page-title">All Transactions</p>
+                </div>
+                <div class="transactions-body">
+                    <div class="col-md-12 margin-top col-lg-12 transactions-grid-column">
+                        <div class="expense-grid-container">
+                            <div class="expense-head-padding" style="background-color: @_searchHeadBg;">
+                                <div class="search-wrapper search-section" style="display: @_searchVisibility;">
+                                    <div class="toolbar-type">
+                                        <SfDropDownList TValue="string"
+                                                        TItem="TypeFilterItem"
+                                                        DataSource="@_typeFilterItems"
+                                                        Width="140px"
+                                                        CssClass="et-type-filter"
+                                                        Value="@_typeFilter"
+                                                        ValueChanged="OnTypeFilterValueChanged">
+                                            <DropDownListFieldSettings Text="Text" Value="Value"></DropDownListFieldSettings>
+                                        </SfDropDownList>
+                                    </div>
+                                    <div id="search">
+                                        <SfTextBox Type="InputType.Search"
+                                                   ShowClearButton="true"
+                                                   Placeholder="Search"
+                                                   CssClass="search txt"
+                                                   @bind-Value="_searchValue"
+                                                   ValueChange="OnSearchChanged"
+                                                   Created="OnSearchCreated">
+                                        </SfTextBox>
+                                        <span id="searchbtn" class="e-search-icon expense-search-icon e-icons" @onclick="RunSearchAsync"></span>
+                                    </div>
+                                    <div class="button-section search-section">
+                                        <SfButton id="addexpense" IsPrimary="true" OnClick="OpenAddDialogAsync">Add Transaction</SfButton>
+                                        <SfButton id="filterExpense" OnClick="OpenFilterMenu">Filter</SfButton>
+                                        <SfButton id="add-btn" IsPrimary="true" IconCss="e-icons add-icon add-head-item" OnClick="OpenAddDialogAsync"></SfButton>
+                                        <SfButton id="filter-btn" OnClick="OpenFilterMenu" IconCss="e-icons e-filter"></SfButton>
+                                    </div>
+                                </div>
+                            </div>
+                            <TransactionGridPanel @ref="_gridRef" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <TransactionFilterSidebar @ref="_filterRef" />
+            <TransactionEditorDialog @ref="_dialogRef" />
+    }
+    else
+    {
+        <div class="search-skeleton"><SfSkeleton Shape="Syncfusion.Blazor.Notifications.SkeletonType.Rectangle" Height="30px" Width="100%"></SfSkeleton></div>
+        <div class="expense-grid-skeleton"><SfSkeleton Shape="Syncfusion.Blazor.Notifications.SkeletonType.Rectangle" Height="700px" Width="100%"></SfSkeleton></div>
+        <div class="filter-skeleton"><SfSkeleton Shape="Syncfusion.Blazor.Notifications.SkeletonType.Rectangle" Height="815px" Width="100%"></SfSkeleton></div>
+    }
+</div>
+
+

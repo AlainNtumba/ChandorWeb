@@ -22,6 +22,7 @@ a, .btn-link {
 
 .content {
     padding-top: 1.1rem;
+    background: linear-gradient(-141deg, #EEF5F7 14%, #EEF2FB 100%);
 }
 
 .valid.modified:not([type=checkbox]) {

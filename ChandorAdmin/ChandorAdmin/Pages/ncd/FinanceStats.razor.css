@@ -1,0 +1,255 @@
+/* Finance dashboard — design tokens (inherits to StatCard / EventCard children) */
+.finance-dashboard {
+    --fd-page-bg: #f4f6fb;
+    --fd-text: #0f172a;
+    --fd-muted: #64748b;
+    --fd-border-subtle: rgba(15, 23, 42, 0.08);
+    --fd-stat-surface: rgba(255, 255, 255, 0.92);
+    --fd-event-bg: rgba(255, 255, 255, 0.78);
+    --fd-shadow-card: 0 14px 34px rgba(15, 23, 42, 0.07), 0 4px 12px rgba(15, 23, 42, 0.04);
+    --fd-shadow-card-hover: 0 22px 46px rgba(15, 23, 42, 0.1), 0 8px 18px rgba(15, 23, 42, 0.06);
+    --fd-accent-positive: #16a34a;
+    --fd-accent-negative: #e11d48;
+    --fd-accent-primary: #6366f1;
+    --fd-accent-warm: #d97706;
+    --fd-header-chip-bg: rgba(99, 102, 241, 0.12);
+    --fd-header-chip-border: rgba(99, 102, 241, 0.22);
+    color: var(--fd-text);
+    padding-bottom: 2rem;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.finance-dash-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0 0.35rem 0.25rem 0.35rem;
+}
+
+.finance-dash-header__eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fd-accent-primary);
+    margin: 0 0 0.35rem 0;
+}
+
+.finance-dash-header__title {
+    font-size: clamp(1.55rem, 2.6vw, 2rem);
+    font-weight: 750;
+    letter-spacing: -0.035em;
+    margin: 0 0 0.45rem 0;
+    line-height: 1.15;
+    color: var(--fd-text);
+}
+
+.finance-dash-header__sub {
+    margin: 0;
+    max-width: 52ch;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--fd-muted);
+}
+
+.finance-dash-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem 0.85rem;
+    flex-shrink: 0;
+}
+
+.finance-dash-daterange {
+    flex: 0 0 auto;
+    width: min(100%, 30rem);
+    min-width: min(100%, 26rem);
+}
+
+/* Syncfusion bootstrap5.css applies text-overflow: ellipsis on all .e-input-group inputs — override with equal/higher specificity. */
+.finance-dash-daterange :deep(.e-daterangepicker),
+.finance-dash-daterange :deep(.e-daterangepicker.e-control-wrapper) {
+    width: 100%;
+    max-width: 100%;
+}
+
+.finance-dash-daterange :deep(.e-input-group.e-date-range-wrapper),
+.finance-dash-daterange :deep(.e-input-group.e-control-wrapper.e-date-range-wrapper) {
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 999px;
+    border-color: var(--fd-header-chip-border);
+    background: var(--fd-header-chip-bg);
+}
+
+.finance-dash-daterange :deep(.e-date-range-wrapper input.e-input:not(.e-daterange-hidden)),
+.finance-dash-daterange :deep(.e-date-range-wrapper input.e-input:not(.e-daterange-hidden):focus),
+.finance-dash-daterange :deep(.e-date-range-wrapper.e-input-focus input.e-input:not(.e-daterange-hidden)) {
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 21rem;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap;
+}
+
+.finance-dash-daterange :deep(.e-input-group-icon.e-icons) {
+    color: var(--fd-accent-primary);
+    flex-shrink: 0;
+}
+
+/* CSS grid dashboard (replaces SfDashboardLayout) */
+.fd-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 18px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.fd-kpi {
+    grid-column: span 3;
+    min-width: 0;
+}
+
+.fd-card {
+    min-width: 0;
+    padding: 0.85rem 1rem 1rem;
+    background: var(--fd-stat-surface);
+    backdrop-filter: blur(10px);
+    border-radius: 6px;
+    border: 1px solid var(--fd-border-subtle);
+    box-shadow: var(--fd-shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    overflow: hidden; /* guarantees nothing can paint over other rows */
+}
+
+.fd-card--chart {
+    grid-column: span 8;
+    /* Allow chart canvas / last column cluster to render without clipping */
+    overflow: visible;
+}
+
+.fd-card--activity {
+    grid-column: span 4;
+}
+
+.fd-pie-row {
+    grid-column: span 12;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    min-width: 0;
+}
+
+.fd-pie-row > .fd-card--donut {
+    min-width: 0;
+    /* Outside data labels need room; default .fd-card is overflow:hidden */
+    overflow: visible;
+}
+
+.dash-chart-host,
+.dash-donut-host {
+    min-width: 0;
+}
+
+.dash-chart-host {
+    overflow: visible;
+    width: 100%;
+}
+
+.finance-feed {
+    overflow: auto;
+    padding-right: 0.15rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-panel-heading__title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--fd-text);
+}
+
+.dash-panel-heading__meta {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.78rem;
+    color: var(--fd-muted);
+    line-height: 1.4;
+}
+
+.dash-panel-heading--row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.dash-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.55rem;
+    border-radius: 6px;
+    color: var(--fd-accent-primary);
+    border: 1px solid var(--fd-header-chip-border);
+    background: var(--fd-header-chip-bg);
+    white-space: nowrap;
+}
+
+.dash-chart-host,
+.dash-donut-host {
+    flex: 1;
+    min-height: 300px;
+}
+
+@media (max-width: 640px) {
+    .finance-dash-header__actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .finance-dashboard {
+        margin: 0 -0.85rem;
+        padding: 1rem 0.65rem 1.5rem;
+        border-radius: 0;
+    }
+
+    .dash-panel-pad--chart,
+    .dash-panel-pad--scroll,
+    .dash-panel-pad--split {
+        padding: 0.75rem 0.85rem 0.9rem;
+    }
+
+    .dash-panel-heading--row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 1200px) {
+    .fd-kpi {
+        grid-column: span 6;
+    }
+
+    .fd-card--chart,
+    .fd-card--activity {
+        grid-column: span 12;
+    }
+
+    .fd-pie-row {
+        grid-template-columns: 1fr;
+    }
+}
