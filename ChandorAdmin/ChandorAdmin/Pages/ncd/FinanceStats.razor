@@ -127,8 +127,8 @@
         <div class="dashboard-pie-row" aria-label="Composition charts">
             <section class="dashboard-card dashboard-card--donut" aria-label="Expense composition">
                 <div class="dash-panel-heading">
-                    <h2 class="dash-panel-heading__title">Expense composition</h2>
-                    <span class="dash-panel-heading__meta">Share by category · @_periodLabel</span>
+                    <h2 class="dash-panel-heading__title">Composition des dépenses</h2>
+                    <span class="dash-panel-heading__meta">Répartition par catégorie · @_periodLabel</span>
                 </div>
                 <div class="dash-donut-host">
                     <SfAccumulationChart @key="@($"exp-pie-{ChartRefreshKey}")"
@@ -156,8 +156,8 @@
 
             <section class="dashboard-card dashboard-card--donut" aria-label="Income composition">
                 <div class="dash-panel-heading">
-                    <h2 class="dash-panel-heading__title">Income composition</h2>
-                    <span class="dash-panel-heading__meta">Total income by category · @_periodLabel</span>
+                    <h2 class="dash-panel-heading__title">Composition des revenus</h2>
+                    <span class="dash-panel-heading__meta">Répartition par catégorie · @_periodLabel</span>
                 </div>
                 <div class="dash-donut-host">
                     <SfAccumulationChart @key="@($"inc-pie-{ChartRefreshKey}")"

@@ -26,17 +26,22 @@
                                 <DataAnnotationsValidator />
 
                                 <table class="c-table">
-                                    <span class="e-label" style="display:block;margin-bottom:6px;"><b>Type de transaction</b></span>
                                     <tr>
                                         <td class="e-rowcell">
                                             <div>
-                                                <SfRadioButton TChecked="string" Label="Entrée" @bind-Checked="_editModel.TransactionType" Disabled="@(!_editIncome)" Value="Income" Name="dlgTransactionType" ValueChange="OnTransactionTypeChanged"></SfRadioButton>
+                                                <SfDropDownList TValue="string" TItem="TransType" 
+                                                    DataSource="@_transactionTypes" 
+                                                    @bind-Value="_editModel.TransactionType" 
+                                                    Placeholder="Type de transaction" 
+                                                    FloatLabelType="FloatLabelType.Always" 
+                                                    Width="100%">
+                                                    <DropDownListFieldSettings Text="Name" Value="Value" />
+                                                    <DropDownListEvents TValue="string" TItem="TransType" ValueChange="OnTransactionTypeChanged" />
+                                                </SfDropDownList>
                                             </div>
-                                        </td>
-                                        <td class="e-rowcell">
-                                            <div>
-                                                <SfRadioButton TChecked="string" Label="Sortie" @bind-Checked="_editModel.TransactionType" Disabled="@(!_editExpense)" Value="Expense" Name="dlgTransactionType" ValueChange="OnTransactionTypeChanged"></SfRadioButton>
-                                            </div>
+                                            <span class="c-err-msg">
+                                                <span><ValidationMessage For="@(() => _editModel.TransactionType)" /></span>
+                                            </span>
                                         </td>
                                     </tr>
                                 </table>
@@ -123,10 +128,6 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                @* <div class="transact-dialog-footer">
-                                    <SfButton IsPrimary="true" type="submit" Disabled="@_saving">@_buttonContent</SfButton>
-                                    <SfButton IsPrimary="true" type="button" OnClick="OnClickCancel" Disabled="@_saving">Cancel</SfButton>
-                                </div> *@
                             </EditForm>
                         </div>
                         <DialogEvents Created="OnCreate"></DialogEvents>

@@ -83,11 +83,12 @@ public partial class FinanceStats
         var requestedEnd = end.Date;
         if (requestedStart > requestedEnd)
             (requestedStart, requestedEnd) = (requestedEnd, requestedStart);
+        var cashFlowEndDate = requestedEnd.AddDays(1);
 
         try
         {
             var summariesTask = FinanceService.GetFinanceSummariesAsync(requestedStart, requestedEnd, departmentId: null);
-            var cashflowTask = FinanceService.GetCashflowSeriesAsync(requestedStart, requestedEnd, departmentId: null);
+            var cashflowTask = FinanceService.GetCashflowSeriesAsync(requestedStart, cashFlowEndDate, departmentId: null);
             var activitiesTask = FinanceService.GetFinanceActivitiesAsync(requestedStart, requestedEnd, departmentId: null);
             var incomeTask = FinanceService.GetIncomeByCategoriesAsync(requestedStart, requestedEnd, departmentId: null);
             var expensesTask = FinanceService.GetExpensesByCategoriesAsync(requestedStart, requestedEnd, departmentId: null);

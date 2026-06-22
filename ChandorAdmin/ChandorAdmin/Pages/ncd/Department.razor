@@ -48,7 +48,7 @@
                     <div>
                         <SfGrid ID="Members"
                             @ref="MemberGridRef"
-                            DataSource="_depMembers"
+                            DataSource="@_depMembers"
                             Toolbar="MemberToolbaritems"
                             AllowExcelExport="true"
                             AllowSorting="true"
@@ -61,7 +61,7 @@
                                 AllowEditing="true" 
                                 AllowDeleting="true" 
                                 AllowEditOnDblClick="true" 
-                                Mode="EditMode.Dialog" />
+                                Mode="EditMode.Normal" />
 
                             <GridColumns>
                                 <GridColumn Field="@nameof(MemberDto.Id)" IsPrimaryKey="true" Visible="false" />

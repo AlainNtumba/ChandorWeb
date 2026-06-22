@@ -35,6 +35,11 @@ public partial class TransactionEditorDialog
     List<AccountDto> _accounts = new();
     List<IncomeTypeDto> _incomeTypes = new();
     List<ExpensesTypeDto> _expenseTypes = new();
+    List<TransType> _transactionTypes = new()
+    {
+        new TransType { Value = "Income", Name = "Revenu" },
+        new TransType { Value = "Expense", Name = "Dépense" }
+    };
 
     bool _isAdd;
     bool _saving;
@@ -224,9 +229,9 @@ public partial class TransactionEditorDialog
         StateHasChanged();
     }
 
-    void OnTransactionTypeChanged(Syncfusion.Blazor.Buttons.ChangeArgs<string> args)
+    void OnTransactionTypeChanged()
     {
-        var value = args.Value ?? "Expense";
+        var value = _editModel.TransactionType ?? "Expense";
         _categoryDataSource = value == "Income"
             ? _incomeTypes.Select(t => new TransactionCategoryOption { Id = t.Id, Name = t.Name }).ToList()
             : _expenseTypes.Select(t => new TransactionCategoryOption { Id = t.Id, Name = t.Name }).ToList();
@@ -497,6 +502,12 @@ public partial class TransactionEditorDialog
     sealed class TransactionCategoryOption
     {
         public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    sealed class TransType
+    {
+        public string Value { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
     }
 }
