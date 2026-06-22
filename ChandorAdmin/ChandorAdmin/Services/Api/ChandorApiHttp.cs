@@ -92,12 +92,79 @@ public sealed class ChandorApiHttp
                 return await TryReadDataResponseBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
             }
 
-            return await response.Content.ReadFromJsonAsync<DataResponse<T>>(JsonOptions, cancellationToken)
-                .ConfigureAwait(false);
+            return await ReadDataResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             response.Dispose();
+        }
+    }
+
+    private async Task<DataResponse<T>?> ReadDataResponseAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var parsed = await TryReadDataResponseBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
+        if (parsed is not null)
+            return parsed;
+
+        if (response.IsSuccessStatusCode)
+            return null;
+
+        var errorMessage = await TryReadProblemDetailsMessageAsync(response, cancellationToken).ConfigureAwait(false);
+        return new DataResponse<T>
+        {
+            Success = false,
+            Message = errorMessage ?? $"Request failed ({(int)response.StatusCode}).",
+            Error = [errorMessage ?? response.ReasonPhrase ?? string.Empty]
+        };
+    }
+
+    private static async Task<string?> TryReadProblemDetailsMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(body))
+                return null;
+
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
+                return message.GetString();
+
+            if (root.TryGetProperty("title", out var title) && title.ValueKind == JsonValueKind.String)
+            {
+                var summary = title.GetString();
+                if (root.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Object)
+                {
+                    var parts = new List<string>();
+                    foreach (var prop in errors.EnumerateObject())
+                    {
+                        foreach (var item in prop.Value.EnumerateArray())
+                        {
+                            if (item.ValueKind == JsonValueKind.String)
+                            {
+                                var text = item.GetString();
+                                if (!string.IsNullOrWhiteSpace(text))
+                                    parts.Add(text);
+                            }
+                        }
+                    }
+
+                    if (parts.Count > 0)
+                        return string.IsNullOrWhiteSpace(summary)
+                            ? string.Join(" ", parts)
+                            : $"{summary} {string.Join(" ", parts)}";
+                }
+
+                return summary;
+            }
+
+            return body.Length <= 500 ? body : body[..500];
+        }
+        catch
+        {
+            return null;
         }
     }
 

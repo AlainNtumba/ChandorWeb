@@ -1,0 +1,41 @@
+@using ChandorAdmin.ViewModels.ChurchAdmin
+
+<div class="church-admin-events-scroll">
+    @if (Items is not null && Items.Count > 0)
+    {
+        <ul class="church-admin-events" role="list">
+            @foreach (var e in Items)
+            {
+                <li class="church-admin-events__item">
+                    <div class="church-admin-events__head">
+                        <h3 class="church-admin-events__title">@e.Title</h3>
+                        <span class="church-admin-events__badge @BadgeClass(e.Status)">@e.Status</span>
+                    </div>
+                    <p class="church-admin-events__meta">
+                        <span class="church-admin-events__ministry">@e.Ministry</span>
+                        <span class="church-admin-events__dot" aria-hidden="true">·</span>
+                        <time datetime="@e.StartsAtUtc.ToString("o")">@e.StartsAtUtc.ToLocalTime().ToString("MMM d, yyyy · h:mm tt")</time>
+                    </p>
+                    <p class="church-admin-events__loc">@e.Location</p>
+                    <p class="church-admin-events__coord"><span class="church-admin-events__coord-label">Coordinator</span> @e.Coordinator</p>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="church-admin-events__empty text-muted mb-0">No upcoming events in this window.</p>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<ChurchEventListItem>? Items { get; set; }
+
+    static string BadgeClass(string status) => status switch
+    {
+        "Confirmed" => "church-admin-events__badge--ok",
+        "Planning" => "church-admin-events__badge--pending",
+        "Awaiting venue" => "church-admin-events__badge--warn",
+        _ => "church-admin-events__badge--neutral"
+    };
+}

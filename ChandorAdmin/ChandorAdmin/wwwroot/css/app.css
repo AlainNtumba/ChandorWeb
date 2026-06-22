@@ -10,6 +10,12 @@ a, .btn-link {
     color: #0071c1;
 }
 
+.c-table {
+    border-collapse: separate !important;
+    border-spacing: 11px !important;
+    width: 100% !important;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;

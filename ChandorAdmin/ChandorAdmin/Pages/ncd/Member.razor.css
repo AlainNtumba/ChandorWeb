@@ -1,0 +1,77 @@
+
+    #et-transactions-host.transactions-page-root {
+        overflow: hidden;
+        background: linear-gradient(-141deg, #EEF5F7 14%, #EEF2FB 100%);
+    }
+
+    .et-content.container-fluid {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Reserve space only for the main column; the filter SfSidebar is position:fixed (not in flow). */
+    @media (min-width: 1100px) {
+        #et-transactions-host .transactions-main-pane {
+            margin-right: 270px;
+        }
+    }
+
+    @media (max-width: 1100px) {
+        #et-transactions-host .transactions-main-pane {
+            margin-right: 0;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .et-content .content-wrapper {
+            padding: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .et-content .content-wrapper {
+            padding: 0 8px 8px 8px;
+            margin-top: 0;
+        }
+    }
+
+    .e-skeleton.e-skeleton-text, .e-skeleton.e-skeleton-square, .e-skeleton.e-skeleton-rectangle, .e-skeleton.e-skeleton-circle {
+        background-color: #83808014;
+    }
+
+    .search-skeleton {
+        height: 30px;
+        width: 100%;
+        margin: 40px 15px 15px 15px;
+    }
+
+    .expense-grid-skeleton {
+        height: 80%;
+        width: 100%;
+        margin: 0px 10px 10px 15px;
+    }
+
+    .filter-skeleton {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        width: 251px;
+        height: 100%;
+    }
+
+    @media (max-width:1101px) {
+        .filter-skeleton {
+            display: none;
+        }
+    }
+
+    @media (max-width:768px) {
+        .search-skeleton {
+            margin: 106px 0px 10px 0px;
+        }
+
+        .expense-grid-skeleton {
+            margin: 10px 0px 10px;
+        }
+    }

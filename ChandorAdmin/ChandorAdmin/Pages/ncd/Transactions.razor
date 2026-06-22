@@ -96,51 +96,51 @@
     @if (_isDataLoaded)
     {
         <div class="exp-content-container transactions-main-pane">
-                <div class="transactions-title-row">
-                    <p class="page-title">All Transactions</p>
-                </div>
-                <div class="transactions-body">
-                    <div class="col-md-12 margin-top col-lg-12 transactions-grid-column">
-                        <div class="expense-grid-container">
-                            <div class="expense-head-padding" style="background-color: @_searchHeadBg;">
-                                <div class="search-wrapper search-section" style="display: @_searchVisibility;">
-                                    <div class="toolbar-type">
-                                        <SfDropDownList TValue="string"
-                                                        TItem="TypeFilterItem"
-                                                        DataSource="@_typeFilterItems"
-                                                        Width="140px"
-                                                        CssClass="et-type-filter"
-                                                        Value="@_typeFilter"
-                                                        ValueChanged="OnTypeFilterValueChanged">
-                                            <DropDownListFieldSettings Text="Text" Value="Value"></DropDownListFieldSettings>
-                                        </SfDropDownList>
-                                    </div>
-                                    <div id="search">
-                                        <SfTextBox Type="InputType.Search"
-                                                   ShowClearButton="true"
-                                                   Placeholder="Search"
-                                                   CssClass="search txt"
-                                                   @bind-Value="_searchValue"
-                                                   ValueChange="OnSearchChanged"
-                                                   Created="OnSearchCreated">
-                                        </SfTextBox>
-                                        <span id="searchbtn" class="e-search-icon expense-search-icon e-icons" @onclick="RunSearchAsync"></span>
-                                    </div>
-                                    <div class="button-section search-section">
-                                        <SfButton id="addexpense" IsPrimary="true" OnClick="OpenAddDialogAsync">Add Transaction</SfButton>
-                                        <SfButton id="filterExpense" OnClick="OpenFilterMenu">Filter</SfButton>
-                                        <SfButton id="add-btn" IsPrimary="true" IconCss="e-icons add-icon add-head-item" OnClick="OpenAddDialogAsync"></SfButton>
-                                        <SfButton id="filter-btn" OnClick="OpenFilterMenu" IconCss="e-icons e-filter"></SfButton>
-                                    </div>
+            <div class="transactions-title-row">
+                <p class="page-title">Opérations financières</p>
+            </div>
+            <div class="transactions-body">
+                <div class="col-md-12 margin-top col-lg-12 transactions-grid-column">
+                    <div class="expense-grid-container">
+                        <div class="expense-head-padding" style="background-color: @_searchHeadBg;">
+                            <div class="search-wrapper search-section" style="display: @_searchVisibility;">
+                                <div class="toolbar-type">
+                                    <SfDropDownList TValue="string"
+                                                    TItem="TypeFilterItem"
+                                                    DataSource="@_typeFilterItems"
+                                                    Width="140px"
+                                                    CssClass="et-type-filter"
+                                                    Value="@_typeFilter"
+                                                    ValueChanged="OnTypeFilterValueChanged">
+                                        <DropDownListFieldSettings Text="Text" Value="Value"></DropDownListFieldSettings>
+                                    </SfDropDownList>
+                                </div>
+                                <div id="search">
+                                    <SfTextBox Type="InputType.Search"
+                                                ShowClearButton="true"
+                                                Placeholder="Recherche"
+                                                CssClass="search txt"
+                                                @bind-Value="_searchValue"
+                                                ValueChange="OnSearchChanged"
+                                                Created="OnSearchCreated">
+                                    </SfTextBox>
+                                    <span id="searchbtn" class="e-search-icon expense-search-icon e-icons" @onclick="RunSearchAsync"></span>
+                                </div>
+                                <div class="button-section search-section">
+                                    <SfButton id="addexpense" IsPrimary="true" OnClick="OpenAddDialogAsync">Insérer</SfButton>
+                                    <SfButton id="filterExpense" OnClick="OpenFilterMenu">Filter</SfButton>
+                                    <SfButton id="add-btn" IsPrimary="true" IconCss="e-icons add-icon add-head-item" OnClick="OpenAddDialogAsync"></SfButton>
+                                    <SfButton id="filter-btn" OnClick="OpenFilterMenu" IconCss="e-icons e-filter"></SfButton>
                                 </div>
                             </div>
-                            <TransactionGridPanel @ref="_gridRef" />
                         </div>
+                        <TransactionGridPanel @ref="_gridRef" />
                     </div>
                 </div>
             </div>
-            <TransactionFilterSidebar @ref="_filterRef" />
-            <TransactionEditorDialog @ref="_dialogRef" />
+        </div>
+        <TransactionFilterSidebar @ref="_filterRef" />
+        <TransactionEditorDialog @ref="_dialogRef" />
     }
     else
     {

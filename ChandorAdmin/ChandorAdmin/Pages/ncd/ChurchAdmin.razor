@@ -1,0 +1,182 @@
+@page "/church-admin"
+@using ChandorAdmin.Components.Dashboard
+@using ChandorAdmin.Components.ChurchAdmin
+@using ChandorAdmin.Components.Finance
+@using ChandorAdmin.ViewModels.ChurchAdmin
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Charts
+
+<PageTitle>Church Administration | Chandelier d'Or</PageTitle>
+
+<div class="dashboard-page">
+    <DashboardHeader Title="Church Administration"
+                     Subtitle="Operations, membership, ministries, and events"
+                     Eyebrow="Management overview">
+        <HeaderActions>
+            <div title="@(_model?.Period.Label ?? string.Empty)">
+                @if (_renderRangePicker)
+                {
+                    <SfDateRangePicker TValue="DateTime"
+                                       AllowEdit="false"
+                                       ShowClearButton="false"
+                                       Format="MM/dd/yyyy"
+                                       Placeholder="Select period"
+                                       StartDate="@_pickerStart"
+                                       EndDate="@_pickerEnd"
+                                       Min="@PickerMinDate"
+                                       Max="@PickerMaxDate"
+                                       Presets="@DateRangePresets">
+                        <DateRangePickerEvents TValue="DateTime" ValueChange="OnDateRangeChangeAsync"></DateRangePickerEvents>
+                    </SfDateRangePicker>
+                }
+            </div>
+        </HeaderActions>
+    </DashboardHeader>
+
+    @if (_model is null)
+    {
+        <div class="p-4 text-center" role="status">
+            <p class="text-muted mb-2">Loading church administration dashboard…</p>
+            <p class="small text-muted mb-0">If this message persists, reload the page or contact support.</p>
+        </div>
+    }
+    else
+    {
+    <section class="dashboard-grid church-admin-dashboard" aria-label="Church administration dashboard">
+        <div class="church-admin-kpi-row">
+            <div class="church-admin-kpi">
+                <StatCard Title="Members"
+                          Value="@FormatInt(_model.Summary.TotalRegisteredMembers)"
+                          Hint="Total registered membership on file"
+                          ValueColor="#4D80F3" />
+            </div>
+            <div class="church-admin-kpi">
+                <StatCard Title="Servants"
+                          Value="@FormatInt(_model.Summary.TotalServingMembers)"
+                          Hint="Active volunteers & ministry servants"
+                          ValueColor="#A16EE5" />
+            </div>
+            <div class="church-admin-kpi">
+                <StatCard Title="Souls"
+                          Value="@FormatInt(_model.Summary.TotalOutreachSouls)"
+                          Hint="Outreach contacts & follow-up pipeline"
+                          ValueColor="#34D3EB" />
+            </div>
+            <div class="church-admin-kpi">
+                <StatCard Title="Converts"
+                          Value="@FormatInt(_model.Summary.TotalBornAgain)"
+                          Hint="New believers & baptism readiness"
+                          ValueColor="#81C868" />
+            </div>
+            <div class="church-admin-kpi">
+                <StatCard Title="Visitors"
+                          Value="@FormatInt(_model.Summary.TotalVisitors)"
+                          Hint="First-time & returning guests (period)"
+                          ValueColor="#FB6D9D" />
+            </div>
+        </div>
+
+        <div class="church-admin-charts-row">
+            <section class="dashboard-card church-admin-chart-card" aria-label="Member growth overview">
+                <div class="dash-panel-heading dash-panel-heading--row">
+                    <div>
+                        <h2 class="dash-panel-heading__title">Member growth overview</h2>
+                        <span class="dash-panel-heading__meta">@_model.MemberGrowthChartHint</span>
+                    </div>
+                    <span class="dash-chip">Registrations</span>
+                </div>
+                <div class="dash-chart-host">
+                    <SfChart @key="@($"growth-{ChartRefreshKey}")"
+                             Width="100%"
+                             Height="320px"
+                             Theme="Theme.Material">
+                        <ChartMargin Left="4" Right="12" Top="8" Bottom="4"></ChartMargin>
+                        <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
+                                            RangePadding="ChartRangePadding.Additional">
+                            <ChartAxisMajorGridLines Width="0"></ChartAxisMajorGridLines>
+                            <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+                            <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+                        </ChartPrimaryXAxis>
+                        <ChartPrimaryYAxis Title="Count">
+                            <ChartAxisMajorGridLines Width="1" DashArray="4"></ChartAxisMajorGridLines>
+                            <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+                            <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+                        </ChartPrimaryYAxis>
+                        <ChartTooltipSettings Enable="true" Shared="true"></ChartTooltipSettings>
+                        <ChartLegendSettings Visible="true" Position="LegendPosition.Top" Alignment="@Syncfusion.Blazor.Charts.Alignment.Far"></ChartLegendSettings>
+                        <ChartSeriesCollection>
+                            <ChartSeries DataSource="@_model.MemberGrowth"
+                                         Name="New registrations"
+                                         XName="@nameof(MemberGrowthSeriesPoint.MonthLabel)"
+                                         YName="@nameof(MemberGrowthSeriesPoint.NewRegistrations)"
+                                         Type="ChartSeriesType.Column"
+                                         Fill="#6366f1"
+                                         ColumnSpacing="0.12">
+                                <ChartMarker Visible="false"></ChartMarker>
+                            </ChartSeries>
+                            <ChartSeries DataSource="@_model.MemberGrowth"
+                                         Name="Membership trend"
+                                         XName="@nameof(MemberGrowthSeriesPoint.MonthLabel)"
+                                         YName="@nameof(MemberGrowthSeriesPoint.MembershipTotal)"
+                                         Type="ChartSeriesType.Column"
+                                         Fill="#0ea5e9"
+                                         ColumnSpacing="0.12">
+                                <ChartMarker Visible="false"></ChartMarker>
+                            </ChartSeries>
+                        </ChartSeriesCollection>
+                    </SfChart>
+                </div>
+            </section>
+
+            <section class="dashboard-card church-admin-chart-card church-admin-chart-card--ministry" aria-label="Ministry distribution">
+                <div class="dash-panel-heading">
+                    <h2 class="dash-panel-heading__title">Ministry distribution</h2>
+                    <span class="dash-panel-heading__meta">Active members by ministry · @_model.Period.Label</span>
+                </div>
+                <div class="dash-donut-host">
+                    <SfAccumulationChart @key="@($"min-{ChartRefreshKey}")"
+                                         Width="100%"
+                                         Height="320px"
+                                         Theme="Theme.Material">
+                        <AccumulationChartMargin Left="4" Right="4" Top="4" Bottom="4"></AccumulationChartMargin>
+                        <AccumulationChartLegendSettings Visible="true"
+                                                         Position="LegendPosition.Bottom"
+                                                         Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></AccumulationChartLegendSettings>
+                        <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
+                        <AccumulationChartSeriesCollection>
+                            <AccumulationChartSeries DataSource="@_model.MinistryDistribution"
+                                                     XName="@nameof(MinistryDistributionSlice.Ministry)"
+                                                     YName="@nameof(MinistryDistributionSlice.MemberCount)"
+                                                     InnerRadius="58%"
+                                                     Palettes="@(_model.MinistryCompositionPalette.ToArray())">
+                                <AccumulationDataLabelSettings Visible="true"
+                                                               Position="AccumulationLabelPosition.Outside"></AccumulationDataLabelSettings>
+                            </AccumulationChartSeries>
+                        </AccumulationChartSeriesCollection>
+                    </SfAccumulationChart>
+                </div>
+            </section>
+        </div>
+
+        <section class="dashboard-card church-admin-grid-panel" aria-label="Recent member activities">
+            <div class="dash-panel-heading dash-panel-heading--row">
+                <div>
+                    <h2 class="dash-panel-heading__title">Recent member activities</h2>
+                    <span class="dash-panel-heading__meta">Pastoral workflow &amp; registry actions</span>
+                </div>
+                <span class="dash-chip">Mock data</span>
+            </div>
+            <ChurchAdminMemberActivityGrid Data="@_model.RecentMemberActivities" />
+        </section>
+
+        <section class="dashboard-card church-admin-events-panel" aria-label="Upcoming church events">
+            <div class="dash-panel-heading">
+                <h2 class="dash-panel-heading__title">Upcoming church events</h2>
+                <span class="dash-panel-heading__meta">Coordinators &amp; venues · next 30 days window</span>
+            </div>
+            <ChurchAdminUpcomingEvents Items="@_model.UpcomingEvents" />
+        </section>
+    </section>
+    }
+</div>

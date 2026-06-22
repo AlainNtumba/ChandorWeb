@@ -27,5 +27,5 @@ public interface IMemberService
 
     Task<DataResponse<bool>?> ConfirmResetPasswordAsync(ConfirmResetPasswordDto request, CancellationToken cancellationToken = default);
 
-    Task<DataResponse<IEnumerable<MemberDto>>?> GetMembersAsync(CancellationToken cancellationToken = default);
+    Task<DataResponse<IEnumerable<MemberDetailsDto>>?> GetMembersAsync(CancellationToken cancellationToken = default);
 }

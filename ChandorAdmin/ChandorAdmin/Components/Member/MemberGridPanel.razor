@@ -1,0 +1,44 @@
+﻿@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.Member
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Navigations
+@inject IMemberService srv;
+
+<div id="expense-grid-wrapper">
+    @if (_renderGrid)
+    {
+        <SfGrid @ref="MemberGridRef"
+                TValue="MemberDetailsDto"
+                Width="100%"
+                Height="100%"
+                AllowSelection="true"
+                AllowPaging="true"
+                AllowTextWrap="false"
+                AllowExcelExport="true"
+                Toolbar="@Toolbaritems"
+                DataSource="@GridData">
+            <GridEvents TValue="MemberDetailsDto"
+                        RowSelected="OnRowSelectChanged"
+                        RowDeselected="OnRowDeselectChanged"
+                        OnToolbarClick="ToolbarClickHandler">
+            </GridEvents>
+            <GridEditSettings AllowEditing="true" AllowEditOnDblClick="false"></GridEditSettings>
+            <GridPageSettings PageSize="11"></GridPageSettings>
+            <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
+            <GridColumns>
+                <GridColumn Type="ColumnType.CheckBox" Width="40"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.Name)" HeaderText="Nom" Width="120" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.Surname)" HeaderText="Prénom" Width="120" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.Postname)" HeaderText="Poste Nom" Width="120" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.GenderDescription)" HeaderText="Gender" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.AgeGroup)" HeaderText="Groupe d'âge" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.Town)" HeaderText="Ville" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.Country)" HeaderText="Pays" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.MemberType)" HeaderText="Type de membre" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.Id)" HeaderText="Unique Id" IsPrimaryKey="true" Visible="false"></GridColumn>
+            </GridColumns>
+        </SfGrid>
+    }
+</div>
+
+

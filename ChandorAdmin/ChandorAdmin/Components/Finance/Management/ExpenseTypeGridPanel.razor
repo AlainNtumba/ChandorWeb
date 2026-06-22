@@ -1,0 +1,60 @@
+@using ChandorAdmin.Components.GlobalNotification
+@using ChandorProject.Shared.DTOs.ExpensesType
+@implements IDisposable
+
+@if (_dialogShell)
+{
+    <SfDialog @ref="_dialog"
+              CssClass="finance-mgmt-dialog"
+              ZIndex="100100"
+              IsModal="true"
+              ShowCloseIcon="true"
+              CloseOnEscape="false"
+              Header="Gestion des types de dépense">
+        <DialogEvents Opened="OnDialogOpenedAsync" Closed="OnDialogClosedAsync" />
+        <DialogTemplates>
+            <Content>
+                @if (!_renderGrid)
+                {
+                    <div class="d-flex justify-content-center p-4" aria-busy="true">
+                        <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Chargement…" />
+                    </div>
+                }
+                else
+                {
+                    <div class="finance-mgmt-grid-host">
+                        <SfGrid @ref="_gridRef"
+                                TValue="ExpensesTypeDto"
+                                DataSource="@_gridData"
+                                Toolbar="@_toolbarItems"
+                                AllowSelection="true"
+                                AllowPaging="true"
+                                AllowSorting="true"
+                                AllowExcelExport="true"
+                                Height="@FinanceManagementGridSupport.ComputeAdaptiveGridHeight(_gridData.Count)"
+                                Width="100%">
+                            <GridEvents TValue="ExpensesTypeDto"
+                                        OnActionBegin="OnActionBeginAsync"
+                                        OnToolbarClick="OnToolbarClickAsync" />
+                            <GridEditSettings AllowAdding="true"
+                                              AllowEditing="true"
+                                              AllowDeleting="false"
+                                              AllowEditOnDblClick="true"
+                                              Mode="EditMode.Normal"
+                                              ShowDeleteConfirmDialog="false" />
+                            <GridPageSettings PageSize="10" />
+                            <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple" />
+                            <GridColumns>
+                                <GridColumn Type="ColumnType.CheckBox" Width="40" />
+                                <GridColumn Field="@nameof(ExpensesTypeDto.Id)" IsPrimaryKey="true" Visible="false" />
+                                <GridColumn Field="@nameof(ExpensesTypeDto.Name)" HeaderText="Nom" ValidationRules="@_requiredRules" />
+                                <GridColumn Field="@nameof(ExpensesTypeDto.Description)" HeaderText="Description" />
+                            </GridColumns>
+                        </SfGrid>
+                    </div>
+                }
+            </Content>
+        </DialogTemplates>
+    </SfDialog>
+}
+<NotificationDialog @ref="_notificationRef" />

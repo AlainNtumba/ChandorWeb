@@ -4,8 +4,9 @@ using ChandorAdmin.Services.Auth;
 using ChandorAdmin.Data;
 using ChandorAdmin.Interfaces.Api;
 using ChandorAdmin.Interfaces.Auth;
+using ChandorAdmin.Interfaces.ChurchAdmin;
+using ChandorAdmin.Services.ChurchAdmin;
 using ChandorAdmin.Services.Api;
-using ChandorAdmin.Services.Finance;
 using Syncfusion.Blazor.Popups;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -22,8 +23,6 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddSyncfusionBlazor();
 builder.Services.AddScoped<SfDialogService>();
-builder.Services.AddScoped<FinanceTransactionDataService>();
-
 builder.Services.Configure<ChandorApiOptions>(builder.Configuration.GetSection(ChandorApiOptions.SectionName));
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
 builder.Services.AddAuthorizationCore();
@@ -55,6 +54,7 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDepartmentTeamService, DepartmentTeamService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IExpensesService, ExpensesService>();
+builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<IExpensesTypeService, ExpensesTypeService>();
 builder.Services.AddScoped<IIncomeService, IncomeService>();
 builder.Services.AddScoped<IIncomeTypeService, IncomeTypeService>();
@@ -69,6 +69,8 @@ builder.Services.AddScoped<IOutreachesService, OutreachesService>();
 builder.Services.AddScoped<IProgramTypeService, ProgramTypeService>();
 builder.Services.AddScoped<ITelephoneService, TelephoneService>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<IChurchAdminDashboardService, ChurchAdminDashboardMockService>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 

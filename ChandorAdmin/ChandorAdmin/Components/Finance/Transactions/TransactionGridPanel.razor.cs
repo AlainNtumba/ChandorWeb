@@ -1,5 +1,7 @@
-using ChandorAdmin.Models.Finance;
-using ChandorAdmin.Services.Finance;
+using System.Globalization;
+using ChandorAdmin.Interfaces.Api;
+using ChandorProject.Shared.DTOs.Finance;
+using Microsoft.AspNetCore.Components;
 using Syncfusion.Blazor.Grids;
 using Syncfusion.Blazor.Navigations;
 
@@ -7,33 +9,39 @@ namespace ChandorAdmin.Components.Finance.Transactions;
 
 public partial class TransactionGridPanel
 {
-    public SfGrid<FinanceTransaction>? TransactGridRef { get; set; }
+    [Inject] public IFinanceService FinanceService { get; set; } = null!;
+
+    public SfGrid<TransactionDto>? TransactGridRef { get; set; }
     public TransactionEditorDialog? DialogRef { get; set; }
     public TransactionFilterSidebar? FilterRef { get; set; }
 
     readonly ValidationRules _rules = new() { Required = true };
-    public IEnumerable<FinanceTransaction> GridData { get; private set; } = Array.Empty<FinanceTransaction>();
+    public IEnumerable<TransactionDto> GridData { get; private set; } = Array.Empty<TransactionDto>();
+    public IReadOnlyList<TransactionDto> AllTransactions { get; private set; } = Array.Empty<TransactionDto>();
+    public DateTime StartDate { get; private set; }
+    public DateTime EndDate { get; private set; }
 
     public List<ItemModel> Toolbaritems { get; } =
     [
         new ItemModel { Text = "Edit", PrefixIcon = "e-edit e-icons", TooltipText = "Edit", Id = "Edit", Disabled = true },
-    new ItemModel { Text = "Delete", PrefixIcon = "e-delete e-icons", TooltipText = "Delete", Id = "Delete", Disabled = true },
-    new ItemModel { Text = "Excel Export", PrefixIcon = "e-excelexport e-icons", TooltipText = "ExcelExport", Id = "Grid_excelexport" }
+        new ItemModel { Text = "Delete", PrefixIcon = "e-delete e-icons", TooltipText = "Delete", Id = "Delete", Disabled = true },
+        new ItemModel { Text = "Excel Export", PrefixIcon = "e-excelexport e-icons", TooltipText = "ExcelExport", Id = "Grid_excelexport" }
     ];
 
     bool _renderGrid;
 
-    protected override async Task OnInitializedAsync()
+    public static (DateTime Start, DateTime End) GetCalendarMonthBounds(DateTime reference)
     {
-        await base.OnInitializedAsync();
-        UpdateTotalBalance();
+        var day = reference.Date;
+        var start = new DateTime(day.Year, day.Month, 1, 0, 0, 0);
+        var end = new DateTime(day.Year, day.Month, DateTime.DaysInMonth(day.Year, day.Month), 23, 59, 59);
+        return (start, end);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await base.OnAfterRenderAsync(firstRender);
             await InvokeAsync(async () =>
             {
                 await Task.Delay(1);
@@ -43,9 +51,27 @@ public partial class TransactionGridPanel
         }
     }
 
-    Task OnRowSelectChanged(RowSelectEventArgs<FinanceTransaction> _) => RefreshToolbarFromSelectionAsync();
+    public async Task LoadTransactionsAsync(DateTime start, DateTime end)
+    {
+        StartDate = start;
+        EndDate = end;
 
-    Task OnRowDeselectChanged(RowDeselectEventArgs<FinanceTransaction> _) => RefreshToolbarFromSelectionAsync();
+        try
+        {
+            var response = await FinanceService.GetChurchTransactionsAsync(start, end);
+            AllTransactions = response?.Data?.ToList() ?? [];
+        }
+        catch
+        {
+            AllTransactions = [];
+        }
+
+        GridRefresh(FilterRef?.RefreshData() ?? AllTransactions.OrderByDescending(t => t.TransactionDate).ToList());
+    }
+
+    Task OnRowSelectChanged(RowSelectEventArgs<TransactionDto> _) => RefreshToolbarFromSelectionAsync();
+
+    Task OnRowDeselectChanged(RowDeselectEventArgs<TransactionDto> _) => RefreshToolbarFromSelectionAsync();
 
     public async Task RefreshToolbarFromSelectionAsync()
     {
@@ -98,44 +124,20 @@ public partial class TransactionGridPanel
 
     public async Task SearchAsync(string? value) => await (TransactGridRef?.SearchAsync(value ?? string.Empty) ?? Task.CompletedTask);
 
-    public void AddRecord(FinanceTransaction row)
+    public async Task ReloadAsync()
     {
-        Data.Transactions.Add(row);
-        GridRefresh(FilterRef?.RefreshData() ?? Enumerable.Empty<FinanceTransaction>());
-    }
-
-    public void UpdateRecord(FinanceTransaction row)
-    {
-        foreach (var data in Data.Transactions.Where(s => s.UniqueId == row.UniqueId))
+        if (StartDate == default || EndDate == default)
         {
-            data.UniqueId = row.UniqueId;
-            data.TransactionType = row.TransactionType;
-            data.DateTime = row.DateTime;
-            data.Category = row.Category;
-            data.PaymentMode = row.PaymentMode;
-            data.Description = row.Description;
-            data.Amount = row.Amount;
-            data.MonthShort = row.MonthShort;
-            data.MonthFull = row.MonthFull;
-            data.FormattedDate = row.FormattedDate;
+            (StartDate, EndDate) = GetCalendarMonthBounds(DateTime.Today);
         }
 
-        GridRefresh(FilterRef?.RefreshData() ?? Enumerable.Empty<FinanceTransaction>());
+        await LoadTransactionsAsync(StartDate, EndDate);
+        FilterRef?.RebuildCategoryList();
+        FilterRef?.UpdateGrid();
+        UpdateTotalBalance();
     }
 
-    public void RemoveRecord(List<string> uniqueIds)
-    {
-        foreach (var id in uniqueIds)
-        {
-            var index = Data.Transactions.FindIndex(s => s.UniqueId == id);
-            if (index > -1)
-                Data.Transactions.RemoveAt(index);
-        }
-
-        GridRefresh(FilterRef?.RefreshData() ?? Enumerable.Empty<FinanceTransaction>());
-    }
-
-    public void GridRefresh(IEnumerable<FinanceTransaction> rows)
+    public void GridRefresh(IEnumerable<TransactionDto> rows)
     {
         GridData = rows;
         StateHasChanged();
@@ -143,14 +145,18 @@ public partial class TransactionGridPanel
 
     public void UpdateTotalBalance()
     {
-        var commonData = Data.CurrentView is null
-            ? Data.Transactions.Where(s => s.DateTime >= Data.StartDate && s.DateTime <= Data.EndDate)
-            : Data.CurrentView;
-
+        var commonData = GridData.ToList();
         var incomeSum = commonData.Where(s => s.TransactionType == "Income").Sum(s => s.Amount);
         var expenseSum = commonData.Where(s => s.TransactionType == "Expense").Sum(s => s.Amount);
-        Data.UpdateCurrentBalance(FinanceTransactionDataService.FormatBalance(incomeSum, expenseSum));
-        Data.NotifyChanged();
+        _ = FormatBalance(incomeSum, expenseSum);
+    }
+
+    public static string FormatBalance(decimal incomeSum, decimal expenseSum)
+    {
+        var n = incomeSum - expenseSum;
+        var sign = n < 0 ? "-" : "";
+        n = Math.Abs(n);
+        return sign + "$" + n.ToString("N0", CultureInfo.InvariantCulture);
     }
 
     public void Dispose() => TransactGridRef = null;

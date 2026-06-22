@@ -1,13 +1,15 @@
 using System.ComponentModel.DataAnnotations;
+using ChandorProject.Shared.Validation;
 
 namespace ChandorAdmin.Models.Finance;
 
 /// <summary>
-/// Edit model for the finance transaction dialog; bound to Blazor EditForm with Syncfusion inputs.
+/// Edit model for the finance transaction dialog; maps to <see cref="ChandorProject.Shared.DTOs.Finance.NewChurchTransactionDto"/> on insert
+/// and <see cref="ChandorProject.Shared.DTOs.Finance.TransactionDto"/> on edit.
 /// </summary>
 public sealed class FinanceTransactionEditorModel
 {
-    public string UniqueId { get; set; } = "";
+    public Guid Id { get; set; }
 
     [Required(ErrorMessage = "Choose Income or Expense.")]
     public string TransactionType { get; set; } = "Expense";
@@ -19,14 +21,18 @@ public sealed class FinanceTransactionEditorModel
     public DateTime? TimeValue { get; set; }
 
     [Required(ErrorMessage = "Category is required.")]
-    public string? Category { get; set; }
+    public Guid? CategoryId { get; set; }
 
     [Required(ErrorMessage = "Amount is required.")]
-    public double? Amount { get; set; }
+    [DecimalRange(ErrorMessage = "Amount must be at least 0.01.")]
+    public decimal? Amount { get; set; }
 
-    [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters.")]
-    public string Description { get; set; } = "";
+    [StringLength(1000, ErrorMessage = "Note cannot exceed 1000 characters.")]
+    public string TransactionNote { get; set; } = "";
 
-    [Required(ErrorMessage = "Payment mode is required.")]
-    public string PaymentMode { get; set; } = "Cash";
+    [Required(ErrorMessage = "Account is required.")]
+    public Guid? AccountId { get; set; }
+
+    public Guid DepartmentId { get; set; }
+    public Guid DepartmentTeamId { get; set; }
 }

@@ -66,6 +66,17 @@
     color: white;
 }
 
+.nav-menu-status {
+    cursor: default;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.nav-menu-status--error {
+    opacity: 1;
+    color: #ffc9c9 !important;
+}
+
 @media (min-width: 641px) {
     .navbar-toggler {
         display: none;

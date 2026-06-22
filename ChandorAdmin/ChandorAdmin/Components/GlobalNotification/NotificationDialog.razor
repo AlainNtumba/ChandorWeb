@@ -1,0 +1,193 @@
+﻿@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Popups
+
+@if (_showConfirm)
+{
+    <SfDialog @ref="_confirmDialog"
+              ZIndex="100200"
+              Width="150px"
+              CssClass="warning-box notification-popup"
+              IsModal="true"
+              ShowCloseIcon="false"
+              CloseOnEscape="false">
+        <DialogTemplates>
+            <Content>
+                <div id="warningBox" class="notification-popup__body">
+                    <table class="Table">
+                        <tbody>
+                            <tr>
+                                <td class="data">
+                                    <span class="alert-wrapper"><span class="warning-alert e-icons warning-icon"></span></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="data">
+                                    <b class="notification-header">@NotificationHeader</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="data notification-details"><i>@NotificationMessage</i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Content>
+        </DialogTemplates>
+        <DialogButtons>
+            <DialogButton Content="Yes" IsPrimary="true" OnClick="OnConfirmYesAsync" />
+            <DialogButton Content="No" OnClick="OnConfirmNoAsync" />
+        </DialogButtons>
+    </SfDialog>
+}
+
+@if (_showNotification)
+{
+    <SfDialog @ref="_notificationDialog"
+              ZIndex="100201"
+              Width="150px"
+              CssClass="alert-box notification-popup"
+              IsModal="true"
+              ShowCloseIcon="false"
+              CloseOnEscape="false">
+        <DialogTemplates>
+            <Content>
+                <div class="notification-popup__body">
+                    <table class="Table">
+                        <tbody>
+                            <tr>
+                                <td class="data">
+                                    @if (NotificationType == "Success")
+                                    {
+                                        <span class="alert-wrapper"><span class="success-alert e-icons success-icon"></span></span>
+                                    }
+                                    else if (NotificationType == "Error")
+                                    {
+                                        <span class="alert-wrapper"><span class="error-alert e-icons error-icon"></span></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="alert-wrapper"><span class="warning-alert e-icons warning-icon"></span></span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="data notification-popup__title">
+                                    <b class="notification-header">@NotificationHeader</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="data notification-details">
+                                    <i>@NotificationMessage</i>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Content>
+        </DialogTemplates>
+        <DialogButtons>
+            <DialogButton Content="Close" IsPrimary="true" OnClick="OnCancelAsync" />
+        </DialogButtons>
+    </SfDialog>
+}
+
+@code {
+    SfDialog? _notificationDialog;
+    SfDialog? _confirmDialog;
+    bool _showNotification;
+    bool _showConfirm;
+    TaskCompletionSource<bool>? _confirmTcs;
+
+    public string NotificationHeader { get; set; } = string.Empty;
+    public string NotificationMessage { get; set; } = string.Empty;
+    public string NotificationType { get; set; } = string.Empty;
+
+    public async Task Notify(string message, string type, string header)
+    {
+        if (string.IsNullOrWhiteSpace(message)
+            || string.IsNullOrWhiteSpace(type)
+            || string.IsNullOrWhiteSpace(header))
+            return;
+
+        await HideConfirmAsync();
+        await HideNotificationAsync();
+
+        NotificationMessage = message;
+        NotificationType = type;
+        NotificationHeader = header;
+        _showNotification = true;
+
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+
+        if (_notificationDialog is not null)
+            await _notificationDialog.ShowAsync();
+    }
+
+    public async Task<bool> ShowAlertDialog()
+    {
+        await HideNotificationAsync();
+
+        _confirmTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _showConfirm = true;
+
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+
+        if (_confirmDialog is not null)
+            await _confirmDialog.ShowAsync();
+
+        var result = await _confirmTcs.Task;
+        _confirmTcs = null;
+        return result;
+    }
+
+    async Task OnConfirmYesAsync()
+    {
+        await CompleteConfirmAsync(true);
+    }
+
+    async Task OnConfirmNoAsync()
+    {
+        await CompleteConfirmAsync(false);
+    }
+
+    async Task CompleteConfirmAsync(bool result)
+    {
+        if (_confirmTcs is null || _confirmTcs.Task.IsCompleted)
+            return;
+
+        await HideConfirmAsync();
+        _confirmTcs.TrySetResult(result);
+    }
+
+    async Task HideConfirmAsync()
+    {
+        if (!_showConfirm)
+            return;
+
+        if (_confirmDialog is not null)
+            await _confirmDialog.HideAsync();
+
+        _showConfirm = false;
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+    }
+
+    public async Task OnCancelAsync()
+    {
+        await HideNotificationAsync();
+    }
+
+    async Task HideNotificationAsync()
+    {
+        if (!_showNotification)
+            return;
+
+        if (_notificationDialog is not null)
+            await _notificationDialog.HideAsync();
+
+        _showNotification = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}

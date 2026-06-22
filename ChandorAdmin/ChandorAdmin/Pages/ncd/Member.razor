@@ -1,0 +1,166 @@
+﻿@page "/church-members"
+@using ChandorAdmin.Components.GlobalNotification
+@using ChandorAdmin.Components.Member
+@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.MemberType
+@inject IMemberTypeService _mtServ
+
+<PageTitle>Membres | Chandelier d'Or</PageTitle>
+
+<HeadContent>
+    <link href="css/finance-transactions.css" rel="stylesheet" />
+</HeadContent>
+
+<div id="et-transactions-host" class="expense-page transactions-page-root">
+
+    <div class="exp-content-container transactions-main-pane">
+        <div class="transactions-title-row">
+            <p class="page-title">All Members</p>
+        </div>
+        <div class="transactions-body">
+            <div class="col-md-12 margin-top col-lg-12 transactions-grid-column">
+                <div class="expense-grid-container">
+                    <div class="expense-head-padding" style="background-color: @_searchHeadBg;">
+                        <div class="search-wrapper search-section" style="display: @_searchVisibility;">
+                            <div class="toolbar-type">
+                                <!-- SfDropDownList -->
+                                <SfDropDownList TValue="Guid"
+                                                TItem="MemberTypeDto"
+                                                DataSource="@_memberTypes"
+                                                Width="140px"
+                                                CssClass="et-type-filter">
+                                    <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                                </SfDropDownList>
+                            </div>
+                            <div id="search">
+                                <!-- SfTextBox @onclcikc span -->
+                                <SfTextBox Type="InputType.Search"
+                                           ShowClearButton="true"
+                                           Placeholder="Search"
+                                           @bind-Value="@_searchValue"
+                                           ValueChange="OnSearchChanged"
+                                           Created="OnSearchCreated"
+                                           CssClass="search txt">
+                                </SfTextBox>
+                                <span id="searchbtn" class="e-search-icon expense-search-icon e-icons" @onclick="RunSearchAsync"></span>
+                            </div>
+                            <div class="button-section search-section">
+                                <SfButton id="addexpense" OnClick="OpenAddDialogAsync" IsPrimary="true">Add Member</SfButton>
+                                <SfButton id="filterExpense">Filter</SfButton>
+                                <SfButton id="add-btn" IsPrimary="true" OnClick="OpenAddDialogAsync" IconCss="e-icons add-icon add-head-item"></SfButton>
+                                <SfButton id="filter-btn" IconCss="e-icons e-filter"></SfButton>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- MemberGridPanel -->
+                    <MemberGridPanel @ref="_gridRef" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Filter Sidebar -->
+    <MemberFilterSidebar @ref="_filterRef" />
+
+    <!-- Member Editor -->
+    <MemberEditorDialog @ref="_dialogRef" />
+
+    <!-- Notification -->
+    <NotificationDialog @ref="_notificationRef" />
+
+</div>
+
+@code {
+    MemberGridPanel? _gridRef;
+    MemberFilterSidebar? _filterRef;
+    MemberEditorDialog? _dialogRef;
+    NotificationDialog? _notificationRef;
+    List<MemberTypeDto> _memberTypes = new();
+
+    string? _searchValue;
+    string _searchVisibility = "none";
+    string _searchHeadBg = "#FFFFFF";
+    string _typeFilter = "All";
+    bool _didInitialWire;
+    bool _isDataLoaded;
+
+    readonly List<TypeFilterItem> _typeFilterItems =
+    [
+        new TypeFilterItem { Text = "All", Value = "All" },
+        new TypeFilterItem { Text = "Member", Value = "Member" },
+        new TypeFilterItem { Text = "New Comer", Value = "New Comer" },
+        new TypeFilterItem { Text = "Visitor", Value = "Visitor" }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        var mtypes = await _mtServ.GetAllMemberTypesAsync();
+
+        _memberTypes.Add(new MemberTypeDto { Name = "All" });
+
+        if (mtypes != null && mtypes.Success && mtypes.Data != null)
+        {
+            var types = mtypes.Data.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase).ToList();
+
+            if (types.Any())
+            {
+                foreach (var t in types) _memberTypes.Add(t);
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (!_isDataLoaded || _didInitialWire || _gridRef is null || _filterRef is null || _dialogRef is null)
+            return;
+
+        _didInitialWire = true;
+        _gridRef.DialogRef = _dialogRef;
+        _gridRef.NotificationRef = _notificationRef;
+        // _filterRef.ContentRef = _gridRef;
+        _dialogRef.ContentRef = _gridRef;
+        // _gridRef.FilterRef = _filterRef;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) _ = LoadAsync();
+    }
+
+    Task RunSearchAsync() => _gridRef?.SearchAsync(_searchValue) ?? Task.CompletedTask;
+
+    Task OpenAddDialogAsync() => _dialogRef?.ShowAddDialog() ?? Task.CompletedTask;
+
+    async Task OnSearchChanged(Syncfusion.Blazor.Inputs.ChangedEventArgs args)
+    {
+        if (_gridRef is not null)
+            await _gridRef.SearchAsync(_searchValue);
+    }
+
+    void OnSearchCreated() => (_searchVisibility, _searchHeadBg) = ("", "");
+
+    Task OnTypeFilterValueChanged(string value)
+    {
+        _typeFilter = string.IsNullOrEmpty(value) ? "All" : value;
+        // _filterRef?.ApplyToolbarTypeFilter(_typeFilter);
+        return Task.CompletedTask;
+    }
+    
+    async Task LoadAsync()
+    {
+        await Task.Delay(500);
+        _isDataLoaded = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private sealed class TypeFilterItem
+    {
+        public string Text { get; set; } = "";
+        public string Value { get; set; } = "";
+    }
+}

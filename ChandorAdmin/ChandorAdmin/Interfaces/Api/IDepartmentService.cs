@@ -21,4 +21,6 @@ public interface IDepartmentService
     Task<DataResponse<bool>?> AddDepartmentMemberAsync(Guid departmentId, Guid memberId, Guid roleId, CancellationToken cancellationToken = default);
 
     Task<DataResponse<bool>?> RemoveDepartmentMemberAsync(Guid departmentId, Guid memberId, CancellationToken cancellationToken = default);
+
+    Task<DataResponse<ChurchDepartmentKeyDto>?> GetChurchDepartmentKeysAsync(CancellationToken cancellationToken = default);
 }

@@ -1,7 +1,9 @@
+@using ChandorAdmin.Components.GlobalNotification
 @using ChandorAdmin.Configuration
+@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.Account
 @implements IDisposable
-@inject SfDialogService DialogService
-@inject FinanceTransactionDataService Data
+@inject IFinanceService FinanceService
 
 <div id="dlg-content">
     <SfDialogProvider />
@@ -10,39 +12,41 @@
         {
             <SfDialog @ref="_transactionDialog"
                       Width="min(100%, 520px)"
+                      Header="@_dialogHeader"
                       CssClass="transact-dialog transact-dialog--chandor"
+                      ZIndex="100100"
                       ShowCloseIcon="true"
                       CloseOnEscape="false"
-                      IsModal="true"
-                      Target="#et-transactions-host">
-                <ChildContent>
-                    <DialogTemplates>
-                        <Header>@_dialogHeader</Header>
-                    </DialogTemplates>
-                    <div class="dlg-content">
-                        <EditForm Model="@_editModel" OnValidSubmit="@OnValidSubmitAsync">
-                            <CustomFormValidator @ref="_customFormValidator" />
-                            <DataAnnotationsValidator />
-                            <input type="hidden" value="@_editModel.UniqueId" />
-                            <div class="transaction-dialog">
-                                <table class="transact-edit-table">
+                      IsModal="true">
+                <DialogTemplates>
+                    <Content>
+                        <div>
+                            <EditForm Model="@_editModel" id="@_formId" OnValidSubmit="@OnValidSubmitAsync">
+                                <CustomFormValidator @ref="_customFormValidator" />
+                                <DataAnnotationsValidator />
+
+                                <table class="c-table">
+                                    <span class="e-label" style="display:block;margin-bottom:6px;"><b>Type de transaction</b></span>
+                                    <tr>
+                                        <td class="e-rowcell">
+                                            <div>
+                                                <SfRadioButton TChecked="string" Label="Entrée" @bind-Checked="_editModel.TransactionType" Disabled="@(!_editIncome)" Value="Income" Name="dlgTransactionType" ValueChange="OnTransactionTypeChanged"></SfRadioButton>
+                                            </div>
+                                        </td>
+                                        <td class="e-rowcell">
+                                            <div>
+                                                <SfRadioButton TChecked="string" Label="Sortie" @bind-Checked="_editModel.TransactionType" Disabled="@(!_editExpense)" Value="Expense" Name="dlgTransactionType" ValueChange="OnTransactionTypeChanged"></SfRadioButton>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <table class="c-table">
                                     <tbody>
-                                        <tr>
-                                            <td class="e-rowcell" colspan="2">
-                                                <div>
-                                                    <span class="e-label" style="display:block;margin-bottom:6px;">Transaction type</span>
-                                                    <SfRadioButton TChecked="string" Label="Income" @bind-Checked="_editModel.TransactionType" Value="Income" Name="dlgTransactionType" ValueChange="OnTransactionTypeChanged"></SfRadioButton>
-                                                    <SfRadioButton TChecked="string" Label="Expense" @bind-Checked="_editModel.TransactionType" Value="Expense" Name="dlgTransactionType" ValueChange="OnTransactionTypeChanged"></SfRadioButton>
-                                                </div>
-                                                <span class="c-err-msg">
-                                                    <span><ValidationMessage For="@(() => _editModel.TransactionType)" /></span>
-                                                </span>
-                                            </td>
-                                        </tr>
                                         <tr>
                                             <td class="e-rowcell">
                                                 <div>
-                                                    <SfDatePicker TValue="DateTime?" Placeholder="Choose a Date" Width="100%" FloatLabelType="FloatLabelType.Always" @bind-Value="_editModel.DateValue" Min="@_editorMinDate" Max="@_editorMaxDate"></SfDatePicker>
+                                                    <SfDatePicker TValue="DateTime?" Placeholder="Date de transaction" Width="100%" FloatLabelType="FloatLabelType.Always" @bind-Value="_editModel.DateValue" Min="@_editorMinDate" Max="@_editorMaxDate"></SfDatePicker>
                                                 </div>
                                                 <span class="c-err-msg">
                                                     <span><ValidationMessage For="@(() => _editModel.DateValue)" /></span>
@@ -50,7 +54,7 @@
                                             </td>
                                             <td class="e-rowcell">
                                                 <div>
-                                                    <SfTimePicker TValue="DateTime?" Placeholder="Choose a Time" Width="100%" FloatLabelType="FloatLabelType.Always" @bind-Value="_editModel.TimeValue"></SfTimePicker>
+                                                    <SfTimePicker TValue="DateTime?" Placeholder="Heure" Width="100%" FloatLabelType="FloatLabelType.Always" @bind-Value="_editModel.TimeValue"></SfTimePicker>
                                                 </div>
                                                 <span class="c-err-msg">
                                                     <span><ValidationMessage For="@(() => _editModel.TimeValue)" /></span>
@@ -60,24 +64,23 @@
                                         <tr>
                                             <td class="e-rowcell">
                                                 <div>
-                                                    <SfDropDownList TValue="string"
-                                                                    CssClass="Category"
-                                                                    TItem="FinanceCategoryOption"
+                                                    <SfDropDownList TValue="Guid?"
+                                                                    TItem="TransactionCategoryOption"
                                                                     DataSource="@_categoryDataSource"
-                                                                    @bind-Value="_editModel.Category"
-                                                                    Placeholder="Select a Category"
+                                                                    @bind-Value="_editModel.CategoryId"
+                                                                    Placeholder="Catégorie"
                                                                     FloatLabelType="FloatLabelType.Always"
                                                                     Width="100%">
-                                                        <DropDownListFieldSettings Text="Category" Value="Category" IconCss="Class"></DropDownListFieldSettings>
+                                                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
                                                     </SfDropDownList>
                                                 </div>
                                                 <span class="c-err-msg">
-                                                    <span><ValidationMessage For="@(() => _editModel.Category)" /></span>
+                                                    <span><ValidationMessage For="@(() => _editModel.CategoryId)" /></span>
                                                 </span>
                                             </td>
                                             <td class="e-rowcell">
                                                 <div>
-                                                    <SfNumericTextBox TValue="double?" Placeholder="Enter a Amount" FloatLabelType="FloatLabelType.Always" Format="c2" Min="0" Width="100%" @bind-Value="_editModel.Amount"></SfNumericTextBox>
+                                                    <SfNumericTextBox TValue="decimal?" Placeholder="Montant" FloatLabelType="FloatLabelType.Always" Format="c2" Min="0.01m" Width="100%" @bind-Value="_editModel.Amount"></SfNumericTextBox>
                                                 </div>
                                                 <span class="c-err-msg">
                                                     <span><ValidationMessage For="@(() => _editModel.Amount)" /></span>
@@ -87,8 +90,26 @@
                                         <tr>
                                             <td class="e-rowcell" colspan="2">
                                                 <div>
-                                                    <SfTextBox @bind-Value="_editModel.Description"
-                                                               Placeholder="Descriptions"
+                                                    <SfDropDownList TValue="Guid?"
+                                                                    TItem="AccountDto"
+                                                                    DataSource="@_accounts"
+                                                                    @bind-Value="_editModel.AccountId"
+                                                                    Placeholder="Compte affecté"
+                                                                    FloatLabelType="FloatLabelType.Always"
+                                                                    Width="100%">
+                                                        <DropDownListFieldSettings Text="AccountName" Value="Id"></DropDownListFieldSettings>
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.AccountId)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="e-rowcell" colspan="2">
+                                                <div>
+                                                    <SfTextBox @bind-Value="_editModel.TransactionNote"
+                                                               Placeholder="Note"
                                                                FloatLabelType="FloatLabelType.Always"
                                                                Multiline="true"
                                                                Width="100%"
@@ -96,37 +117,30 @@
                                                     </SfTextBox>
                                                 </div>
                                                 <span class="c-err-msg">
-                                                    <span><ValidationMessage For="@(() => _editModel.Description)" /></span>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="e-rowcell" colspan="2">
-                                                <div>
-                                                    <span class="e-label" style="display:block;margin-bottom:6px;">Payment mode</span>
-                                                    <SfRadioButton TChecked="string" Label="Cash" @bind-Checked="_editModel.PaymentMode" Value="Cash" Name="dlgPaymentMode"></SfRadioButton>
-                                                    <SfRadioButton TChecked="string" Label="Debit Card" @bind-Checked="_editModel.PaymentMode" Value="Debit Card" Name="dlgPaymentMode"></SfRadioButton>
-                                                    <SfRadioButton TChecked="string" Label="Credit Card" @bind-Checked="_editModel.PaymentMode" Value="Credit Card" Name="dlgPaymentMode"></SfRadioButton>
-                                                </div>
-                                                <span class="c-err-msg">
-                                                    <span><ValidationMessage For="@(() => _editModel.PaymentMode)" /></span>
+                                                    <span><ValidationMessage For="@(() => _editModel.TransactionNote)" /></span>
                                                 </span>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
-                            <div class="transact-dialog-footer">
-                                <SfButton IsPrimary="true" type="submit">@_buttonContent</SfButton>
-                                <SfButton IsPrimary="true" type="button" OnClick="OnClickCancel">Cancel</SfButton>
-                            </div>
-                        </EditForm>
-                    </div>
-                    <DialogEvents Created="OnCreate"></DialogEvents>
-                </ChildContent>
+                                @* <div class="transact-dialog-footer">
+                                    <SfButton IsPrimary="true" type="submit" Disabled="@_saving">@_buttonContent</SfButton>
+                                    <SfButton IsPrimary="true" type="button" OnClick="OnClickCancel" Disabled="@_saving">Cancel</SfButton>
+                                </div> *@
+                            </EditForm>
+                        </div>
+                        <DialogEvents Created="OnCreate"></DialogEvents>
+
+                    </Content>
+                </DialogTemplates>
+                <DialogButtons>
+                    <DialogButton form="@_formId" Type="Syncfusion.Blazor.Popups.ButtonType.Submit" IsPrimary="true" Disabled="@_saving" Content="@_buttonContent" />
+                    <DialogButton Type="Syncfusion.Blazor.Popups.ButtonType.Button" IsPrimary="true" Content="Annuler" OnClick="OnClickCancel" />
+                </DialogButtons>
             </SfDialog>
         }
     </div>
+    <NotificationDialog @ref="_notificationRef" />
 </div>
 
 <style>

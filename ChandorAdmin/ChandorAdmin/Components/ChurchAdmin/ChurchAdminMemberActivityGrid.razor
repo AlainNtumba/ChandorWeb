@@ -1,0 +1,56 @@
+@using Syncfusion.Blazor.Grids
+@using ChandorAdmin.ViewModels.ChurchAdmin
+
+<div class="church-admin-grid-host">
+    <SfGrid TValue="MemberActivityGridRow"
+            DataSource="@_rows"
+            AllowPaging="true"
+            AllowSorting="true"
+            AllowFiltering="true"
+            AllowResizing="true"
+            Height="100%">
+        <GridPageSettings PageSize="10" PageSizes="@(new[] { 5, 10, 20, 50 })"></GridPageSettings>
+        <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+        <GridSortSettings>
+            <GridSortColumns>
+                <GridSortColumn Field="@nameof(MemberActivityGridRow.ActivityDate)" Direction="SortDirection.Descending"></GridSortColumn>
+            </GridSortColumns>
+        </GridSortSettings>
+        <GridColumns>
+            <GridColumn Field="@nameof(MemberActivityGridRow.MemberId)" HeaderText="Member ID" Width="110" ClipMode="ClipMode.EllipsisWithTooltip"></GridColumn>
+            <GridColumn Field="@nameof(MemberActivityGridRow.FullName)" HeaderText="Full Name" MinWidth="140" ClipMode="ClipMode.EllipsisWithTooltip"></GridColumn>
+            <GridColumn Field="@nameof(MemberActivityGridRow.ActivityType)" HeaderText="Activity Type" Width="160"></GridColumn>
+            <GridColumn Field="@nameof(MemberActivityGridRow.Ministry)" HeaderText="Ministry" Width="120"></GridColumn>
+            <GridColumn Field="@nameof(MemberActivityGridRow.ActivityDate)" HeaderText="Date" Type="ColumnType.Date" Format="d" Width="110"></GridColumn>
+            <GridColumn Field="@nameof(MemberActivityGridRow.ResponsibleAdmin)" HeaderText="Responsible Admin" MinWidth="150" ClipMode="ClipMode.EllipsisWithTooltip"></GridColumn>
+            <GridColumn HeaderText="Status" Width="120" AllowFiltering="false">
+                <Template>
+                    @{
+                        var row = (MemberActivityGridRow)context;
+                    }
+                    <span class="church-admin-status @StatusClass(row.Status)">@row.Status</span>
+                </Template>
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<MemberActivityGridRow>? Data { get; set; }
+
+    IEnumerable<MemberActivityGridRow> _rows = Array.Empty<MemberActivityGridRow>();
+
+    protected override void OnParametersSet()
+    {
+        _rows = Data ?? Array.Empty<MemberActivityGridRow>();
+    }
+
+    static string StatusClass(string status) => status switch
+    {
+        "Completed" => "church-admin-status--ok",
+        "Pending" => "church-admin-status--pending",
+        "In review" => "church-admin-status--review",
+        "Scheduled" => "church-admin-status--scheduled",
+        _ => "church-admin-status--neutral"
+    };
+}

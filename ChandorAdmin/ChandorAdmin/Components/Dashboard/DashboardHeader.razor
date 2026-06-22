@@ -1,0 +1,29 @@
+<header class="dashboard-header">
+    <div class="dashboard-header__titles">
+        @if (!string.IsNullOrWhiteSpace(Eyebrow))
+        {
+            <p class="dashboard-header__eyebrow">@Eyebrow</p>
+        }
+        <h1 class="dashboard-header__title">@Title</h1>
+        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        {
+            <p class="dashboard-header__sub">@Subtitle</p>
+        }
+    </div>
+    @if (HeaderActions is not null)
+    {
+        <div class="dashboard-header__actions">
+            @HeaderActions
+        </div>
+    }
+</header>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    [Parameter] public string? Subtitle { get; set; }
+
+    [Parameter] public string? Eyebrow { get; set; }
+
+    [Parameter] public RenderFragment? HeaderActions { get; set; }
+}

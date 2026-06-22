@@ -8,7 +8,7 @@ public sealed class ChandorApiOptions
     public const string SectionName = "ChandorApi";
 
     /// <summary>
-    /// Root URL including the <c>/api/</c> segment (e.g. https://chandor.somee.com/api/).
+    /// Root URL including the <c>/api/</c> segment (e.g. https://chandor.somee.com/api/ https://localhost:7145/api/).
     /// </summary>
     public string BaseUrl { get; set; } = "https://localhost:7145/api/";
 

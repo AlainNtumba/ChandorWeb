@@ -34,4 +34,7 @@ public sealed class DepartmentService(ChandorApiHttp api) : IDepartmentService
 
     public Task<DataResponse<bool>?> RemoveDepartmentMemberAsync(Guid departmentId, Guid memberId, CancellationToken cancellationToken = default)
         => api.DeleteDataResponseAsync<bool>($"{C}/remove-department-member/{departmentId}/{memberId}", cancellationToken);
+
+    public Task<DataResponse<ChurchDepartmentKeyDto>?> GetChurchDepartmentKeysAsync(CancellationToken cancellationToken = default)
+        => api.GetDataResponseAsync<ChurchDepartmentKeyDto>($"{C}/get-church-department-keys", cancellationToken);
 }

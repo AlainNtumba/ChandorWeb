@@ -1,0 +1,48 @@
+﻿@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Inputs
+
+<div class="transactions-filter-root">
+    <span id="filter-toggle"
+        class="navbar-toggler e-icons e-filter"
+        role="button"
+        tabindex="0"
+        aria-label="Open filters"
+    ></span>
+
+    @if (_mobileDrawerOpen)
+    {
+        <div class="overlay" @onclick="HideFilterMenu"></div>
+    }
+
+    <aside class="transactions-filter-dock @(_mobileDrawerOpen ? "transactions-filter-dock--open" : null)" aria-label="Member Filters">
+        <div class="sidebar-wrapper-filter">
+            <div class="filter-head">
+                <span class="e-icon filter-icon filter-head-item"></span>
+                <span class="filter-txt filter-head-item"></span>
+            </div>
+            <div class="expense-filter-container">
+                <label>Select an age range</label>
+                <div>
+                    <!-- Age range picker-->
+                </div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+@code {
+    bool _mobileDrawerOpen;
+
+    internal void ShowFilterMenu()
+    {
+        _mobileDrawerOpen = true;
+        StateHasChanged();
+    }
+
+    void HideFilterMenu()
+    {
+        _mobileDrawerOpen = false;
+        StateHasChanged();
+    }
+}

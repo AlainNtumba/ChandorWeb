@@ -85,7 +85,7 @@
 }
 
 .exp-content-container .e-grid .e-toolbar .e-toolbar-items .e-toolbar-item .e-tbar-btn:hover {
-    background: rgba(0, 0, 0, 0.12);
+    background: rgba(106, 35, 157, 1);
     border-color: rgba(0, 0, 0, 0.12);
     color: rgba(0, 0, 0, 0.87);
 }
@@ -415,6 +415,23 @@ span.e-label {
     padding-top: 12px;
 }
 
+.transactions-filter-dock .transaction-manage-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.transactions-filter-dock .transaction-manage-actions > div {
+    width: 100%;
+}
+
+.transactions-filter-dock .transaction-manage-actions .e-btn {
+    width: 100%;
+    display: inline-flex;
+    justify-content: center;
+    text-align: center;
+}
+
 .label-font.bottom-align {
     padding-bottom: 16px;
 }
@@ -613,7 +630,7 @@ span.e-label {
 .dlg-debit-payment { width: 33%; float: left; min-width: 113px; padding: 0; }
 .dlg-credit-payment { width: 33%; float: left; min-width: 100px; padding: 0; }
 
-#et-transactions-host .transact-dialog--chandor.e-dialog {
+.transact-dialog--chandor.e-dialog {
     height: auto !important;
     max-height: none !important;
 }
@@ -627,7 +644,7 @@ span.e-label {
         min-width: 500px;
     }
 
-    #et-transactions-host .transact-dialog--chandor.e-dialog {
+    .transact-dialog--chandor.e-dialog {
         width: min(92vw, 520px) !important;
         height: auto !important;
         max-height: none !important;
@@ -644,7 +661,7 @@ span.e-label {
         max-width: 483px !important;
     }
 
-    #et-transactions-host .transact-dialog--chandor.e-dialog {
+    .transact-dialog--chandor.e-dialog {
         width: min(92vw, 100%) !important;
         height: auto !important;
         max-height: none !important;
@@ -653,73 +670,73 @@ span.e-label {
 }
 
 /* Transaction editor modal: fit content (no inner scrollbar), Bootstrap-style footer */
-#et-transactions-host .transact-dialog--chandor.e-dialog .e-dlg-content {
+.transact-dialog--chandor.e-dialog .e-dlg-content {
     overflow: visible !important;
     max-height: none !important;
 }
 
-#et-transactions-host .transact-dialog--chandor .dlg-content {
+.transact-dialog--chandor .dlg-content {
     overflow: visible;
     height: auto;
     max-height: none;
     padding: 0 1.25rem;
 }
 
-#et-transactions-host .transact-dialog--chandor .transaction-dialog {
+.transact-dialog--chandor .transaction-dialog {
     padding: 12px 0 10px 0;
 }
 
-#et-transactions-host .transact-dialog--chandor .transaction-dialog::after {
+.transact-dialog--chandor .transaction-dialog::after {
     content: "";
     display: table;
     clear: both;
 }
 
-#et-transactions-host .transact-dialog--chandor .dlg-date-section,
-#et-transactions-host .transact-dialog--chandor .category-section {
+.transact-dialog--chandor .dlg-date-section,
+.transact-dialog--chandor .category-section {
     margin-top: 18px;
     height: auto;
     min-height: 52px;
 }
 
-#et-transactions-host .transact-dialog--chandor .description-container {
+.transact-dialog--chandor .description-container {
     margin-top: 18px;
     height: auto;
     min-height: 52px;
 }
 
-#et-transactions-host .transact-dialog--chandor .payment-label {
+.transact-dialog--chandor .payment-label {
     margin-top: 18px;
 }
 
-#et-transactions-host .transact-dialog--chandor .transact-edit-table {
+.transact-dialog--chandor .transact-edit-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
 }
 
-#et-transactions-host .transact-dialog--chandor .transact-edit-table .e-rowcell {
+.transact-dialog--chandor .transact-edit-table .e-rowcell {
     vertical-align: top;
     padding: 6px 6px 2px 6px;
     width: 50%;
 }
 
-#et-transactions-host .transact-dialog--chandor .transact-edit-table .e-rowcell[colspan="2"] {
+.transact-dialog--chandor .transact-edit-table .e-rowcell[colspan="2"] {
     width: 100%;
 }
 
-#et-transactions-host .transact-dialog--chandor .transact-edit-table .c-err-msg {
+.transact-dialog--chandor .transact-edit-table .c-err-msg {
     display: block;
     min-height: 1.1em;
 }
 
-#et-transactions-host .transact-dialog--chandor .transact-desc-textbox.e-input-group,
-#et-transactions-host .transact-dialog--chandor .transact-desc-textbox.e-multi-line-input {
+.transact-dialog--chandor .transact-desc-textbox.e-input-group,
+.transact-dialog--chandor .transact-desc-textbox.e-multi-line-input {
     min-height: 88px;
 }
 
-#et-transactions-host .transact-dialog--chandor .transact-dialog-footer {
+.transact-dialog--chandor .transact-dialog-footer {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -731,4 +748,68 @@ span.e-label {
 
 #expense-grid-wrapper .e-pager .e-pagercontainer {
     margin: 5px 6px 5px 10px;
+}
+
+/* Body-level finance modals above layout chrome (sidebar, top row, filter dock) */
+.e-dlg-overlay:has(+ .e-dlg-container .finance-mgmt-dialog),
+.e-dlg-overlay:has(+ .e-dlg-container .transact-dialog--chandor),
+.e-dlg-container:has(.finance-mgmt-dialog),
+.e-dlg-container:has(.transact-dialog--chandor) {
+    z-index: 100100 !important;
+}
+
+.finance-mgmt-dialog.e-dialog {
+    width: min(92vw, 1120px) !important;
+    min-width: min(92vw, 680px) !important;
+    max-width: 92vw !important;
+    height: auto !important;
+    max-height: 80vh !important;
+}
+
+.finance-mgmt-dialog.e-dialog .e-dlg-header-content {
+    flex: 0 0 auto;
+}
+
+.finance-mgmt-dialog.e-dialog .e-dlg-content {
+    overflow: hidden !important;
+    max-height: calc(80vh - 3.5rem) !important;
+    padding: 0.5rem 1rem 1rem;
+}
+
+.finance-mgmt-dialog.e-dialog .e-footer-content {
+    flex: 0 0 auto;
+}
+
+.finance-mgmt-dialog .finance-mgmt-grid-host {
+    height: auto;
+    max-height: calc(80vh - 5.5rem);
+}
+
+.finance-mgmt-dialog .finance-mgmt-grid-host .e-grid {
+    height: auto;
+    max-height: calc(80vh - 5.5rem);
+}
+
+.finance-mgmt-dialog .e-toolbar .e-toolbar-items {
+    flex-wrap: wrap;
+    row-gap: 4px;
+}
+
+@media (max-width: 768px) {
+    .finance-mgmt-dialog.e-dialog {
+        width: 96vw !important;
+        min-width: 96vw !important;
+        max-width: 96vw !important;
+        max-height: 80vh !important;
+    }
+
+    .finance-mgmt-dialog.e-dialog .e-dlg-content {
+        max-height: calc(80vh - 3.5rem) !important;
+        padding: 0.5rem 0.5rem 0.75rem;
+    }
+
+    .finance-mgmt-dialog .finance-mgmt-grid-host,
+    .finance-mgmt-dialog .finance-mgmt-grid-host .e-grid {
+        max-height: calc(80vh - 5.5rem);
+    }
 }

@@ -1,0 +1,230 @@
+﻿@using ChandorAdmin.Configuration
+@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.AgeGroup
+@using ChandorProject.Shared.DTOs.Member
+@using ChandorProject.Shared.DTOs.MemberType
+@inject IMemberTypeService _typeServ
+@inject IAgeGroupService _ageServ
+@inject SfDialogService DialogService
+
+<div id="dlg-content">
+    <SfDialogProvider />
+    <div id="et-dialog-target">
+        @if (_createNewDialog)
+        {
+            <SfDialog IsModal="true"
+                      @ref="@_memberDialog"
+                      Header="@_dialogHeader"
+                      Width="min(100%, 520px)"
+                      CloseOnEscape="false">
+                <DialogTemplates>
+                    <Content>
+                        <div>
+                            <EditForm Model="@_editModel" id="@_formId" OnValidSubmit="OnValidSubmitAsync">
+                                <DataAnnotationsValidator />
+                                <CustomFormValidator @ref="@_customFormValidator" />
+                                <table class="c-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Username"
+                                                               Placeholder="Username"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Username)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table class="c-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Name"
+                                                               Placeholder="Name"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Name)" /></span>
+                                                </span>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Postname"
+                                                               Placeholder="Postname"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Postname)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Surname"
+                                                               Placeholder="Surname"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Surname)" /></span>
+                                                </span>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDatePicker TValue="DateTime"
+                                                                  Placeholder="Birthday"
+                                                                  @bind-Value="@_editModel.Birthday"
+                                                                  FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Birthday)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table class="c-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TItem="MemberTypeDto" TValue="Guid"
+                                                                    @bind-Value="@_editModel.MemberTypeId"
+                                                                    DataSource="@_memberTypes"
+                                                                    Placeholder="Member Type"
+                                                                    FloatLabelType="FloatLabelType.Always">
+                                                        <DropDownListFieldSettings Value="Id" Text="Name" />
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.MemberTypeId)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table class="c-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TItem="AgeGroupDto" TValue="Guid"
+                                                                    @bind-Value="@_editModel.AgeGroupId"
+                                                                    DataSource="@_ageGroups"
+                                                                    Placeholder="Age Group"
+                                                                    FloatLabelType="FloatLabelType.Always">
+                                                        <DropDownListFieldSettings Value="Id" Text="GroupName" />
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span>
+                                                    <span><ValidationMessage For="@(() => _editModel.AgeGroupId)" /></span>
+                                                </span>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TItem="Gender" TValue="bool"
+                                                                    @bind-Value="@_editModel.Gender"
+                                                                    DataSource="@_genders"
+                                                                    Placeholder="Gender"
+                                                                    FloatLabelType="FloatLabelType.Always">
+                                                        <DropDownListFieldSettings Value="Sex" Text="Name" />
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span>
+                                                    <span><ValidationMessage For="@(() => _editModel.Gender)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Country"
+                                                               Placeholder="Country"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Country)" /></span>
+                                                </span>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Town"
+                                                               Placeholder="City"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Town)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table class="c-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Suburb"
+                                                               Placeholder="Suburb"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Suburb)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Address"
+                                                               Placeholder="Address"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Address)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Note"
+                                                               Placeholder="Note"
+                                                               Multiline="true"
+                                                               Width="100%"
+                                                               CssClass="transact-desc-textbox"
+                                                               FloatLabelType="FloatLabelType.Always" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Note)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </EditForm>
+                        </div>
+                    </Content>
+                </DialogTemplates>
+
+                <DialogButtons>
+                    <DialogButton form="@_formId"
+                                  Type="Syncfusion.Blazor.Popups.ButtonType.Submit"
+                                  IsPrimary="true" Content="@_buttonContent" />
+
+                    <DialogButton Type="Syncfusion.Blazor.Popups.ButtonType.Button"
+                                  Content="Cancel" IsPrimary="true" OnClick="OnClickCancel" />
+                </DialogButtons>
+
+                @* <DialogEvents Created="OnCreate"></DialogEvents> *@
+            </SfDialog>
+        }
+    </div>
+</div>
+
+

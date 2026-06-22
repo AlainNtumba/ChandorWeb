@@ -1,8 +1,12 @@
+@using ChandorAdmin.Components.Dashboard
+@using ChandorAdmin.Components.Finance.Management
+@using ChandorAdmin.Interfaces.Api
 @using Syncfusion.Blazor.Calendars
 @using Syncfusion.Blazor.DropDowns
 @using Syncfusion.Blazor.Buttons
 @using Syncfusion.Blazor.Inputs
-@inject FinanceTransactionDataService Data
+@using ChandorProject.Shared.DTOs.Finance
+@inject IFinanceService FinanceService;
 
 <div class="transactions-filter-root">
     <span id="filter-toggle"
@@ -22,30 +26,31 @@
         <div class="sidebar-wrapper-filter">
             <div class="filter-head">
                 <span class="e-icon filter-icon filter-head-item"></span>
-                <span class="filter-txt filter-head-item">Filters</span>
+                <span class="filter-txt filter-head-item">Filtres</span>
             </div>
             <div class="expense-filter-container">
-                <label class="label-font">Select a range</label>
+                <label class="label-font">Sélectionnez une période</label>
                 <div class="filter-date-range filter-item">
                     <SfDateRangePicker TValue="DateTime"
                                        CssClass="DateTime"
                                        ShowClearButton="false"
                                        Format="MM/dd/yyyy"
                                        AllowEdit="false"
-                                       EndDate="@Data.EndDate"
-                                       StartDate="@Data.StartDate"
+                                       EndDate="@EndDate"
+                                       StartDate="@StartDate"
                                        Min="@_pickerMinDate"
-                                       Max="@_pickerMaxDate">
+                                       Max="@_pickerMaxDate"
+                                       Presets="@_transactionDateRangePresets">
                         <DateRangePickerEvents TValue="DateTime" ValueChange="DateRangeChanged"></DateRangePickerEvents>
                     </SfDateRangePicker>
                 </div>
-                <label class="label-font">Category</label>
+                <label class="label-font">Catégorie</label>
                 <div class="category filter-item">
                     <SfMultiSelect TValue="string[]"
                                    TItem="FilterCategoryOption"
                                    DataSource="@_filterCategoryList"
                                    Mode="VisualMode.Box"
-                                   Placeholder="Select Categories"
+                                   Placeholder="Sélectionnez les catégories"
                                    HideSelectedItem="true"
                                    ClosePopupOnSelect="false">
                         <MultiSelectEvents TValue="string[]"
@@ -59,65 +64,93 @@
                 </div>
                 <label class="label-font bottom-align">Cashflow</label>
                 <div class="cashflow filter-item">
-                    <SfCheckBox TChecked="bool" Label="Income" @bind-Checked="_incomeChecked" CssClass="TransactionType" ValueChange="OnFilterControlChanged"></SfCheckBox>
-                    <SfCheckBox TChecked="bool" Label="Expense" @bind-Checked="_expenseChecked" CssClass="TransactionType" ValueChange="OnFilterControlChanged"></SfCheckBox>
+                    <SfCheckBox TChecked="bool" Label="Entrée" @bind-Checked="_incomeChecked" CssClass="TransactionType" ValueChange="OnFilterControlChanged"></SfCheckBox>
+                    <SfCheckBox TChecked="bool" Label="Sortie" @bind-Checked="_expenseChecked" CssClass="TransactionType" ValueChange="OnFilterControlChanged"></SfCheckBox>
                 </div>
-                <label class="label-font bottom-align">Payment Mode</label>
-                <div class="paymentModes filter-item">
-                    <SfCheckBox TChecked="bool" Label="Cash" @bind-Checked="_cashChecked" CssClass="PaymentMode" ValueChange="OnFilterControlChanged"></SfCheckBox>
-                    <SfCheckBox TChecked="bool" Label="Debit Card" @bind-Checked="_debitChecked" CssClass="PaymentMode" ValueChange="OnFilterControlChanged"></SfCheckBox>
-                    <br />
-                    <br />
-                    <SfCheckBox TChecked="bool" Label="Credit Card" @bind-Checked="_creditChecked" CssClass="PaymentMode" ValueChange="OnFilterControlChanged"></SfCheckBox>
-                </div>
+                @if (_accountFilterOptions.Count > 0)
+                {
+                    <label class="label-font bottom-align">Comptes</label>
+                    <div class="paymentModes filter-item">
+                        @foreach (var account in _accountFilterOptions)
+                        {
+                            <SfCheckBox TChecked="bool"
+                                        Label="@account"
+                                        Checked="@IsAccountChecked(account)"
+                                        CssClass="PaymentMode"
+                                        ValueChange="@(args => OnAccountFilterChanged(account, args))">
+                            </SfCheckBox>
+                            <br />
+                        }
+                    </div>
+                }
                 <div>
-                    <label class="label-font">Amount</label>
+                    <label class="label-font">Montant</label>
                     <div class="amount-filter">
                         <div class="min-numeric amt-filter">
                             <label class="inlineAlign minLabel">Min :</label>
-                            <SfNumericTextBox TValue="double?" CssClass="inlineAlign" Width="55px" Format="c0" ShowSpinButton="false" @bind-Value="_minAmount" Min="0" Max="6000">
+                            <SfNumericTextBox TValue="double?" CssClass="inlineAlign" Width="55px" Format="c0" ShowSpinButton="false" @bind-Value="_minAmount" Min="0">
                                 <NumericTextBoxEvents TValue="double?" ValueChange="OnFilterControlChanged"></NumericTextBoxEvents>
                             </SfNumericTextBox>
                         </div>
                         <span class="amt-filter separateLine"></span>
                         <div class="max-numeric amt-filter">
                             <label class="inlineAlign maxLabel">Max :</label>
-                            <SfNumericTextBox TValue="double?" CssClass="inlineAlign" Width="55px" Format="c0" ShowSpinButton="false" @bind-Value="_maxAmount" Min="0" Max="6000">
+                            <SfNumericTextBox TValue="double?" CssClass="inlineAlign" Width="55px" Format="c0" ShowSpinButton="false" @bind-Value="_maxAmount" Min="0">
                                 <NumericTextBoxEvents TValue="double?" ValueChange="OnFilterControlChanged"></NumericTextBoxEvents>
                             </SfNumericTextBox>
                         </div>
                     </div>
+                </div>
+                <label class="label-font bottom-align">Gérer les comptes et types de transactions</label>
+                <div class="transaction-manage-actions">
+                    <div><SfButton Content="Comptes" OnClick="OpenAccountsPanelAsync" /></div>
+                    <div><SfButton Content="Type de Revenu" OnClick="OpenIncomeTypesPanelAsync" /></div>
+                    <div><SfButton Content="Type de Dépenses" OnClick="OpenExpenseTypesPanelAsync" /></div>
                 </div>
             </div>
         </div>
     </aside>
 </div>
 
+<AccountGridPanel @ref="_accountPanel" />
+<IncomeTypeGridPanel @ref="_incomeTypePanel" />
+<ExpenseTypeGridPanel @ref="_expenseTypePanel" />
+
 @code {
     public TransactionGridPanel? ContentRef { get; set; }
+
+    AccountGridPanel? _accountPanel;
+    IncomeTypeGridPanel? _incomeTypePanel;
+    ExpenseTypeGridPanel? _expenseTypePanel;
+
+    readonly List<Presets> _transactionDateRangePresets = DashboardDateRangePresets.StandardThreePresets();
+
+    public DateTime StartDate { get; private set; }
+    public DateTime EndDate { get; private set; }
 
     bool _mobileDrawerOpen;
     bool _incomeChecked = true;
     bool _expenseChecked = true;
-    bool _cashChecked = true;
-    bool _debitChecked = true;
-    bool _creditChecked = true;
     double? _minAmount;
     double? _maxAmount;
     readonly List<string> _categoryValues = new();
+    readonly HashSet<string> _selectedAccounts = new(StringComparer.OrdinalIgnoreCase);
+    List<string> _accountFilterOptions = new();
     List<FilterCategoryOption> _filterCategoryList = new();
-    /// <summary>Earliest date in seeded sample data.</summary>
-    DateTime _pickerMinDate => new(2019, 6, 1, 0, 0, 0);
-
-    /// <summary>Allow selecting the default current-month range and browsing sample rows through ~5 years ahead.</summary>
+    DateTime _pickerMinDate => new(2015, 1, 1, 0, 0, 0);
     DateTime _pickerMaxDate => new(DateTime.Today.Year + 5, 12, 31, 23, 59, 59);
 
     protected override void OnInitialized()
     {
-        RebuildCategoryList();
-        MinMaxAmount();
-        _minAmount ??= 0;
-        _maxAmount ??= 100;
+        (StartDate, EndDate) = TransactionGridPanel.GetCalendarMonthBounds(DateTime.Today);
+        _minAmount = 0;
+        _maxAmount = null;
+    }
+
+    public void SetDateRange(DateTime start, DateTime end)
+    {
+        StartDate = start;
+        EndDate = end;
     }
 
     internal void ShowFilterMenu()
@@ -131,6 +164,12 @@
         _mobileDrawerOpen = false;
         StateHasChanged();
     }
+
+    Task OpenAccountsPanelAsync() => _accountPanel?.ShowAsync() ?? Task.CompletedTask;
+
+    Task OpenIncomeTypesPanelAsync() => _incomeTypePanel?.ShowAsync() ?? Task.CompletedTask;
+
+    Task OpenExpenseTypesPanelAsync() => _expenseTypePanel?.ShowAsync() ?? Task.CompletedTask;
 
     void OnFilterToggleKey(KeyboardEventArgs e)
     {
@@ -158,53 +197,88 @@
         UpdateGrid();
     }
 
-    void DateRangeChanged(RangePickerEventArgs<DateTime> args)
+    async Task DateRangeChanged(RangePickerEventArgs<DateTime> args)
     {
-        Data.SetDate(args.StartDate, args.EndDate);
-        UpdateGrid();
-        ContentRef?.UpdateTotalBalance();
+        StartDate = args.StartDate;
+        EndDate = args.EndDate;
+
+        if (ContentRef is not null)
+        {
+            await ContentRef.LoadTransactionsAsync(StartDate, EndDate);
+            RebuildCategoryList();
+            UpdateGrid();
+            ContentRef.UpdateTotalBalance();
+        }
     }
 
     void OnFilterControlChanged() => UpdateGrid();
 
+    bool IsAccountChecked(string account) =>
+        _selectedAccounts.Count == 0 || _selectedAccounts.Contains(account);
+
+    void OnAccountFilterChanged(string account, Syncfusion.Blazor.Buttons.ChangeEventArgs<bool> args)
+    {
+        if (_accountFilterOptions.Count == 0)
+            return;
+
+        if (_selectedAccounts.Count == 0)
+            _selectedAccounts.UnionWith(_accountFilterOptions);
+
+        if (args.Checked)
+            _selectedAccounts.Add(account);
+        else
+            _selectedAccounts.Remove(account);
+
+        if (_selectedAccounts.Count == _accountFilterOptions.Count)
+            _selectedAccounts.Clear();
+
+        UpdateGrid();
+    }
+
     public void RebuildCategoryList()
     {
-        var start = Data.StartDate;
-        var end = Data.EndDate;
-        var categoryList = new List<FilterCategoryOption>();
-        foreach (var row in Data.Transactions)
-        {
-            if (row.DateTime >= start && row.DateTime <= end)
-                categoryList.Add(new FilterCategoryOption { Text = row.Category, Value = row.Category });
-        }
+        if (ContentRef is null)
+            return;
 
-        _filterCategoryList = categoryList
-            .GroupBy(x => x.Value)
-            .Select(g => g.First())
+        var rows = ContentRef.AllTransactions;
+        _filterCategoryList = rows
+            .Select(r => r.TransactionCategory)
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(c => c)
+            .Select(c => new FilterCategoryOption { Text = c, Value = c })
             .ToList();
+
+        _accountFilterOptions = rows
+            .Select(r => r.AccountName)
+            .Where(a => !string.IsNullOrWhiteSpace(a))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(a => a)
+            .ToList();
+
+        _selectedAccounts.Clear();
+        MinMaxAmount(rows);
     }
 
-    void MinMaxAmount()
+    void MinMaxAmount(IEnumerable<TransactionDto> rows)
     {
-        var start = Data.StartDate;
-        var end = Data.EndDate;
-        var slice = Data.Transactions.Where(s => s.DateTime >= start && s.DateTime <= end).ToList();
+        var slice = rows.ToList();
         if (slice.Count > 0)
         {
-            _minAmount = slice.Min(s => s.Amount);
-            _maxAmount = slice.Max(s => s.Amount);
+            _minAmount = (double)slice.Min(s => s.Amount);
+            _maxAmount = (double)slice.Max(s => s.Amount);
         }
     }
 
-    public IEnumerable<FinanceTransaction> RefreshData()
+    public IEnumerable<TransactionDto> RefreshData()
     {
-        var start = Data.StartDate;
-        var end = Data.EndDate;
-        IEnumerable<FinanceTransaction> rows = Data.Transactions.Where(s => s.DateTime >= start && s.DateTime <= end);
-        Data.SetCurrentView(rows);
+        if (ContentRef is null)
+            return Array.Empty<TransactionDto>();
 
-        var min = _minAmount ?? 0;
-        var max = _maxAmount ?? double.MaxValue;
+        IEnumerable<TransactionDto> rows = ContentRef.AllTransactions;
+
+        var min = (decimal)(_minAmount ?? 0);
+        var max = _maxAmount.HasValue ? (decimal)_maxAmount.Value : decimal.MaxValue;
         rows = rows.Where(s => s.Amount >= min && s.Amount <= max);
 
         if (_incomeChecked || _expenseChecked)
@@ -217,33 +291,13 @@
                 rows = rows.Where(s => s.TransactionType == "Expense");
         }
 
-        if (_cashChecked || _creditChecked || _debitChecked)
-        {
-            if (_cashChecked && _creditChecked && _debitChecked)
-                rows = rows.Where(s => s.PaymentMode is "Cash" or "Credit Card" or "Debit Card");
-            else if (_cashChecked && _creditChecked)
-                rows = rows.Where(s => s.PaymentMode is "Cash" or "Credit Card");
-            else if (_cashChecked && _debitChecked)
-                rows = rows.Where(s => s.PaymentMode is "Cash" or "Debit Card");
-            else if (_creditChecked && _debitChecked)
-                rows = rows.Where(s => s.PaymentMode is "Credit Card" or "Debit Card");
-            else if (_cashChecked)
-                rows = rows.Where(s => s.PaymentMode == "Cash");
-            else if (_creditChecked)
-                rows = rows.Where(s => s.PaymentMode == "Credit Card");
-            else if (_debitChecked)
-                rows = rows.Where(s => s.PaymentMode == "Debit Card");
-        }
+        if (_selectedAccounts.Count > 0)
+            rows = rows.Where(s => _selectedAccounts.Contains(s.AccountName));
 
         if (_categoryValues.Count > 0)
-        {
-            var combined = new List<FinanceTransaction>();
-            foreach (var category in _categoryValues)
-                combined.AddRange(rows.Where(s => s.Category == category));
-            rows = combined;
-        }
+            rows = rows.Where(s => _categoryValues.Contains(s.TransactionCategory));
 
-        return rows.OrderByDescending(e => e.DateTime).ToList();
+        return rows.OrderByDescending(e => e.TransactionDate).ToList();
     }
 
     public void UpdateGrid()

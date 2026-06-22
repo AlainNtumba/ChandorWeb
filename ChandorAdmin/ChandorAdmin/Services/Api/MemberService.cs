@@ -42,6 +42,6 @@ public sealed class MemberService(ChandorApiHttp api) : IMemberService
     public Task<DataResponse<bool>?> ConfirmResetPasswordAsync(ConfirmResetPasswordDto request, CancellationToken cancellationToken = default)
         => api.PostDataResponseAsync<bool>($"{C}/confirm-reset-password", JsonContent.Create(request), cancellationToken);
 
-    public Task<DataResponse<IEnumerable<MemberDto>>?> GetMembersAsync(CancellationToken cancellationToken = default)
-        => api.GetDataResponseAsync<IEnumerable<MemberDto>>($"{C}/get-members", cancellationToken);
+    public Task<DataResponse<IEnumerable<MemberDetailsDto>>?> GetMembersAsync(CancellationToken cancellationToken = default)
+        => api.GetDataResponseAsync<IEnumerable<MemberDetailsDto>>($"{C}/get-members-details", cancellationToken);
 }

@@ -14,9 +14,11 @@
     </div>
 </div>
 
+@using ChandorProject.Shared.DTOs.Finance
+
 @code {
     [Parameter, EditorRequired]
-    public FinanceActivityItem Item { get; set; } = default!;
+    public FinanceActivityItemDto Item { get; set; } = default!;
 
     static string FormatAmount(decimal amount) => amount.ToString("N0");
 }

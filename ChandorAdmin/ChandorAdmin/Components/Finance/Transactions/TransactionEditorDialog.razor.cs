@@ -1,47 +1,103 @@
+using ChandorAdmin.Components.Finance.Management;
+using ChandorAdmin.Components.GlobalNotification;
 using ChandorAdmin.Configuration;
+using ChandorAdmin.Interfaces.Api;
 using ChandorAdmin.Models.Finance;
+using ChandorProject.Shared.DTOs.Account;
+using ChandorProject.Shared.DTOs.Expenses;
+using ChandorProject.Shared.DTOs.ExpensesType;
+using ChandorProject.Shared.DTOs.Finance;
+using ChandorProject.Shared.DTOs.Income;
+using ChandorProject.Shared.DTOs.IncomeType;
+using Microsoft.AspNetCore.Components;
 using Syncfusion.Blazor.Popups;
 
 namespace ChandorAdmin.Components.Finance.Transactions;
 
 public partial class TransactionEditorDialog
 {
+    [Inject] public IIncomeTypeService IncomeTypeService { get; set; } = null!;
+    [Inject] public IExpensesTypeService ExpensesTypeService { get; set; } = null!;
+    [Inject] public IAccountService AccountService { get; set; } = null!;
+    [Inject] public IIncomeService IncomeService { get; set; } = null!;
+    [Inject] public IExpensesService ExpensesService { get; set; } = null!;
+    [Inject] public IDepartmentService DepartmentService { get; set; } = null!;
+
     public TransactionGridPanel? ContentRef { get; set; }
 
     SfDialog? _transactionDialog;
+    NotificationDialog? _notificationRef;
     CustomFormValidator? _customFormValidator;
 
     FinanceTransactionEditorModel _editModel = new();
 
-    List<FinanceCategoryOption> _categoryDataSource = new();
+    List<TransactionCategoryOption> _categoryDataSource = new();
+    List<AccountDto> _accounts = new();
+    List<IncomeTypeDto> _incomeTypes = new();
+    List<ExpensesTypeDto> _expenseTypes = new();
+
     bool _isAdd;
-    DateTime _editorMinDate => new(2019, 6, 1, 0, 0, 0);
-
+    bool _saving;
+    bool _lookupsLoaded;
+    DateTime _editorMinDate => new(2015, 1, 1, 0, 0, 0);
     DateTime _editorMaxDate => new(DateTime.Today.Year + 5, 12, 31, 23, 59, 59);
-    FinanceTransaction? _selectedRecord;
-    string _buttonContent = "Add";
+    TransactionDto? _selectedRecord;
+    string _buttonContent = "Ajouter";
     string _dialogHeader = "";
+    string _formId = "transaction";
     bool _createNewDialog;
-    List<FinanceTransaction> _gridSelectedRecords = new();
+    bool _editIncome, _editExpense = true;
+    List<TransactionDto> _gridSelectedRecords = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await EnsureLookupsLoadedAsync();
         ResetCategoryListForExpense();
-        _editModel.Description = "";
-        _editModel.DateValue = Data.EndDate;
-        _editModel.TimeValue = Data.EndDate;
-        _editModel.Category = _categoryDataSource.Count > 0 ? _categoryDataSource[0].Category : null;
+        _editModel.TransactionNote = "";
+        var (_, end) = TransactionGridPanel.GetCalendarMonthBounds(DateTime.Today);
+        _editModel.DateValue = end;
+        _editModel.TimeValue = end;
+        _editModel.CategoryId = _categoryDataSource.FirstOrDefault()?.Id;
+        _editModel.AccountId = _accounts.FirstOrDefault()?.Id;
+    }
+
+    async Task EnsureLookupsLoadedAsync()
+    {
+        if (_lookupsLoaded)
+            return;
+
+        try
+        {
+            var incomeTypesTask = IncomeTypeService.GetAllIncomeTypesAsync();
+            var expenseTypesTask = ExpensesTypeService.GetAllExpensesTypesAsync();
+            var accountsTask = AccountService.GetAllAccountsAsync();
+            await Task.WhenAll(incomeTypesTask, expenseTypesTask, accountsTask);
+
+            _incomeTypes = incomeTypesTask.Result?.Data?.ToList() ?? [];
+            _expenseTypes = expenseTypesTask.Result?.Data?.ToList() ?? [];
+            _accounts = accountsTask.Result?.Data?.ToList() ?? [];
+            _lookupsLoaded = true;
+        }
+        catch
+        {
+            _incomeTypes = [];
+            _expenseTypes = [];
+            _accounts = [];
+        }
     }
 
     void ResetCategoryListForExpense()
     {
-        _categoryDataSource = new List<FinanceCategoryOption>(Data.CategoryExpenseData);
+        _categoryDataSource = _expenseTypes
+            .Select(t => new TransactionCategoryOption { Id = t.Id, Name = t.Name })
+            .ToList();
     }
 
     bool _pendingDialogShow;
 
     public async Task ShowAddDialog()
     {
+        await EnsureLookupsLoadedAsync();
         _isAdd = true;
         var hadShell = _createNewDialog;
         UpdateAddDialog();
@@ -61,21 +117,26 @@ public partial class TransactionEditorDialog
 
     void UpdateAddDialog()
     {
-        _dialogHeader = "New Transaction";
-        _buttonContent = "Add";
-        var tick = DateTime.UtcNow.Ticks.ToString();
-        _editModel.UniqueId = "T" + (tick.Length >= 6 ? tick[^6..] : tick);
+        _editExpense = true;
+        _editIncome = true;
+        _dialogHeader = "Nouvelle opÈration";
+        _buttonContent = "Ajouter";
+        _editModel.Id = Guid.Empty;
         _editModel.Amount = 0;
-        _editModel.DateValue = _editModel.TimeValue = Data.EndDate;
-        _editModel.Description = "";
+        var (_, end) = TransactionGridPanel.GetCalendarMonthBounds(DateTime.Today);
+        _editModel.DateValue = _editModel.TimeValue = end;
+        _editModel.TransactionNote = "";
         _editModel.TransactionType = "Expense";
-        _editModel.PaymentMode = "Cash";
         ResetCategoryListForExpense();
-        _editModel.Category = _categoryDataSource.Count > 0 ? _categoryDataSource[0].Category : null;
+        _editModel.CategoryId = _categoryDataSource.FirstOrDefault()?.Id;
+        _editModel.AccountId = _accounts.FirstOrDefault()?.Id;
+        _editModel.DepartmentId = Guid.Empty;
+        _editModel.DepartmentTeamId = Guid.Empty;
     }
 
-    public async Task ShowEditDialog(FinanceTransaction selected)
+    public async Task ShowEditDialog(TransactionDto selected)
     {
+        await EnsureLookupsLoadedAsync();
         _isAdd = false;
         _selectedRecord = selected;
         var hadShell = _createNewDialog;
@@ -96,28 +157,40 @@ public partial class TransactionEditorDialog
 
     void UpdateEditDialog()
     {
-        _dialogHeader = "Edit Transaction";
-        _buttonContent = "Save";
+        _dialogHeader = "Modifier l'opÈration";
+        _buttonContent = "Sauvegarder";
         if (_selectedRecord is null)
             return;
 
-        _editModel.UniqueId = _selectedRecord.UniqueId;
+        _editModel.Id = _selectedRecord.Id;
+        _editModel.TransactionType = _selectedRecord.TransactionType;
         if (_selectedRecord.TransactionType == "Income")
         {
-            _editModel.TransactionType = "Income";
-            _categoryDataSource = new List<FinanceCategoryOption>(Data.CategoryIncomeData);
+            _editIncome = true;
+            _editExpense = false;
+            _categoryDataSource = _incomeTypes
+                .Select(t => new TransactionCategoryOption { Id = t.Id, Name = t.Name })
+                .ToList();
         }
-        else if (_selectedRecord.TransactionType == "Expense")
+        else
         {
-            _editModel.TransactionType = "Expense";
+            _editIncome = false;
+            _editExpense = true;
             ResetCategoryListForExpense();
         }
 
-        _editModel.DateValue = _editModel.TimeValue = _selectedRecord.DateTime;
-        _editModel.PaymentMode = _selectedRecord.PaymentMode;
-        _editModel.Description = _selectedRecord.Description;
+        _editModel.DateValue = _editModel.TimeValue = _selectedRecord.TransactionDate;
+        _editModel.TransactionNote = _selectedRecord.TransactionNote;
         _editModel.Amount = _selectedRecord.Amount;
-        _editModel.Category = _selectedRecord.Category;
+        _editModel.DepartmentId = _selectedRecord.DepartmentId;
+
+        _editModel.CategoryId = _categoryDataSource
+            .FirstOrDefault(c => string.Equals(c.Name, _selectedRecord.TransactionCategory, StringComparison.OrdinalIgnoreCase))?.Id
+            ?? _categoryDataSource.FirstOrDefault()?.Id;
+
+        _editModel.AccountId = _accounts
+            .FirstOrDefault(a => string.Equals(a.AccountName, _selectedRecord.AccountName, StringComparison.OrdinalIgnoreCase))?.Id
+            ?? _accounts.FirstOrDefault()?.Id;
     }
 
     void OnCreate()
@@ -128,19 +201,19 @@ public partial class TransactionEditorDialog
             UpdateEditDialog();
     }
 
-    public async Task ShowAlertDialog(List<FinanceTransaction> selectedRecords)
+    public async Task ShowAlertDialog(List<TransactionDto> selectedRecords)
     {
         _gridSelectedRecords = selectedRecords;
-        var confirm = await DialogService.ConfirmAsync(
-            "Are you sure you want to delete the selected transaction(s)?",
-            "Delete",
-            new DialogOptions
-            {
-                ShowCloseIcon = true,
-                Width = "40%",
-                PrimaryButtonOptions = new DialogButtonOptions { Content = "Yes" },
-                CancelButtonOptions = new DialogButtonOptions { Content = "No" }
-            });
+
+        if (_notificationRef is null)
+            return;
+
+        _notificationRef.NotificationHeader = "Warning";
+        _notificationRef.NotificationType = "Warning";
+        _notificationRef.NotificationMessage = selectedRecords.Count > 1
+            ? "ù tes-vous s˚r de vouloir supprimer la transaction sÈlectionnÈe?"
+            : "ù tes-vous s˚r de vouloir supprimer la transaction sÈlectionnÈe?";
+        var confirm = await _notificationRef.ShowAlertDialog();
 
         if (!confirm || ContentRef is null)
             return;
@@ -155,57 +228,248 @@ public partial class TransactionEditorDialog
     {
         var value = args.Value ?? "Expense";
         _categoryDataSource = value == "Income"
-            ? new List<FinanceCategoryOption>(Data.CategoryIncomeData)
-            : new List<FinanceCategoryOption>(Data.CategoryExpenseData);
+            ? _incomeTypes.Select(t => new TransactionCategoryOption { Id = t.Id, Name = t.Name }).ToList()
+            : _expenseTypes.Select(t => new TransactionCategoryOption { Id = t.Id, Name = t.Name }).ToList();
 
-        _editModel.Category = _categoryDataSource.Count > 0 ? _categoryDataSource[0].Category : null;
+        _editModel.CategoryId = _categoryDataSource.FirstOrDefault()?.Id;
     }
 
     async Task OnValidSubmitAsync()
     {
         _customFormValidator?.ClearFormErrors();
 
-        if (ContentRef is null || _editModel.Amount is null)
+        if (ContentRef is null || _editModel.Amount is null || _editModel.CategoryId is null || _editModel.AccountId is null)
             return;
 
-        var dtBase = _editModel.DateValue ?? Data.EndDate;
-        var tm = _editModel.TimeValue ?? Data.EndDate;
+        var dtBase = _editModel.DateValue ?? DateTime.Today;
+        var tm = _editModel.TimeValue ?? DateTime.Today;
         var combined = dtBase.Date.Add(tm.TimeOfDay);
 
-        var row = new FinanceTransaction
+        _saving = true;
+        try
         {
-            UniqueId = _editModel.UniqueId,
-            TransactionType = _editModel.TransactionType,
-            DateTime = combined,
-            Category = _editModel.Category ?? "",
-            PaymentMode = _editModel.PaymentMode,
-            Description = _editModel.Description ?? "",
-            Amount = (int)_editModel.Amount.Value,
-            MonthShort = combined.ToString("MMM"),
-            MonthFull = combined.ToString("MMMM, yyyy"),
-            FormattedDate = combined.ToString("MM/dd/yyyy hh:mm tt")
-        };
+            if (_isAdd)
+            {
+                var request = new NewChurchTransactionDto
+                {
+                    TransactionDate = combined,
+                    TransactionType = _editModel.TransactionType,
+                    TransactionNote = _editModel.TransactionNote ?? string.Empty,
+                    Amount = _editModel.Amount.Value,
+                    CategoryId = _editModel.CategoryId.Value,
+                    AccountId = _editModel.AccountId.Value
+                };
 
-        if (_isAdd)
-            ContentRef.AddRecord(row);
+                var response = await FinanceService.InsertChurchTransactionAsync(request);
+                if (response is not { Success: true })
+                {
+                    await NotifyTransactionResultAsync(false, _isAdd, response?.Message);
+                    return;
+                }
+
+                await NotifyTransactionResultAsync(true, _isAdd);
+            }
+            else
+            {
+                var saved = await SaveEditAsync(combined);
+                if (!saved)
+                    return;
+
+                await NotifyTransactionResultAsync(true, _isAdd);
+            }
+
+            if (_transactionDialog is not null)
+                await _transactionDialog.HideAsync();
+
+            await ContentRef.ReloadAsync();
+            ContentRef.UpdateTotalBalance();
+        }
+        catch
+        {
+            await NotifyTransactionResultAsync(false, _isAdd, "Impossible d'enregistrer l'opÈration. Veuillez rÈessayer.");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    async Task<bool> SaveEditAsync(DateTime transactionDate)
+    {
+        if (_selectedRecord is null || _editModel.CategoryId is null || _editModel.AccountId is null || _editModel.Amount is null)
+            return false;
+
+        if (_selectedRecord.TransactionType == "Income")
+        {
+            var existing = await IncomeService.GetIncomeByIdAsync(_selectedRecord.Id);
+            if (existing is not { Success: true, Data: not null })
+            {
+                await NotifyTransactionResultAsync(
+                    false,
+                    false,
+                    FinanceManagementGridSupport.FormatApiErrorMessage(existing, "La transaction n'a pas pu Ítre chargÈe pour modification."));
+                return false;
+            }
+
+            var (departmentId, departmentTeamId) = await ResolveDepartmentKeysForUpdateAsync(
+                existing.Data.DepartmentId,
+                existing.Data.DepartmentTeamId,
+                _selectedRecord.DepartmentId);
+            if (departmentId == Guid.Empty || departmentTeamId == Guid.Empty)
+            {
+                await NotifyTransactionResultAsync(false, false, "Impossible de rÈsoudre le dÈpartement pour cette transaction.");
+                return false;
+            }
+
+            var income = new IncomeDto
+            {
+                Id = _selectedRecord.Id,
+                IncomeDate = transactionDate,
+                IncomeTypeId = _editModel.CategoryId.Value,
+                AccountId = _editModel.AccountId.Value,
+                Amount = _editModel.Amount.Value,
+                Note = _editModel.TransactionNote ?? string.Empty,
+                DepartmentId = departmentId,
+                DepartmentTeamId = departmentTeamId
+            };
+
+            var response = await IncomeService.UpdateIncomeAsync(income);
+            if (response is not { Success: true })
+            {
+                await NotifyTransactionResultAsync(
+                    false,
+                    false,
+                    FinanceManagementGridSupport.FormatApiErrorMessage(response, "Impossible de mettre ‡ jour la transaction."));
+                return false;
+            }
+        }
         else
-            ContentRef.UpdateRecord(row);
+        {
+            var existing = await ExpensesService.GetExpensesByIdAsync(_selectedRecord.Id);
+            if (existing is not { Success: true, Data: not null })
+            {
+                await NotifyTransactionResultAsync(
+                    false,
+                    false,
+                    FinanceManagementGridSupport.FormatApiErrorMessage(existing, "La transaction n'a pas pu Ítre chargÈe pour modification."));
+                return false;
+            }
 
-        if (_transactionDialog is not null)
-            await _transactionDialog.HideAsync();
+            var (departmentId, departmentTeamId) = await ResolveDepartmentKeysForUpdateAsync(
+                existing.Data.DepartmentId,
+                existing.Data.DepartmentTeamId,
+                _selectedRecord.DepartmentId);
+            if (departmentId == Guid.Empty || departmentTeamId == Guid.Empty)
+            {
+                await NotifyTransactionResultAsync(false, false, "Impossible de rÈsoudre le dÈpartement pour cette transaction.");
+                return false;
+            }
 
-        ContentRef.UpdateTotalBalance();
+            var expense = new ExpensesDto
+            {
+                Id = _selectedRecord.Id,
+                ExpenseDate = transactionDate,
+                ExpensesTypeId = _editModel.CategoryId.Value,
+                AccountId = _editModel.AccountId.Value,
+                Amount = _editModel.Amount.Value,
+                Note = _editModel.TransactionNote ?? string.Empty,
+                DepartmentId = departmentId,
+                DepartmentTeamId = departmentTeamId
+            };
+
+            var response = await ExpensesService.UpdateExpensesAsync(expense);
+            if (response is not { Success: true })
+            {
+                await NotifyTransactionResultAsync(
+                    false,
+                    false,
+                    FinanceManagementGridSupport.FormatApiErrorMessage(response, "Impossible de mettre ‡ jour la transaction."));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    async Task<(Guid DepartmentId, Guid DepartmentTeamId)> ResolveDepartmentKeysForUpdateAsync(
+        Guid existingDepartmentId,
+        Guid existingDepartmentTeamId,
+        Guid selectedDepartmentId)
+    {
+        var departmentId = existingDepartmentId != Guid.Empty
+            ? existingDepartmentId
+            : selectedDepartmentId;
+        var departmentTeamId = existingDepartmentTeamId;
+
+        if (departmentId != Guid.Empty && departmentTeamId != Guid.Empty)
+            return (departmentId, departmentTeamId);
+
+        var keys = await DepartmentService.GetChurchDepartmentKeysAsync();
+        if (keys is not { Success: true, Data: not null })
+            return (departmentId, departmentTeamId);
+
+        if (departmentId == Guid.Empty)
+            departmentId = keys.Data.DepartmentId;
+        if (departmentTeamId == Guid.Empty)
+            departmentTeamId = keys.Data.DepartmentTeamId;
+
+        return (departmentId, departmentTeamId);
+    }
+
+    async Task NotifyTransactionResultAsync(bool success, bool isAdd, string? errorMessage = null)
+    {
+        if (_notificationRef is null)
+            return;
+
+        var status = success ? "Success" : "Error";
+        var action = isAdd ? "l'ajout" : "la mise ‡ jour";
+        var responseMessage = success
+            ? isAdd
+                ? "La transaction a ÈtÈ ajoutÈe avec succËs."
+                : "La transaction a ÈtÈ mise ‡ jour avec succËs."
+            : string.IsNullOrWhiteSpace(errorMessage)
+                ? $"Une erreur s'est produite pendant {action} de la transaction."
+                : $"Une erreur s'est produite pendant {action} de la transaction.\nError: {errorMessage}";
+
+        await _notificationRef.Notify(responseMessage, status, status);
     }
 
     async Task OnClickDeleteAsync()
     {
-        if (ContentRef is null)
+        if (ContentRef is null || _notificationRef is null)
             return;
 
-        var ids = _gridSelectedRecords.Select(s => s.UniqueId).ToList();
-        ContentRef.RemoveRecord(ids);
+        var allSucceeded = true;
+        string? lastError = null;
+
+        foreach (var record in _gridSelectedRecords)
+        {
+            var response = record.TransactionType == "Income"
+                ? await IncomeService.DeleteIncomeAsync(record.Id)
+                : await ExpensesService.DeleteExpensesAsync(record.Id);
+
+            if (response is not { Success: true })
+            {
+                allSucceeded = false;
+                lastError = response?.Message;
+            }
+        }
+
+        await ContentRef.ReloadAsync();
         ContentRef.UpdateTotalBalance();
         await ContentRef.RefreshToolbarFromSelectionAsync();
+
+        var count = _gridSelectedRecords.Count;
+        var responseMessage = allSucceeded
+            ? count > 1
+                ? $"{count} transactions ont ÈtÈ supprimÈes avec succËs"
+                : "La transaction a ÈtÈ supprimÈe avec succËs."
+            : string.IsNullOrWhiteSpace(lastError)
+                ? "Une erreur s'est produite lors de la suppression de la transaction."
+                : $"Une erreur s'est produite lors de la suppression de la transaction.\nError: {lastError}";
+
+        var status = allSucceeded ? "Success" : "Error";
+        await _notificationRef.Notify(responseMessage, status, status);
     }
 
     async Task OnClickCancel()
@@ -228,5 +492,11 @@ public partial class TransactionEditorDialog
     {
         _transactionDialog = null;
         _customFormValidator = null;
+    }
+
+    sealed class TransactionCategoryOption
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

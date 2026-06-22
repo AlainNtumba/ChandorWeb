@@ -13,27 +13,54 @@
     <div class="scroller">
         <nav class="sidebar-app-nav" aria-label="Application menu">
         <ul class="nav flex-column">
-            <li class="nav-item px-3">
-                <NavLink class="nav-link" href="church-department">
-                    <span class="syncfusion-blazor-icons syncfusion-blazor-icon-calendar" aria-hidden="true"></span>
-                    <span class="displayText">Départements</span>
-                </NavLink>
-            </li>
-            <SidebarAccordionNav ExclusiveExpand="true">
+                <SidebarAccordionNav ExclusiveExpand="true">
+                    <SidebarAccordionSection SectionId="management" Title="Management" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-appbar">
+                        <li class="sidebar-accordion-subitem">
+                            <NavLink class="nav-link sidebar-accordion-sublink" href="church-admin">
+                                <span class="displayText">Dashboard</span>
+                            </NavLink>
+                        </li>
+                        <li class="sidebar-accordion-subitem">
+                            <NavLink class="nav-link sidebar-accordion-sublink" href="church-members">
+                                <span class="displayText">Membres</span>
+                            </NavLink>
+                        </li>
+                    </SidebarAccordionSection>
+                <SidebarAccordionSection SectionId="departments" Title="Departments" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-treeview">
+                    @if (_departmentsNavLoading)
+                    {
+                        <li class="sidebar-accordion-subitem" aria-live="polite">
+                            <span class="nav-link sidebar-accordion-sublink nav-menu-status">Loading departments…</span>
+                        </li>
+                    }
+                    else if (_departmentsNavError is not null)
+                    {
+                        <li class="sidebar-accordion-subitem" aria-live="assertive">
+                            <span class="nav-link sidebar-accordion-sublink nav-menu-status nav-menu-status--error" title="@_departmentsNavError">@_departmentsNavError</span>
+                        </li>
+                    }
+                    else if (_departmentNavItems.Count == 0)
+                    {
+                        <li class="sidebar-accordion-subitem">
+                            <span class="nav-link sidebar-accordion-sublink nav-menu-status">No departments</span>
+                        </li>
+                    }
+                    else
+                    {
+                        @foreach (var dept in _departmentNavItems)
+                        {
+                            <li class="sidebar-accordion-subitem">
+                                <NavLink class="nav-link sidebar-accordion-sublink" href="@($"department/{dept.Id}")" Match="NavLinkMatch.All">
+                                    <span class="displayText">@dept.Name</span>
+                                </NavLink>
+                            </li>
+                        }
+                    }
+                </SidebarAccordionSection>
                 <SidebarAccordionSection SectionId="finance" Title="Finance" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-dropdownlist">
                     <li class="sidebar-accordion-subitem">
                         <NavLink class="nav-link sidebar-accordion-sublink" href="finance-stats">
                             <span class="displayText">Dashboard</span>
-                        </NavLink>
-                    </li>
-                    <li class="sidebar-accordion-subitem">
-                        <NavLink class="nav-link sidebar-accordion-sublink" href="finance-income">
-                            <span class="displayText">Income</span>
-                        </NavLink>
-                    </li>
-                    <li class="sidebar-accordion-subitem">
-                        <NavLink class="nav-link sidebar-accordion-sublink" href="finance-expense">
-                            <span class="displayText">Expense</span>
                         </NavLink>
                     </li>
                     <li class="sidebar-accordion-subitem">

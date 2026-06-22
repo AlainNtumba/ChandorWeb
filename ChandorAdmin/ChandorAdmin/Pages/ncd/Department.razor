@@ -1,74 +1,161 @@
-﻿@page "/church-department"
+﻿@page "/department/{departmentId:guid}"
+@using ChandorAdmin.Components.Dashboard
+@using ChandorProject.Shared.DTOs.Department
+@using ChandorProject.Shared.DTOs.Member
+@using ChandorProject.Shared.DTOs.ChurchProgram
+@using Syncfusion.Blazor.Spinner
 
-<PageTitle>Départements | Chandelier d'Or</PageTitle>
+<PageTitle>@PageTitleText</PageTitle>
 
-<div class="container-fluid page-wrapper" style="padding: 0 0 1rem 0">
+<div class="dashboard-page" style="padding: 0 0 1rem 0">
 
-    <div class="main-container">
+    <div>
 
-        <!-- Header -->
-        <div class="header-section p-2 mb-2 bg-secondary text-white fw-bold">
-            Département des sœurs
-        </div>
-
-        <!-- Main Content -->
-        <div class="content-area gap-2">
-
-            <!-- First Row -->
-            <div class="row gx-2 gy-0 content-row-top">
-
-                <!-- Large Left Section -->
-                <div class="col-md-8 h-100">
-                    <div class="content-box">
-                        <h5>Main Content Area 1</h5>
-                        <p>
-                            Any large content added here will scroll inside this box
-                            without stretching the page layout.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Right Sidebar -->
-                <div class="col-md-4 h-100">
-                    <div class="content-box">
-                        <h5>Sidebar 1</h5>
-                        <p>
-                            Sidebar content remains scrollable inside the fixed area.
-                        </p>
-                    </div>
-                </div>
-
+        @if (_invalidDepartmentId)
+        {
+            <div class="alert alert-warning m-3" role="alert">
+                Invalid department: the identifier is missing or not a valid GUID.
             </div>
-
-            <!-- Second Row -->
-            <div class="row gx-2 gy-0 content-row-bottom">
-
-                <!-- Large Left Section -->
-                <div class="col-md-8 h-100">
-                    <div class="content-box">
-                        <h5>Main Content Area 2</h5>
-                        <p>
-                            This section also remains fixed and internally scrollable.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Right Sidebar -->
-                <div class="col-md-4 h-100">
-                    <div class="content-box">
-                        <h5>Sidebar 2</h5>
-                        <p>
-                            Footer always stays visible on desktop.
-                        </p>
-                    </div>
-                </div>
-
+        }
+        else if (_pageLoading)
+        {
+            <div class="d-flex flex-column align-items-center justify-content-center gap-3 p-5" aria-busy="true" aria-live="polite">
+                <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Loading department…" />
             </div>
+        }
+        else if (_pageError is not null)
+        {
+            <div class="alert alert-danger m-3" role="alert">
+                @_pageError
+            </div>
+        }
+        else if (_department is not null)
+        {
+            <DashboardHeader Title="@_department.Name"
+                             Subtitle="@GetDepartmentSubtitle(_department)"
+                             Eyebrow="Aperçu du département" />
 
-        </div>
+
+            <section class="dashboard-grid" aria-label="Department dashboard grid">
+
+                <section class="dashboard-card dashboard-card--chart">
+                    <div class="dash-panel-heading">
+                        <h2 class="dash-panel-heading__title">Membres du département</h2>
+                        <span class="dash-panel-heading__meta">
+                            Gestion des membres du département.
+                        </span>
+                    </div>
+                    <div>
+                        <SfGrid ID="Members"
+                            @ref="MemberGridRef"
+                            DataSource="_depMembers"
+                            Toolbar="MemberToolbaritems"
+                            AllowExcelExport="true"
+                            AllowSorting="true"
+                            AllowPaging="true"
+                        >
+                            <GridEvents TValue="MemberDto"></GridEvents>
+
+                            <GridEditSettings ShowDeleteConfirmDialog="false" 
+                                AllowAdding="true" 
+                                AllowEditing="true" 
+                                AllowDeleting="true" 
+                                AllowEditOnDblClick="true" 
+                                Mode="EditMode.Dialog" />
+
+                            <GridColumns>
+                                <GridColumn Field="@nameof(MemberDto.Id)" IsPrimaryKey="true" Visible="false" />
+                                <GridColumn Field="@nameof(MemberDto.Name)" HeaderText="Nom" />
+                                <GridColumn Field="@nameof(MemberDto.Postname)" HeaderText="Prenom" />
+                                <GridColumn Field="@nameof(MemberDto.Surname)" HeaderText="Surnom" />
+                                <GridColumn Field="@nameof(MemberDto.Gender)" HeaderText="Genre">
+                                    <Template>
+                                        @{
+                                            var row = (MemberDto)context;
+                                            <div>@row.Gender ? "Male" : "Female"</div>
+                                        }
+                                    </Template>
+                                </GridColumn>
+                                <GridColumn Field="@nameof(MemberDto.Address)" HeaderText="Addresse" />
+                                <GridColumn Field="@nameof(MemberDto.PhoneNumbers)" HeaderText="Contacts" ClipMode="ClipMode.EllipsisWithTooltip" />
+                            </GridColumns>
+                        </SfGrid>
+                    </div>
+                </section>
+
+                <section class="dashboard-card dashboard-card--activity">
+                    <div class="dash-panel-heading">
+                        <h2 class="dash-panel-heading__title">Department Members</h2>
+                        <span class="dash-panel-heading__meta">
+                            Gauge charts to be added here to visualize department data.
+                        </span>
+                    </div>
+                    <div>
+
+                    </div>
+                </section>
+
+                <section class="dashboard-card dashboard-card--chart">
+                    <div class="dash-panel-heading">
+                        <h2 class="dash-panel-heading__title">Programmes du département</h2>
+                        <span class="dash-panel-heading__meta">
+                            Programmes liés à ce département
+                        </span>
+                    </div>
+                    <div>
+                        <SfGrid ID="Programs" 
+                            @ref="ProgramGridRef"
+                            DataSource="_depPrograms"
+                            Toolbar="ProgramToolbaritems"
+                            AllowExcelExport="true"
+                            AllowSorting="true"
+                        >
+
+                            <GridEditSettings ShowDeleteConfirmDialog="false"
+                                AllowAdding="true"
+                                AllowEditing="true"
+                                AllowDeleting="true"
+                                AllowEditOnDblClick="true"
+                                Mode="EditMode.Dialog" />
+
+                            <GridEvents TValue="ChurchProgramDto" />
+
+                            <GridColumns>
+                                <GridColumn Field="@nameof(ChurchProgramDto.Id)" IsPrimaryKey="true" Visible="false" />
+                                <GridColumn Field="@nameof(ChurchProgramDto.StartTime)" HeaderText="Date" />
+                                <GridColumn Field="@nameof(ChurchProgramDto.Theme)" />
+                                <GridColumn Field="@nameof(ChurchProgramDto.Description)" />
+                                <GridColumn Field="@nameof(ChurchProgramDto.Lieu)" />
+                            </GridColumns>
+                        </SfGrid>
+                    </div>
+                </section>
+
+                <section class="dashboard-card dashboard-card--activity">
+                    <div class="dash-panel-heading">
+                        <h2 class="dash-panel-heading__title">Department Calendar</h2>
+                        <span class="dash-panel-heading__meta">
+                            Department events and deadlines to be added here
+                        </span>
+                    </div>
+                    <div>
+                    </div>
+                </section>
+
+            </section>
+        }
 
     </div>
 
 </div>
 
+@code {
+    string PageTitleText => _department?.Name is { Length: > 0 } n
+        ? $"{n} | Chandelier d'Or"
+        : "Department | Chandelier d'Or";
 
+    static string GetDepartmentSubtitle(DepartmentDto d) =>
+        string.IsNullOrWhiteSpace(d.Description)
+            ? "General overview of department functions"
+            : d.Description;
+}

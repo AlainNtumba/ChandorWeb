@@ -1,9 +1,13 @@
 using ChandorAdmin.Components.Finance.Transactions;
+using ChandorAdmin.Interfaces.Api;
+using Microsoft.AspNetCore.Components;
 
 namespace ChandorAdmin.Pages.ncd;
 
 public partial class Transactions
 {
+    [Inject] public IFinanceService FinanceService { get; set; } = null!;
+
     TransactionGridPanel? _gridRef;
     TransactionFilterSidebar? _filterRef;
     TransactionEditorDialog? _dialogRef;
@@ -16,9 +20,9 @@ public partial class Transactions
 
     readonly List<TypeFilterItem> _typeFilterItems =
     [
-        new TypeFilterItem { Text = "All", Value = "All" },
-    new TypeFilterItem { Text = "Income", Value = "Income" },
-    new TypeFilterItem { Text = "Expense", Value = "Expense" }
+        new TypeFilterItem { Text = "Tout", Value = "All" },
+        new TypeFilterItem { Text = "Revenu", Value = "Income" },
+        new TypeFilterItem { Text = "Dépenses", Value = "Expense" }
     ];
 
     bool _didInitialWire;
@@ -35,8 +39,12 @@ public partial class Transactions
         _dialogRef.ContentRef = _gridRef;
         _gridRef.FilterRef = _filterRef;
 
+        var (start, end) = TransactionGridPanel.GetCalendarMonthBounds(DateTime.Today);
+        _filterRef.SetDateRange(start, end);
+        await _gridRef.LoadTransactionsAsync(start, end);
         _filterRef.RebuildCategoryList();
         _filterRef.ApplyToolbarTypeFilter(_typeFilter);
+        _gridRef.UpdateTotalBalance();
         await InvokeAsync(StateHasChanged);
     }
 
