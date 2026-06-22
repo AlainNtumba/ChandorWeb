@@ -10,8 +10,6 @@ using ChandorAdmin.Services.Api;
 using Syncfusion.Blazor.Popups;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Authorization;
 using Syncfusion.Blazor;
 
