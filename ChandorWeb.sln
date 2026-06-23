@@ -5,7 +5,7 @@ VisualStudioVersion = 17.14.36915.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdimSystem", "AdimSystem\AdimSystem.csproj", "{6CC04840-A3D4-4207-BC87-CF87E34A0D53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChandorProject.Shared", "..\ChandorProject\ChandorProject.Shared\ChandorProject.Shared.csproj", "{29887A6A-B4E4-CF6A-F6D4-A3F86FBD7A15}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChandorProject.Shared", "ChandorProject\ChandorProject.Shared\ChandorProject.Shared.csproj", "{29887A6A-B4E4-CF6A-F6D4-A3F86FBD7A15}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChandorAdmin", "ChandorAdmin\ChandorAdmin\ChandorAdmin.csproj", "{A2E1FBA2-272C-4FAB-AA06-663302EC5AD8}"
 EndProject
