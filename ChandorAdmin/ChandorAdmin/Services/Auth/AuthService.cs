@@ -65,7 +65,7 @@ public sealed class AuthService : IAuthService
         _ = cancellationToken;
         _authState.Clear();
         if (redirectToLogin)
-            _navigation.NavigateTo("/login");
+            _navigation.NavigateTo("login");
         return Task.CompletedTask;
     }
 
