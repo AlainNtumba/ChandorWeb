@@ -33,7 +33,7 @@
         </HeaderActions>
     </DashboardHeader>
 
-    <section class="dashboard-grid" aria-label="Finance dashboard grid">
+    <section class="dashboard-grid finance-stats-dashboard" aria-label="Finance dashboard grid">
         <div class="dashboard-kpi">
             <StatCard Title="Revenus"
                       Value="@FormatMoney(_summary.TotalIncome)"
@@ -62,67 +62,69 @@
                       ValueColor="#34D3EB" />
         </div>
 
-        <section class="dashboard-card dashboard-card--chart" aria-label="Income vs expenses chart">
-            <div class="dash-panel-heading">
-                <h2 class="dash-panel-heading__title">Revenus vs dépenses</h2>
-                <span class="dash-panel-heading__meta">Six derniers mois (@_barChartPeriodHint) · totaux mensuels</span>
-            </div>
-            <div class="dash-chart-host">
-                <SfChart @key="ChartRefreshKey"
-                         Width="100%"
-                         Height="300px"
-                         Theme="Theme.Material">
-                    <ChartMargin Left="8" Right="36" Top="12" Bottom="8"></ChartMargin>
-                    <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
-                                        RangePadding="ChartRangePadding.Additional">
-                        <ChartAxisMajorGridLines Width="0"></ChartAxisMajorGridLines>
-                        <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
-                        <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
-                    </ChartPrimaryXAxis>
-                    <ChartPrimaryYAxis LabelFormat="C0">
-                        <ChartAxisMajorGridLines Width="1" DashArray="4"></ChartAxisMajorGridLines>
-                        <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
-                        <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
-                    </ChartPrimaryYAxis>
-                    <ChartTooltipSettings Enable="true" Shared="true"></ChartTooltipSettings>
-                    <ChartLegendSettings Visible="true" Position="LegendPosition.Top" Alignment="@Syncfusion.Blazor.Charts.Alignment.Far"></ChartLegendSettings>
-                    <ChartSeriesCollection>
-                        <ChartSeries DataSource="@_cashflow"
-                                     Name="Income"
-                                     XName="@nameof(CashflowSeriesPointDto.MonthLabel)"
-                                     YName="@nameof(CashflowSeriesPointDto.Income)"
-                                     Type="ChartSeriesType.Column"
-                                     Fill="@IncomeSeriesFill">
-                            <ChartMarker Visible="false"></ChartMarker>
-                        </ChartSeries>
-                        <ChartSeries DataSource="@_cashflow"
-                                     Name="Expenses"
-                                     XName="@nameof(CashflowSeriesPointDto.MonthLabel)"
-                                     YName="@nameof(CashflowSeriesPointDto.Expenses)"
-                                     Type="ChartSeriesType.Column"
-                                     Fill="@ExpenseSeriesFill">
-                            <ChartMarker Visible="false"></ChartMarker>
-                        </ChartSeries>
-                    </ChartSeriesCollection>
-                </SfChart>
-            </div>
-        </section>
-
-        <section class="dashboard-card dashboard-card--activity" aria-label="Recent activity">
-            <div class="dash-panel-heading dash-panel-heading--row">
-                <div>
-                    <h2 class="dash-panel-heading__title">Activités financières</h2>
-                    <span class="dash-panel-heading__meta">Dernières écritures du registre fictif</span>
+        <div class="finance-stats-main-row">
+            <section class="dashboard-card dashboard-card--chart" aria-label="Income vs expenses chart">
+                <div class="dash-panel-heading">
+                    <h2 class="dash-panel-heading__title">Revenus vs dépenses</h2>
+                    <span class="dash-panel-heading__meta">Six derniers mois (@_barChartPeriodHint) · totaux mensuels</span>
                 </div>
-                <span class="dash-chip">Activité récente</span>
-            </div>
-            <div class="dashboard-feed">
-                @foreach (var row in _recentActivity)
-                {
-                    <EventCard Item="row" />
-                }
-            </div>
-        </section>
+                <div class="dash-chart-host">
+                    <SfChart @key="ChartRefreshKey"
+                             Width="100%"
+                             Height="300px"
+                             Theme="Theme.Material">
+                        <ChartMargin Left="8" Right="36" Top="12" Bottom="8"></ChartMargin>
+                        <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
+                                            RangePadding="ChartRangePadding.Additional">
+                            <ChartAxisMajorGridLines Width="0"></ChartAxisMajorGridLines>
+                            <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+                            <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+                        </ChartPrimaryXAxis>
+                        <ChartPrimaryYAxis LabelFormat="C0">
+                            <ChartAxisMajorGridLines Width="1" DashArray="4"></ChartAxisMajorGridLines>
+                            <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+                            <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+                        </ChartPrimaryYAxis>
+                        <ChartTooltipSettings Enable="true" Shared="true"></ChartTooltipSettings>
+                        <ChartLegendSettings Visible="true" Position="LegendPosition.Top" Alignment="@Syncfusion.Blazor.Charts.Alignment.Far"></ChartLegendSettings>
+                        <ChartSeriesCollection>
+                            <ChartSeries DataSource="@_cashflow"
+                                         Name="Income"
+                                         XName="@nameof(CashflowSeriesPointDto.MonthLabel)"
+                                         YName="@nameof(CashflowSeriesPointDto.Income)"
+                                         Type="ChartSeriesType.Column"
+                                         Fill="@IncomeSeriesFill">
+                                <ChartMarker Visible="false"></ChartMarker>
+                            </ChartSeries>
+                            <ChartSeries DataSource="@_cashflow"
+                                         Name="Expenses"
+                                         XName="@nameof(CashflowSeriesPointDto.MonthLabel)"
+                                         YName="@nameof(CashflowSeriesPointDto.Expenses)"
+                                         Type="ChartSeriesType.Column"
+                                         Fill="@ExpenseSeriesFill">
+                                <ChartMarker Visible="false"></ChartMarker>
+                            </ChartSeries>
+                        </ChartSeriesCollection>
+                    </SfChart>
+                </div>
+            </section>
+
+            <section class="dashboard-card dashboard-card--activity" aria-label="Recent activity">
+                <div class="dash-panel-heading dash-panel-heading--row">
+                    <div>
+                        <h2 class="dash-panel-heading__title">Activités financières</h2>
+                        <span class="dash-panel-heading__meta">Dernières écritures du registre fictif</span>
+                    </div>
+                    <span class="dash-chip">Activité récente</span>
+                </div>
+                <div class="dashboard-feed">
+                    @foreach (var row in _recentActivity)
+                    {
+                        <EventCard Item="row" />
+                    }
+                </div>
+            </section>
+        </div>
 
         <div class="dashboard-pie-row" aria-label="Composition charts">
             <section class="dashboard-card dashboard-card--donut" aria-label="Expense composition">

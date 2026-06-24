@@ -335,6 +335,54 @@ button.e-btn.dlgbtn {
     min-height: 0;
 }
 
+/* Finance stats: keep activity feed within the SfChart panel height */
+.finance-stats-dashboard {
+    --finance-stats-chart-row-height: calc(300px + 5.25rem);
+}
+
+.finance-stats-main-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 18px;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.finance-stats-main-row > .dashboard-card--chart {
+    grid-column: span 8;
+}
+
+.finance-stats-main-row > .dashboard-card--activity {
+    grid-column: span 4;
+}
+
+.finance-stats-main-row > .dashboard-card {
+    height: var(--finance-stats-chart-row-height);
+    max-height: var(--finance-stats-chart-row-height);
+    box-sizing: border-box;
+}
+
+.finance-stats-main-row > .dashboard-card--chart {
+    overflow: visible;
+}
+
+.finance-stats-main-row > .dashboard-card--activity {
+    overflow: hidden;
+}
+
+.finance-stats-main-row .dashboard-card--activity .dash-panel-heading {
+    flex-shrink: 0;
+}
+
+.finance-stats-main-row .dashboard-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 .dash-panel-heading__title {
     font-size: 1.05rem;
     font-weight: 700;
@@ -410,6 +458,21 @@ button.e-btn.dlgbtn {
     .dashboard-card--chart,
     .dashboard-card--activity {
         grid-column: span 12;
+    }
+
+    .finance-stats-main-row > .dashboard-card--chart,
+    .finance-stats-main-row > .dashboard-card--activity {
+        grid-column: span 12;
+    }
+
+    .finance-stats-main-row > .dashboard-card--chart {
+        height: auto;
+        max-height: none;
+    }
+
+    .finance-stats-main-row > .dashboard-card--activity {
+        height: auto;
+        max-height: clamp(280px, 42vh, 420px);
     }
 
     .dashboard-pie-row {
