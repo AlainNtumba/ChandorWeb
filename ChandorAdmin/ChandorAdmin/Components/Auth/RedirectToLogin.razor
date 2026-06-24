@@ -1,6 +1,14 @@
-@using Microsoft.AspNetCore.Components
-@inject NavigationManager Navigation
+@using ChandorAdmin.Services
+@inject AppNavigation AppNavigation
 @code {
-    protected override void OnInitialized() =>
-        Navigation.NavigateTo("login");
+    private bool _redirected;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender || _redirected)
+            return;
+
+        _redirected = true;
+        AppNavigation.NavigateToLogin(replace: true);
+    }
 }

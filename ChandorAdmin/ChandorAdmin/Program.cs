@@ -1,5 +1,6 @@
 ﻿using ChandorAdmin;
 using ChandorAdmin.Configuration;
+using ChandorAdmin.Services;
 using ChandorAdmin.Services.Auth;
 using ChandorAdmin.Data;
 using ChandorAdmin.Interfaces.Api;
@@ -38,6 +39,7 @@ void ConfigureChandorBase(HttpClient client)
 builder.Services.AddHttpClient("ChandorApi", ConfigureChandorBase);
 builder.Services.AddHttpClient("ChandorApi.Auth", ConfigureChandorBase);
 
+builder.Services.AddScoped<AppNavigation>();
 builder.Services.AddScoped<IAuthState, AuthState>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ChandorApiHttp>();

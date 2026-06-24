@@ -4,9 +4,9 @@ using System.Text.Json;
 using ChandorAdmin.Configuration;
 using ChandorAdmin.Interfaces.Auth;
 using ChandorAdmin.Models.Auth;
+using ChandorAdmin.Services;
 using ChandorProject.Shared.DTOs.User;
 using ChandorProject.Shared.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 
 namespace ChandorAdmin.Services.Auth;
@@ -22,7 +22,7 @@ public sealed class AuthService : IAuthService
     private readonly IAuthState _authState;
     private readonly IOptions<AuthOptions> _options;
     private readonly ILogger<AuthService> _logger;
-    private readonly NavigationManager _navigation;
+    private readonly AppNavigation _appNavigation;
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
 
     public AuthService(
@@ -30,13 +30,13 @@ public sealed class AuthService : IAuthService
         IAuthState authState,
         IOptions<AuthOptions> options,
         ILogger<AuthService> logger,
-        NavigationManager navigation)
+        AppNavigation appNavigation)
     {
         _httpClientFactory = httpClientFactory;
         _authState = authState;
         _options = options;
         _logger = logger;
-        _navigation = navigation;
+        _appNavigation = appNavigation;
     }
 
     public async Task<DataResponse<AuthTokenResponseDto?>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
@@ -65,7 +65,7 @@ public sealed class AuthService : IAuthService
         _ = cancellationToken;
         _authState.Clear();
         if (redirectToLogin)
-            _navigation.NavigateTo("login");
+            _appNavigation.NavigateToLogin();
         return Task.CompletedTask;
     }
 

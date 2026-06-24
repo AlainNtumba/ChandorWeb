@@ -1,5 +1,6 @@
 using ChandorAdmin.Configuration;
 using ChandorAdmin.Interfaces.Auth;
+using ChandorAdmin.Services;
 using ChandorProject.Shared.DTOs.User;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -8,7 +9,7 @@ namespace ChandorAdmin.Pages.ncd;
 
 public partial class Login
 {
-    [Inject] public NavigationManager NavMgr { get; set; } = null!;
+    [Inject] public AppNavigation AppNavigation { get; set; } = null!;
     [Inject] public IAuthService AuthService { get; set; } = null!;
     [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
     public LoginRequestDto User { get; set; } = new();
@@ -22,7 +23,7 @@ public partial class Login
     {
         var s = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (s.User.Identity is { IsAuthenticated: true })
-            NavMgr.NavigateTo("/");
+            AppNavigation.NavigateToHome();
     }
 
     public async Task AuthenticateUser()
@@ -51,7 +52,7 @@ public partial class Login
             {
                 if (authUser.Success)
                 {
-                    NavMgr.NavigateTo("/");
+                    AppNavigation.NavigateToHome();
                 }
                 else
                 {

@@ -47,16 +47,10 @@
                 loadBlazor();
                 return;
             }
-            var isLocalHost = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-            if (isLocalHost) {
-                navigator.serviceWorker.getRegistrations()
-                    .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
-                    .catch(function () { })
-                    .finally(loadBlazor);
-            } else {
-                loadBlazor();
-                navigator.serviceWorker.register('service-worker.js').catch(function () { });
-            }
+            navigator.serviceWorker.getRegistrations()
+                .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
+                .catch(function () { })
+                .finally(loadBlazor);
         })();
     </script>
 	<script>
