@@ -99,7 +99,7 @@ public partial class FinanceStats
             _cashflow = cashflowTask.Result?.Data?.ToList() ?? [];
             _recentActivity = activitiesTask.Result?.Data?.ToList() ?? [];
             _incomeByCategory = incomeTask.Result?.Data?.ToList() ?? [];
-            _expenseByCategory = expensesTask.Result?.Data?.ToList() ?? [];
+            _expenseByCategory = NormalizeExpenseCategories(expensesTask.Result?.Data);
 
             _periodStart = requestedStart;
             _periodEnd = requestedEnd;
@@ -145,4 +145,24 @@ public partial class FinanceStats
     }
 
     static string FormatMoney(decimal value) => value.ToString("C0");
+
+    static List<ExpenseCategoryDto> NormalizeExpenseCategories(IEnumerable<ExpenseCategoryDto>? items)
+    {
+        if (items is null)
+            return [];
+
+        return items
+            .Select(item => new ExpenseCategoryDto
+            {
+                Category = string.IsNullOrWhiteSpace(item.Category) ? "Non catégorisé" : item.Category.Trim(),
+                Amount = item.Amount
+            })
+            .GroupBy(item => item.Category, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new ExpenseCategoryDto
+            {
+                Category = group.Key,
+                Amount = group.Sum(item => item.Amount)
+            })
+            .ToList();
+    }
 }

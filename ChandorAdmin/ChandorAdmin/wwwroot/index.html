@@ -5,8 +5,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Welcome | Chandelier d'Or</title>
-    <!-- GitHub Pages: update the base href below if this repository is renamed. -->
-    <base href="/ChandorWeb/" />
+    <!-- GitHub Pages: update the production base path below if this repository is renamed. -->
+    <script>
+        (function () {
+            var isLocal = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
+            if (isLocal && /^\/chandorweb(\/|$)/i.test(location.pathname)) {
+                location.replace('/');
+                return;
+            }
+            var base = document.createElement('base');
+            base.href = isLocal ? '/' : '/ChandorWeb/';
+            document.head.appendChild(base);
+        })();
+    </script>
     <link href="css/Custom/bootstrap5.css" rel="stylesheet" />
     <link href="css/Custom/CustomCss.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />

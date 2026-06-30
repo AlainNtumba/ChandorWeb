@@ -38,7 +38,7 @@ public partial class TransactionEditorDialog
     List<TransType> _transactionTypes = new()
     {
         new TransType { Value = "Income", Name = "Revenu" },
-        new TransType { Value = "Expense", Name = "Dépense" }
+        new TransType { Value = "Expense", Name = "DÃ©pense" }
     };
 
     bool _isAdd;
@@ -124,7 +124,7 @@ public partial class TransactionEditorDialog
     {
         _editExpense = true;
         _editIncome = true;
-        _dialogHeader = "Nouvelle opération";
+        _dialogHeader = "Nouvelle opÃ©ration";
         _buttonContent = "Ajouter";
         _editModel.Id = Guid.Empty;
         _editModel.Amount = 0;
@@ -162,7 +162,7 @@ public partial class TransactionEditorDialog
 
     void UpdateEditDialog()
     {
-        _dialogHeader = "Modifier l'opération";
+        _dialogHeader = "Modifier l'opÃ©ration";
         _buttonContent = "Sauvegarder";
         if (_selectedRecord is null)
             return;
@@ -216,8 +216,8 @@ public partial class TransactionEditorDialog
         _notificationRef.NotificationHeader = "Warning";
         _notificationRef.NotificationType = "Warning";
         _notificationRef.NotificationMessage = selectedRecords.Count > 1
-            ? "Êtes-vous sûr de vouloir supprimer la transaction sélectionnée?"
-            : "Êtes-vous sûr de vouloir supprimer la transaction sélectionnée?";
+            ? "ÃŠtes-vous sÃ»r de vouloir supprimer la transaction sÃ©lectionnÃ©e?"
+            : "ÃŠtes-vous sÃ»r de vouloir supprimer la transaction sÃ©lectionnÃ©e?";
         var confirm = await _notificationRef.ShowAlertDialog();
 
         if (!confirm || ContentRef is null)
@@ -291,7 +291,7 @@ public partial class TransactionEditorDialog
         }
         catch
         {
-            await NotifyTransactionResultAsync(false, _isAdd, "Impossible d'enregistrer l'opération. Veuillez réessayer.");
+            await NotifyTransactionResultAsync(false, _isAdd, "Impossible d'enregistrer l'opÃ©ration. Veuillez rÃ©essayer.");
         }
         finally
         {
@@ -312,7 +312,7 @@ public partial class TransactionEditorDialog
                 await NotifyTransactionResultAsync(
                     false,
                     false,
-                    FinanceManagementGridSupport.FormatApiErrorMessage(existing, "La transaction n'a pas pu être chargée pour modification."));
+                    FinanceManagementGridSupport.FormatApiErrorMessage(existing, "La transaction n'a pas pu Ãªtre chargÃ©e pour modification."));
                 return false;
             }
 
@@ -322,7 +322,7 @@ public partial class TransactionEditorDialog
                 _selectedRecord.DepartmentId);
             if (departmentId == Guid.Empty || departmentTeamId == Guid.Empty)
             {
-                await NotifyTransactionResultAsync(false, false, "Impossible de résoudre le département pour cette transaction.");
+                await NotifyTransactionResultAsync(false, false, "Impossible de rÃ©soudre le dÃ©partement pour cette transaction.");
                 return false;
             }
 
@@ -344,7 +344,7 @@ public partial class TransactionEditorDialog
                 await NotifyTransactionResultAsync(
                     false,
                     false,
-                    FinanceManagementGridSupport.FormatApiErrorMessage(response, "Impossible de mettre à jour la transaction."));
+                    FinanceManagementGridSupport.FormatApiErrorMessage(response, "Impossible de mettre Ã  jour la transaction."));
                 return false;
             }
         }
@@ -356,7 +356,7 @@ public partial class TransactionEditorDialog
                 await NotifyTransactionResultAsync(
                     false,
                     false,
-                    FinanceManagementGridSupport.FormatApiErrorMessage(existing, "La transaction n'a pas pu être chargée pour modification."));
+                    FinanceManagementGridSupport.FormatApiErrorMessage(existing, "La transaction n'a pas pu Ãªtre chargÃ©e pour modification."));
                 return false;
             }
 
@@ -366,7 +366,7 @@ public partial class TransactionEditorDialog
                 _selectedRecord.DepartmentId);
             if (departmentId == Guid.Empty || departmentTeamId == Guid.Empty)
             {
-                await NotifyTransactionResultAsync(false, false, "Impossible de résoudre le département pour cette transaction.");
+                await NotifyTransactionResultAsync(false, false, "Impossible de rÃ©soudre le dÃ©partement pour cette transaction.");
                 return false;
             }
 
@@ -388,7 +388,7 @@ public partial class TransactionEditorDialog
                 await NotifyTransactionResultAsync(
                     false,
                     false,
-                    FinanceManagementGridSupport.FormatApiErrorMessage(response, "Impossible de mettre à jour la transaction."));
+                    FinanceManagementGridSupport.FormatApiErrorMessage(response, "Impossible de mettre Ã  jour la transaction."));
                 return false;
             }
         }
@@ -427,11 +427,11 @@ public partial class TransactionEditorDialog
             return;
 
         var status = success ? "Success" : "Error";
-        var action = isAdd ? "l'ajout" : "la mise à jour";
+        var action = isAdd ? "l'ajout" : "la mise Ã  jour";
         var responseMessage = success
             ? isAdd
-                ? "La transaction a été ajoutée avec succès."
-                : "La transaction a été mise à jour avec succès."
+                ? "La transaction a Ã©tÃ© ajoutÃ©e avec succÃ¨s."
+                : "La transaction a Ã©tÃ© mise Ã  jour avec succÃ¨s."
             : string.IsNullOrWhiteSpace(errorMessage)
                 ? $"Une erreur s'est produite pendant {action} de la transaction."
                 : $"Une erreur s'est produite pendant {action} de la transaction.\nError: {errorMessage}";
@@ -467,8 +467,8 @@ public partial class TransactionEditorDialog
         var count = _gridSelectedRecords.Count;
         var responseMessage = allSucceeded
             ? count > 1
-                ? $"{count} transactions ont été supprimées avec succès"
-                : "La transaction a été supprimée avec succès."
+                ? $"{count} transactions ont Ã©tÃ© supprimÃ©es avec succÃ¨s"
+                : "La transaction a Ã©tÃ© supprimÃ©e avec succÃ¨s."
             : string.IsNullOrWhiteSpace(lastError)
                 ? "Une erreur s'est produite lors de la suppression de la transaction."
                 : $"Une erreur s'est produite lors de la suppression de la transaction.\nError: {lastError}";

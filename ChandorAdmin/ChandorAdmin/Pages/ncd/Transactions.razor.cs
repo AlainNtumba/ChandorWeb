@@ -22,7 +22,7 @@ public partial class Transactions
     [
         new TypeFilterItem { Text = "Tout", Value = "All" },
         new TypeFilterItem { Text = "Revenu", Value = "Income" },
-        new TypeFilterItem { Text = "Dépenses", Value = "Expense" }
+        new TypeFilterItem { Text = "DÃ©penses", Value = "Expense" }
     ];
 
     bool _didInitialWire;

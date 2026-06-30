@@ -135,11 +135,11 @@
                 <div class="dash-donut-host">
                     <SfAccumulationChart @key="@($"exp-pie-{ChartRefreshKey}")"
                                          Width="100%"
-                                         Height="300px"
+                                         Height="320px"
                                          Theme="Theme.Material">
-                        <AccumulationChartMargin Left="8" Right="8" Top="8" Bottom="8"></AccumulationChartMargin>
+                        <AccumulationChartMargin Left="8" Right="8" Top="8" Bottom="24"></AccumulationChartMargin>
                         <AccumulationChartLegendSettings Visible="true"
-                                                         Position="LegendPosition.Right"
+                                                         Position="LegendPosition.Bottom"
                                                          Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></AccumulationChartLegendSettings>
                         <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
                         <AccumulationChartSeriesCollection>
