@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using ChandorAdmin.Helpers;
 using ChandorAdmin.Interfaces.Api;
 using ChandorProject.Shared.DTOs.Finance;
 using ChandorProject.Shared.Models;
@@ -35,7 +36,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     {
         var url =
             $"{C}/get-department-transactions" +
-            $"?departmentId={departmentId}&start={start}&end={end}";
+            $"?departmentId={departmentId}&start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}";
 
         return api.GetDataResponseAsync<IEnumerable<TransactionDto>>(url, cancellationToken);
     }
@@ -47,7 +48,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     {
         var url =
             $"{C}/get-church-transactions" +
-            $"?start={start}&end={end}";
+            $"?start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}";
 
         return api.GetDataResponseAsync<IEnumerable<TransactionDto>>(url, cancellationToken);
     }
@@ -60,7 +61,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     {
         var url =
             $"{C}/get-finance-activities" +
-            $"?start={start}&end={end}&departmentId={departmentId}";
+            $"?start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}&departmentId={departmentId}";
 
         return api.GetDataResponseAsync<IEnumerable<FinanceActivityItemDto>>(url, cancellationToken);
     }
@@ -77,7 +78,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     {
         var url =
             $"{C}/get-finance-summaries" +
-            $"?start={start}&end={end}&departmentId={departmentId}";
+            $"?start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}&departmentId={departmentId}";
 
         return api.GetDataResponseAsync<IEnumerable<FinanceSummaryDto>>(url, cancellationToken);
     }
@@ -90,7 +91,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     {
         var url =
             $"{C}/get-cashflow-series" +
-            $"?start={start}&end={end}&departmentId={departmentId}";
+            $"?start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}&departmentId={departmentId}";
 
         return api.GetDataResponseAsync<IEnumerable<CashflowSeriesPointDto>>(url, cancellationToken);
     }
@@ -107,7 +108,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     {
         var url =
             $"{C}/get-income-by-categories" +
-            $"?start={start}&end={end}&departmentId={departmentId}";
+            $"?start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}&departmentId={departmentId}";
 
         return api.GetDataResponseAsync<IEnumerable<IncomeCategoryDto>>(url, cancellationToken);
     }
@@ -120,7 +121,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     {
         var url =
             $"{C}/get-expenses-by-categories" +
-            $"?start={start}&end={end}&departmentId={departmentId}";
+            $"?start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}&departmentId={departmentId}";
 
         return api.GetDataResponseAsync<IEnumerable<ExpenseCategoryDto>>(url, cancellationToken);
     }

@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using ChandorAdmin.Helpers;
 using ChandorAdmin.Interfaces.Api;
 using ChandorProject.Shared.DTOs.ChurchProgram;
 using ChandorProject.Shared.Models;
@@ -29,13 +30,13 @@ public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramSer
 
     public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetUpcomingEventsAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default)
     {
-        var q = $"start={Uri.EscapeDataString(start.ToUniversalTime().ToString("o"))}&end={Uri.EscapeDataString(end.ToUniversalTime().ToString("o"))}";
+        var q = $"start={ApiDateQueryFormatter.FormatQueryValue(start, asUtc: true)}&end={ApiDateQueryFormatter.FormatQueryValue(end, asUtc: true)}";
         return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get-upcoming-events?{q}", cancellationToken);
     }
 
     public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetPeriodicCongregationProgramsAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default)
     {
-        var q = $"start={Uri.EscapeDataString(start.ToUniversalTime().ToString("o"))}&end={Uri.EscapeDataString(end.ToUniversalTime().ToString("o"))}";
+        var q = $"start={ApiDateQueryFormatter.FormatQueryValue(start, asUtc: true)}&end={ApiDateQueryFormatter.FormatQueryValue(end, asUtc: true)}";
         return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get_periodic_congration_programs?{q}", cancellationToken);
     }
 
@@ -51,9 +52,9 @@ public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramSer
     {
         var parts = new List<string> { $"take={take}", $"skip={skip}" };
         if (fromDate is { } fd)
-            parts.Add($"fromDate={Uri.EscapeDataString(fd.ToUniversalTime().ToString("o"))}");
+            parts.Add($"fromDate={ApiDateQueryFormatter.FormatQueryValue(fd, asUtc: true)}");
         if (toDate is { } td)
-            parts.Add($"toDate={Uri.EscapeDataString(td.ToUniversalTime().ToString("o"))}");
+            parts.Add($"toDate={ApiDateQueryFormatter.FormatQueryValue(td, asUtc: true)}");
         return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get_paginatedfeed_congration_programs?{string.Join("&", parts)}", cancellationToken);
     }
 
