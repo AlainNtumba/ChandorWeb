@@ -9,8 +9,10 @@ namespace ChandorAdmin.Components.Member;
 public partial class MemberGridPanel
 {
     public IEnumerable<MemberDetailsDto> GridData { get; set; } = Array.Empty<MemberDetailsDto>();
+    public IReadOnlyList<MemberDetailsDto> AllMembers { get; private set; } = Array.Empty<MemberDetailsDto>();
     public SfGrid<MemberDetailsDto>? MemberGridRef { get; set; }
     public MemberEditorDialog? DialogRef { get; set; }
+    public MemberFilterSidebar? FilterRef { get; set; }
     public NotificationDialog? NotificationRef { get; set; }
 
     public List<ItemModel> Toolbaritems { get; } =
@@ -23,12 +25,6 @@ public partial class MemberGridPanel
     bool _renderGrid;
 
     readonly ValidationRules _rules = new() { Required = true };
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-        await LoadData();
-    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -46,12 +42,23 @@ public partial class MemberGridPanel
 
     public async Task LoadData()
     {
-        var data = await srv.GetMembersAsync();
-        if (data != null && data.Success && data.Data != null)
+        try
         {
-            GridData = data.Data;
-            StateHasChanged();
+            var data = await srv.GetMembersAsync();
+            if (data is { Success: true, Data: not null })
+                AllMembers = data.Data.ToList();
+            else
+                AllMembers = [];
         }
+        catch
+        {
+            AllMembers = [];
+        }
+
+        GridRefresh(FilterRef?.RefreshData() ?? AllMembers);
+        if (FilterRef is not null)
+            await FilterRef.RebuildFilterListsAsync();
+        StateHasChanged();
     }
 
     public async Task AddMember(NewMemberDto member)

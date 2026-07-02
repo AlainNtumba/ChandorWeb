@@ -1,4 +1,4 @@
-﻿@using ChandorAdmin.Interfaces.Api
+@using ChandorAdmin.Interfaces.Api
 @using ChandorProject.Shared.DTOs.Member
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Navigations
@@ -31,7 +31,7 @@
                 <GridColumn Field="@nameof(MemberDetailsDto.Surname)" HeaderText="Prénom" Width="120" ValidationRules="@_rules"></GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.Postname)" HeaderText="Poste Nom" Width="120" ValidationRules="@_rules"></GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.GenderDescription)" HeaderText="Gender" ClipMode="ClipMode.Ellipsis"></GridColumn>
-                <GridColumn Field="@nameof(MemberDetailsDto.AgeGroup)" HeaderText="Groupe d'âge" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(MemberDetailsDto.AgeGroup)" HeaderText="Tranches d'âge" ClipMode="ClipMode.Ellipsis"></GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.Town)" HeaderText="Ville" ClipMode="ClipMode.Ellipsis"></GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.Country)" HeaderText="Pays" ClipMode="ClipMode.Ellipsis"></GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.MemberType)" HeaderText="Type de membre" ClipMode="ClipMode.Ellipsis"></GridColumn>

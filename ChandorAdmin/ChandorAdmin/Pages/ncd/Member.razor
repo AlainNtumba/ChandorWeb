@@ -1,11 +1,12 @@
-﻿@page "/church-members"
+@page "/church-members"
 @using ChandorAdmin.Components.GlobalNotification
 @using ChandorAdmin.Components.Member
 @using ChandorAdmin.Interfaces.Api
 @using ChandorProject.Shared.DTOs.MemberType
+@using Syncfusion.Blazor.DropDowns
 @inject IMemberTypeService _mtServ
 
-<PageTitle>Membres | Chandelier d'Or</PageTitle>
+<PageTitle>Membres</PageTitle>
 
 <HeadContent>
     <link href="css/finance-transactions.css" rel="stylesheet" />
@@ -14,29 +15,30 @@
 <div id="et-transactions-host" class="expense-page transactions-page-root">
 
     <div class="exp-content-container transactions-main-pane">
-        <div class="transactions-title-row">
-            <p class="page-title">All Members</p>
-        </div>
         <div class="transactions-body">
             <div class="col-md-12 margin-top col-lg-12 transactions-grid-column">
                 <div class="expense-grid-container">
                     <div class="expense-head-padding" style="background-color: @_searchHeadBg;">
                         <div class="search-wrapper search-section" style="display: @_searchVisibility;">
                             <div class="toolbar-type">
-                                <!-- SfDropDownList -->
-                                <SfDropDownList TValue="Guid"
-                                                TItem="MemberTypeDto"
-                                                DataSource="@_memberTypes"
-                                                Width="140px"
-                                                CssClass="et-type-filter">
-                                    <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
-                                </SfDropDownList>
+                                @if (_memberTypes.Count > 0)
+                                {
+                                    <SfDropDownList TValue="Guid"
+                                                    TItem="MemberTypeDto"
+                                                    DataSource="@_memberTypes"
+                                                    Width="140px"
+                                                    CssClass="et-type-filter"
+                                                    Value="@_selectedMemberTypeId"
+                                                    ValueChanged="OnToolbarMemberTypeChanged">
+                                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                                    </SfDropDownList>
+                                }
                             </div>
                             <div id="search">
                                 <!-- SfTextBox @onclcikc span -->
                                 <SfTextBox Type="InputType.Search"
                                            ShowClearButton="true"
-                                           Placeholder="Search"
+                                           Placeholder="Recherche"
                                            @bind-Value="@_searchValue"
                                            ValueChange="OnSearchChanged"
                                            Created="OnSearchCreated"
@@ -45,10 +47,10 @@
                                 <span id="searchbtn" class="e-search-icon expense-search-icon e-icons" @onclick="RunSearchAsync"></span>
                             </div>
                             <div class="button-section search-section">
-                                <SfButton id="addexpense" OnClick="OpenAddDialogAsync" IsPrimary="true">Add Member</SfButton>
-                                <SfButton id="filterExpense">Filter</SfButton>
+                                <SfButton id="addexpense" OnClick="OpenAddDialogAsync" IsPrimary="true">Ajouter</SfButton>
+                                <SfButton id="filterExpense" OnClick="OpenFilterMenu">Filter</SfButton>
                                 <SfButton id="add-btn" IsPrimary="true" OnClick="OpenAddDialogAsync" IconCss="e-icons add-icon add-head-item"></SfButton>
-                                <SfButton id="filter-btn" IconCss="e-icons e-filter"></SfButton>
+                                <SfButton id="filter-btn" OnClick="OpenFilterMenu" IconCss="e-icons e-filter"></SfButton>
                             </div>
                         </div>
                     </div>
@@ -76,21 +78,14 @@
     MemberEditorDialog? _dialogRef;
     NotificationDialog? _notificationRef;
     List<MemberTypeDto> _memberTypes = new();
+    Guid _selectedMemberTypeId = Guid.Empty;
 
     string? _searchValue;
     string _searchVisibility = "none";
     string _searchHeadBg = "#FFFFFF";
-    string _typeFilter = "All";
     bool _didInitialWire;
     bool _isDataLoaded;
-
-    readonly List<TypeFilterItem> _typeFilterItems =
-    [
-        new TypeFilterItem { Text = "All", Value = "All" },
-        new TypeFilterItem { Text = "Member", Value = "Member" },
-        new TypeFilterItem { Text = "New Comer", Value = "New Comer" },
-        new TypeFilterItem { Text = "Visitor", Value = "Visitor" }
-    ];
+    bool _syncingMemberTypeFilter;
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,7 +93,7 @@
 
         var mtypes = await _mtServ.GetAllMemberTypesAsync();
 
-        _memberTypes.Add(new MemberTypeDto { Name = "All" });
+        _memberTypes.Add(new MemberTypeDto { Id = Guid.Empty, Name = "All" });
 
         if (mtypes != null && mtypes.Success && mtypes.Data != null)
         {
@@ -109,6 +104,8 @@
                 foreach (var t in types) _memberTypes.Add(t);
             }
         }
+
+        _selectedMemberTypeId = Guid.Empty;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -120,9 +117,13 @@
         _didInitialWire = true;
         _gridRef.DialogRef = _dialogRef;
         _gridRef.NotificationRef = _notificationRef;
-        // _filterRef.ContentRef = _gridRef;
+        _filterRef.ContentRef = _gridRef;
         _dialogRef.ContentRef = _gridRef;
-        // _gridRef.FilterRef = _filterRef;
+        _gridRef.FilterRef = _filterRef;
+        _filterRef.ToolbarSyncRequested = SyncToolbarFromSidebar;
+
+        await _gridRef.LoadData();
+        _filterRef.UpdateGrid();
 
         await InvokeAsync(StateHasChanged);
     }
@@ -136,6 +137,8 @@
 
     Task OpenAddDialogAsync() => _dialogRef?.ShowAddDialog() ?? Task.CompletedTask;
 
+    void OpenFilterMenu() => _filterRef?.ShowFilterMenu();
+
     async Task OnSearchChanged(Syncfusion.Blazor.Inputs.ChangedEventArgs args)
     {
         if (_gridRef is not null)
@@ -144,11 +147,39 @@
 
     void OnSearchCreated() => (_searchVisibility, _searchHeadBg) = ("", "");
 
-    Task OnTypeFilterValueChanged(string value)
+    void OnToolbarMemberTypeChanged(Guid value)
     {
-        _typeFilter = string.IsNullOrEmpty(value) ? "All" : value;
-        // _filterRef?.ApplyToolbarTypeFilter(_typeFilter);
-        return Task.CompletedTask;
+        if (_syncingMemberTypeFilter || _filterRef is null)
+            return;
+
+        _syncingMemberTypeFilter = true;
+        _selectedMemberTypeId = value;
+
+        if (value == Guid.Empty)
+            _filterRef.ClearMemberTypeFilter();
+        else
+        {
+            var memberTypeName = _memberTypes.FirstOrDefault(t => t.Id == value)?.Name;
+            _filterRef.SetMemberTypeFilter(memberTypeName);
+        }
+
+        _syncingMemberTypeFilter = false;
+    }
+
+    void SyncToolbarFromSidebar()
+    {
+        if (_syncingMemberTypeFilter || _filterRef is null)
+            return;
+
+        _syncingMemberTypeFilter = true;
+        var selected = _filterRef.GetSelectedMemberTypeNames();
+
+        _selectedMemberTypeId = selected.Count == 1
+            ? _memberTypes.FirstOrDefault(t => t.Name == selected[0])?.Id ?? Guid.Empty
+            : Guid.Empty;
+
+        _syncingMemberTypeFilter = false;
+        InvokeAsync(StateHasChanged);
     }
     
     async Task LoadAsync()
@@ -156,11 +187,5 @@
         await Task.Delay(500);
         _isDataLoaded = true;
         await InvokeAsync(StateHasChanged);
-    }
-
-    private sealed class TypeFilterItem
-    {
-        public string Text { get; set; } = "";
-        public string Value { get; set; } = "";
     }
 }

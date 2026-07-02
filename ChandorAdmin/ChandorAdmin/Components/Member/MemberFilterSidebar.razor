@@ -1,38 +1,142 @@
-﻿@using Syncfusion.Blazor.DropDowns
+@using ChandorAdmin.Components.Member.Management
+@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.AgeGroup
+@using ChandorProject.Shared.DTOs.Member
+@using ChandorProject.Shared.DTOs.MemberType
+@using Syncfusion.Blazor.DropDowns
 @using Syncfusion.Blazor.Buttons
-@using Syncfusion.Blazor.Inputs
+@inject IMemberTypeService MemberTypeService
+@inject IAgeGroupService AgeGroupService
 
 <div class="transactions-filter-root">
     <span id="filter-toggle"
-        class="navbar-toggler e-icons e-filter"
-        role="button"
-        tabindex="0"
-        aria-label="Open filters"
-    ></span>
+          class="navbar-toggle e-icons e-filter"
+          role="button"
+          tabindex="0"
+          aria-label="Open filters"
+          @onclick="ShowFilterMenu"
+          @onkeydown="OnFilterToggleKey"></span>
 
     @if (_mobileDrawerOpen)
     {
         <div class="overlay" @onclick="HideFilterMenu"></div>
     }
 
-    <aside class="transactions-filter-dock @(_mobileDrawerOpen ? "transactions-filter-dock--open" : null)" aria-label="Member Filters">
+    <aside class="transactions-filter-dock @(_mobileDrawerOpen ? "transactions-filter-dock--open" : null)" aria-label="Member filters">
         <div class="sidebar-wrapper-filter">
             <div class="filter-head">
                 <span class="e-icon filter-icon filter-head-item"></span>
-                <span class="filter-txt filter-head-item"></span>
+                <span class="filter-txt filter-head-item">Filtres</span>
             </div>
             <div class="expense-filter-container">
-                <label>Select an age range</label>
-                <div>
-                    <!-- Age range picker-->
+                <label class="label-font">Type de membre</label>
+                <div class="category filter-item">
+                    <SfMultiSelect TValue="string[]"
+                                   TItem="FilterMemberTypeOption"
+                                   DataSource="@_filterMemberTypeList"
+                                   @bind-Value="_memberTypeSelectedValues"
+                                   Mode="VisualMode.Box"
+                                   Placeholder="Sélectionnez les types de membres"
+                                   HideSelectedItem="true"
+                                   ClosePopupOnSelect="false">
+                        <MultiSelectEvents TValue="string[]"
+                                           TItem="FilterMemberTypeOption"
+                                           ValueChange="OnMemberTypeFilterChanged">
+                        </MultiSelectEvents>
+                        <MultiSelectFieldSettings Text="Text" Value="Value"></MultiSelectFieldSettings>
+                    </SfMultiSelect>
+                </div>
+                <label class="label-font bottom-align">Genre</label>
+                <div class="cashflow filter-item">
+                    <SfCheckBox TChecked="bool" Label="Femme" @bind-Checked="_femaleChecked" CssClass="TransactionType" ValueChange="OnFilterControlChanged"></SfCheckBox>
+                    <SfCheckBox TChecked="bool" Label="Homme" @bind-Checked="_maleChecked" CssClass="TransactionType" ValueChange="OnFilterControlChanged"></SfCheckBox>
+                </div>
+                @if (_ageGroupFilterOptions.Count > 0)
+                {
+                    <label class="label-font bottom-align">Tranches d'âge</label>
+                    <div class="paymentModes filter-item">
+                        @foreach (var ageGroup in _ageGroupFilterOptions)
+                        {
+                            <SfCheckBox TChecked="bool"
+                                        Label="@ageGroup"
+                                        Checked="@IsAgeGroupChecked(ageGroup)"
+                                        CssClass="PaymentMode"
+                                        ValueChange="@(args => OnAgeGroupFilterChanged(ageGroup, args))">
+                            </SfCheckBox>
+                            <br />
+                        }
+                    </div>
+                }
+                <label class="label-font bottom-align">Gestion d'information</label>
+                <div class="transaction-manage-actions">
+                    <div><SfButton Content="Types de membres" OnClick="OpenMemberTypesPanelAsync" /></div>
+                    <div><SfButton Content="Rôles des membres" OnClick="OpenMemberRolesPanelAsync" /></div>
+                    <div><SfButton Content="Tranches d'âge" OnClick="OpenAgeGroupsPanelAsync" /></div>
                 </div>
             </div>
         </div>
     </aside>
 </div>
 
+<MemberTypeGridPanel @ref="_memberTypePanel" />
+<MemberRoleGridPanel @ref="_memberRolePanel" />
+<AgeGroupGridPanel @ref="_ageGroupPanel" />
+
 @code {
+    public MemberGridPanel? ContentRef { get; set; }
+
+    MemberTypeGridPanel? _memberTypePanel;
+    MemberRoleGridPanel? _memberRolePanel;
+    AgeGroupGridPanel? _ageGroupPanel;
+
     bool _mobileDrawerOpen;
+    bool _femaleChecked = true;
+    bool _maleChecked = true;
+    string[] _memberTypeSelectedValues = [];
+    readonly HashSet<string> _selectedAgeGroups = new(StringComparer.OrdinalIgnoreCase);
+    List<string> _ageGroupFilterOptions = new();
+    List<FilterMemberTypeOption> _filterMemberTypeList = new();
+
+    public System.Action? ToolbarSyncRequested { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFilterDataSourcesAsync();
+    }
+
+    async Task LoadFilterDataSourcesAsync()
+    {
+        try
+        {
+            var typesResponse = await MemberTypeService.GetAllMemberTypesAsync();
+            if (typesResponse is { Success: true, Data: not null })
+            {
+                _filterMemberTypeList = typesResponse.Data
+                    .Where(t => !string.IsNullOrWhiteSpace(t.Name))
+                    .OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(t => new FilterMemberTypeOption { Text = t.Name, Value = t.Name })
+                    .ToList();
+            }
+
+            var ageGroupsResponse = await AgeGroupService.GetAllAgeGroupsAsync();
+            if (ageGroupsResponse is { Success: true, Data: not null })
+            {
+                _ageGroupFilterOptions = ageGroupsResponse.Data
+                    .Where(a => !string.IsNullOrWhiteSpace(a.GroupName))
+                    .OrderBy(a => a.FromAge)
+                    .Select(a => a.GroupName)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+        }
+        catch
+        {
+            _filterMemberTypeList = [];
+            _ageGroupFilterOptions = [];
+        }
+
+        _selectedAgeGroups.Clear();
+    }
 
     internal void ShowFilterMenu()
     {
@@ -44,5 +148,101 @@
     {
         _mobileDrawerOpen = false;
         StateHasChanged();
+    }
+
+    Task OpenMemberTypesPanelAsync() => _memberTypePanel?.ShowAsync() ?? Task.CompletedTask;
+
+    Task OpenMemberRolesPanelAsync() => _memberRolePanel?.ShowAsync() ?? Task.CompletedTask;
+
+    Task OpenAgeGroupsPanelAsync() => _ageGroupPanel?.ShowAsync() ?? Task.CompletedTask;
+
+    void OnFilterToggleKey(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ")
+            ShowFilterMenu();
+    }
+
+    void OnMemberTypeFilterChanged(MultiSelectChangeEventArgs<string[]>? _ = null)
+    {
+        UpdateGrid();
+        ToolbarSyncRequested?.Invoke();
+    }
+
+    public IReadOnlyList<string> GetSelectedMemberTypeNames() => _memberTypeSelectedValues;
+
+    public void SetMemberTypeFilter(string? memberTypeName)
+    {
+        _memberTypeSelectedValues = string.IsNullOrWhiteSpace(memberTypeName)
+            ? []
+            : [memberTypeName];
+        UpdateGrid();
+        StateHasChanged();
+    }
+
+    public void ClearMemberTypeFilter() => SetMemberTypeFilter(null);
+
+    void OnFilterControlChanged() => UpdateGrid();
+
+    bool IsAgeGroupChecked(string ageGroup) =>
+        _selectedAgeGroups.Count == 0 || _selectedAgeGroups.Contains(ageGroup);
+
+    void OnAgeGroupFilterChanged(string ageGroup, Syncfusion.Blazor.Buttons.ChangeEventArgs<bool> args)
+    {
+        if (_ageGroupFilterOptions.Count == 0)
+            return;
+
+        if (_selectedAgeGroups.Count == 0)
+            _selectedAgeGroups.UnionWith(_ageGroupFilterOptions);
+
+        if (args.Checked)
+            _selectedAgeGroups.Add(ageGroup);
+        else
+            _selectedAgeGroups.Remove(ageGroup);
+
+        if (_selectedAgeGroups.Count == _ageGroupFilterOptions.Count)
+            _selectedAgeGroups.Clear();
+
+        UpdateGrid();
+    }
+
+    public async Task RebuildFilterListsAsync()
+    {
+        await LoadFilterDataSourcesAsync();
+        _selectedAgeGroups.Clear();
+        StateHasChanged();
+    }
+
+    public IEnumerable<MemberDetailsDto> RefreshData()
+    {
+        if (ContentRef is null)
+            return Array.Empty<MemberDetailsDto>();
+
+        IEnumerable<MemberDetailsDto> rows = ContentRef.AllMembers;
+
+        if (_femaleChecked && !_maleChecked)
+            rows = rows.Where(m => !m.Gender);
+        else if (!_femaleChecked && _maleChecked)
+            rows = rows.Where(m => m.Gender);
+
+        if (_selectedAgeGroups.Count > 0)
+            rows = rows.Where(m => _selectedAgeGroups.Contains(m.AgeGroup));
+
+        if (_memberTypeSelectedValues.Length > 0)
+            rows = rows.Where(m => _memberTypeSelectedValues.Contains(m.MemberType));
+
+        return rows.ToList();
+    }
+
+    public void UpdateGrid()
+    {
+        if (ContentRef is null)
+            return;
+        ContentRef.GridRefresh(RefreshData());
+    }
+
+    public sealed class FilterMemberTypeOption
+    {
+        public string Text { get; set; } = "";
+        public string Value { get; set; } = "";
     }
 }
