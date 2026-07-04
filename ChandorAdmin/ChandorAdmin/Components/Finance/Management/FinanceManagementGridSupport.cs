@@ -31,24 +31,6 @@ internal static class FinanceManagementGridSupport
         || string.Equals(args.Item.Id, "ExcelExport", StringComparison.OrdinalIgnoreCase)
         || args.Item.Text?.Contains("Excel", StringComparison.OrdinalIgnoreCase) == true;
 
-    /// <summary>
-    /// Sizes the grid to its visible row count (capped by page size) while respecting the dialog max height.
-    /// </summary>
-    internal static string ComputeAdaptiveGridHeight(int rowCount, int pageSize = 10)
-    {
-        const int toolbarHeight = 42;
-        const int headerHeight = 38;
-        const int rowHeight = 36;
-        const int pagerHeight = 42;
-        const int chrome = 8;
-        const int minHeight = 220;
-
-        var visibleRows = Math.Clamp(rowCount, 1, pageSize);
-        var contentHeight = toolbarHeight + headerHeight + (visibleRows * rowHeight) + pagerHeight + chrome;
-
-        return $"min({Math.Max(contentHeight, minHeight)}px, calc(80vh - 5.5rem))";
-    }
-
     internal static string FormatApiErrorMessage<T>(DataResponse<T>? response, string fallback)
     {
         if (response?.Message is { Length: > 0 } msg)

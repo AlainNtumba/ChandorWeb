@@ -1,4 +1,4 @@
-﻿@using ChandorAdmin.Components.Layout
+@using ChandorAdmin.Components.Layout
 <div>
     <nav aria-label="Home">
     <ul class="nav flex-column">
@@ -14,7 +14,7 @@
         <nav class="sidebar-app-nav" aria-label="Application menu">
         <ul class="nav flex-column">
                 <SidebarAccordionNav ExclusiveExpand="true">
-                    <SidebarAccordionSection SectionId="management" Title="Management" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-appbar">
+                    <SidebarAccordionSection SectionId="management" Title="Administration" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-appbar">
                         <li class="sidebar-accordion-subitem">
                             <NavLink class="nav-link sidebar-accordion-sublink" href="church-admin">
                                 <span class="displayText">Dashboard</span>
@@ -23,6 +23,11 @@
                         <li class="sidebar-accordion-subitem">
                             <NavLink class="nav-link sidebar-accordion-sublink" href="church-members">
                                 <span class="displayText">Membres</span>
+                            </NavLink>
+                        </li>
+                        <li class="sidebar-accordion-subitem">
+                            <NavLink class="nav-link sidebar-accordion-sublink" href="departments">
+                                <span class="displayText">Départements</span>
                             </NavLink>
                         </li>
                     </SidebarAccordionSection>

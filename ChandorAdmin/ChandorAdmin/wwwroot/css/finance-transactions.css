@@ -786,8 +786,14 @@ span.e-label {
 }
 
 .finance-mgmt-dialog .finance-mgmt-grid-host .e-grid {
-    height: auto;
+    height: auto !important;
     max-height: calc(80vh - 5.5rem);
+}
+
+.finance-mgmt-dialog .finance-mgmt-grid-host .e-grid .e-gridcontent {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-y: visible !important;
 }
 
 .finance-mgmt-dialog .e-toolbar .e-toolbar-items {

@@ -1,0 +1,17 @@
+.manage-department-page {
+    padding-bottom: 0;
+}
+
+.manage-department-card {
+    overflow: visible;
+}
+
+.manage-department-card .e-grid,
+.manage-department-card .e-grid .e-gridcontent {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+.manage-department-card .e-grid .e-gridcontent {
+    overflow-y: visible !important;
+}

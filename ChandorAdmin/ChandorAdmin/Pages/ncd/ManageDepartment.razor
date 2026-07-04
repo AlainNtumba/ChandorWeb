@@ -1,8 +1,80 @@
-﻿
+@using ChandorAdmin.Components.Dashboard
+@using ChandorAdmin.Components.Department
+@using ChandorAdmin.Components.GlobalNotification
 @using ChandorAdmin.Interfaces.Api
-@inject IDepartmentService dpSerav;
-@page "/department-management"
+@using ChandorProject.Shared.DTOs.Department
+@inject IDepartmentService dpServ;
+@page "/departments"
 
-@code {
+<PageTitle>Départements</PageTitle>
 
-}
+<HeadContent>
+    <link href="css/finance-transactions.css" rel="stylesheet" />
+</HeadContent>
+
+<div class="dashboard-page manage-department-page" style="padding: 0 0 1rem 0">
+    <DashboardHeader Title="Départements"
+                     Subtitle="Gestion des départements de l'église"
+                     Eyebrow="Administration" />
+
+    <section class="dashboard-card manage-department-card" aria-label="Grille de gestion des départements">
+        @if (_loading)
+        {
+            <div class="d-flex justify-content-center p-5" aria-busy="true" aria-live="polite">
+                <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Chargement…" />
+            </div>
+        }
+        else
+        {
+            <SfGrid @ref="_gridRef"
+                    TValue="DepartmentDto"
+                    DataSource="@_gridData"
+                    Toolbar="@_toolbarItems"
+                    AllowSelection="true"
+                    AllowPaging="true"
+                    AllowSorting="true"
+                    AllowExcelExport="true"
+                    Width="100%">
+                <GridEvents TValue="DepartmentDto"
+                            OnActionBegin="OnActionBeginAsync"
+                            OnToolbarClick="OnToolbarClickAsync"
+                            CommandClicked="OnCommandClickedAsync" />
+                <GridEditSettings AllowAdding="true"
+                                  AllowEditing="true"
+                                  AllowDeleting="false"
+                                  AllowEditOnDblClick="true"
+                                  Mode="EditMode.Normal"
+                                  ShowDeleteConfirmDialog="false" />
+                <GridPageSettings PageSize="9" />
+                <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Single" />
+                <GridColumns>
+                    <GridColumn Field="@nameof(DepartmentDto.Id)" IsPrimaryKey="true" Visible="false" />
+                    <GridColumn Field="@nameof(DepartmentDto.Name)" HeaderText="Nom" Width="250" ValidationRules="@_requiredRules" />
+                    <GridColumn Field="@nameof(DepartmentDto.Description)" HeaderText="Description" />
+
+                    <GridColumn HeaderText="Membres" Width="140" TextAlign="TextAlign.Center">
+                        <GridCommandColumns>
+                            <GridCommandColumn ID="ViewMembres" Type="CommandButtonType.None" ButtonOption="@(new CommandButtonOptions() { Content = "Voir" })" />
+                        </GridCommandColumns>
+                    </GridColumn>
+
+                    <GridColumn HeaderText="Responsables" Width="140" TextAlign="TextAlign.Center">
+                        <GridCommandColumns>
+                            <GridCommandColumn ID="ViewLeaders" ButtonOption="@(new CommandButtonOptions() { Content = "Voir" })" />
+                        </GridCommandColumns>
+                    </GridColumn>
+
+                    <GridColumn HeaderText="Commissions" Width="140" TextAlign="TextAlign.Center">
+                        <GridCommandColumns>
+                            <GridCommandColumn ID="ViewTeams" Type="CommandButtonType.None" ButtonOption="@(new CommandButtonOptions() { Content = "Voir" })" />
+                        </GridCommandColumns>
+                    </GridColumn>
+                </GridColumns>
+            </SfGrid>
+        }
+    </section>
+</div>
+
+<DepartmentMembersGridPanel @ref="_membersPanel" />
+<DepartmentCommissionGridPanel @ref="_commissionPanel" />
+<NotificationDialog @ref="_notificationRef" />

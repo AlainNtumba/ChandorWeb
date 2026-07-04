@@ -1,0 +1,71 @@
+@using ChandorAdmin.Components.GlobalNotification
+@using ChandorProject.Shared.DTOs.Member
+@implements IDisposable
+
+@if (_dialogShell)
+{
+    <SfDialog @ref="_dialog"
+              CssClass="finance-mgmt-dialog"
+              ZIndex="100100"
+              IsModal="true"
+              ShowCloseIcon="true"
+              CloseOnEscape="false"
+              Header="@_dialogHeader">
+        <DialogEvents Opened="OnDialogOpenedAsync" Closed="OnDialogClosedAsync" />
+        <DialogTemplates>
+            <Content>
+                @if (_loading)
+                {
+                    <div class="d-flex justify-content-center p-4" aria-busy="true">
+                        <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Chargement…" />
+                    </div>
+                }
+                else if (!_renderGrid)
+                {
+                    <div class="d-flex justify-content-center p-4" aria-busy="true">
+                        <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Chargement…" />
+                    </div>
+                }
+                else if (_gridData.Count == 0)
+                {
+                    <div class="p-4 text-center text-muted" role="status">
+                        <p class="mb-0">@DepartmentManagementGridSupport.NoDataMessage</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="finance-mgmt-grid-host">
+                        <SfGrid @ref="_gridRef"
+                                TValue="MemberDto"
+                                DataSource="@_gridData"
+                                Toolbar="@_toolbarItems"
+                                AllowPaging="true"
+                                AllowSorting="true"
+                                AllowExcelExport="true"
+                                Width="100%">
+                            <GridEvents TValue="MemberDto" OnToolbarClick="OnToolbarClickAsync" />
+                            <GridPageSettings PageSize="10" />
+                            <GridColumns>
+                                <GridColumn Field="@nameof(MemberDto.Id)" IsPrimaryKey="true" Visible="false" />
+                                <GridColumn Field="@nameof(MemberDto.Name)" HeaderText="Nom" />
+                                <GridColumn Field="@nameof(MemberDto.Postname)" HeaderText="Prénom" />
+                                <GridColumn Field="@nameof(MemberDto.Surname)" HeaderText="Surnom" />
+                                <GridColumn Field="@nameof(MemberDto.Gender)" HeaderText="Genre">
+                                    <Template>
+                                        @{
+                                            var row = (MemberDto)context;
+                                            <div>@(row.Gender ? "Homme" : "Femme")</div>
+                                        }
+                                    </Template>
+                                </GridColumn>
+                                <GridColumn Field="@nameof(MemberDto.Address)" HeaderText="Adresse" />
+                                <GridColumn Field="@nameof(MemberDto.PhoneNumbers)" HeaderText="Contacts" ClipMode="ClipMode.EllipsisWithTooltip" />
+                            </GridColumns>
+                        </SfGrid>
+                    </div>
+                }
+            </Content>
+        </DialogTemplates>
+    </SfDialog>
+}
+<NotificationDialog @ref="_notificationRef" />

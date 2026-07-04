@@ -1,10 +1,19 @@
 using ChandorProject.Shared.Models;
 using Syncfusion.Blazor.Navigations;
 
-namespace ChandorAdmin.Components.Member.Management;
+namespace ChandorAdmin.Components.Department;
 
-internal static class MemberManagementGridSupport
+internal static class DepartmentManagementGridSupport
 {
+    internal const string CreateSuccessMessage = "L'opération a été effectuée avec succès.";
+    internal const string UpdateSuccessMessage = "La modification a été effectuée avec succès.";
+    internal const string DeleteSuccessMessage = "La suppression a été effectuée avec succès.";
+    internal const string LoadErrorMessage = "Une erreur est survenue lors du chargement des données.";
+    internal const string SaveErrorMessage = "Une erreur est survenue lors de l'enregistrement.";
+    internal const string DeleteErrorMessage = "Une erreur est survenue lors de la suppression.";
+    internal const string ValidationErrorMessage = "Veuillez corriger les erreurs avant de continuer.";
+    internal const string NoDataMessage = "Aucune donnée trouvée.";
+
     internal static readonly List<object> CrudToolbarItems =
     [
         "Add",
@@ -12,6 +21,12 @@ internal static class MemberManagementGridSupport
         new ItemModel { Text = "Delete", PrefixIcon = "e-delete e-icons", TooltipText = "Delete", Id = "Delete" },
         "Update",
         "Cancel",
+        "ExcelExport",
+        "Search"
+    ];
+
+    internal static readonly List<object> ReadOnlyToolbarItems =
+    [
         "ExcelExport",
         "Search"
     ];
