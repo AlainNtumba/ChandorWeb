@@ -27,7 +27,7 @@ public sealed class DepartmentService(ChandorApiHttp api) : IDepartmentService
         => api.GetDataResponseAsync<IEnumerable<DepartmentDto>>($"{C}/get-departments", cancellationToken);
 
     public Task<DataResponse<IEnumerable<MemberDto>>?> GetDepartmentMembersAsync(Guid departmentId, CancellationToken cancellationToken = default)
-        => api.GetDataResponseAsync<IEnumerable<MemberDto>>($"{C}/get-department-members/{departmentId}", cancellationToken);
+        => api.GetDataResponseAsync<IEnumerable<MemberDto>>($"{C}/get-members-by-department-id/{departmentId}", cancellationToken);
 
     public Task<DataResponse<bool>?> AddDepartmentMemberAsync(Guid departmentId, Guid memberId, Guid roleId, CancellationToken cancellationToken = default)
         => api.PostDataResponseAsync<bool>($"{C}/add-department-member/{departmentId}/{memberId}/{roleId}", new StringContent("{}", Encoding.UTF8, "application/json"), cancellationToken);
