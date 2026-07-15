@@ -54,12 +54,12 @@
                                     <Template>
                                         @{
                                             var row = (MemberDto)context;
-                                            <div>@(row.Gender ? "Homme" : "Femme")</div>
+                                            var gender = row.Gender ? "Homme" : "Femme";
+                                            <div>@gender</div>
                                         }
                                     </Template>
                                 </GridColumn>
                                 <GridColumn Field="@nameof(MemberDto.Address)" HeaderText="Adresse" />
-                                <GridColumn Field="@nameof(MemberDto.PhoneNumbers)" HeaderText="Contacts" ClipMode="ClipMode.EllipsisWithTooltip" />
                             </GridColumns>
                         </SfGrid>
                     </div>

@@ -1,4 +1,4 @@
-﻿@page "/department/{departmentId:guid}"
+@page "/department/{departmentId:guid}"
 @using ChandorAdmin.Components.Dashboard
 @using ChandorProject.Shared.DTOs.Department
 @using ChandorProject.Shared.DTOs.Member
@@ -72,12 +72,12 @@
                                     <Template>
                                         @{
                                             var row = (MemberDto)context;
-                                            <div>@row.Gender ? "Male" : "Female"</div>
+                                            var gender = row.Gender ? "Male" : "Female";
+                                            <div>@gender</div>
                                         }
                                     </Template>
                                 </GridColumn>
                                 <GridColumn Field="@nameof(MemberDto.Address)" HeaderText="Addresse" />
-                                <GridColumn Field="@nameof(MemberDto.PhoneNumbers)" HeaderText="Contacts" ClipMode="ClipMode.EllipsisWithTooltip" />
                             </GridColumns>
                         </SfGrid>
                     </div>
