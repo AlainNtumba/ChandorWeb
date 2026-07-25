@@ -21,6 +21,9 @@ public sealed class MemberActivityService(ChandorApiHttp api) : IMemberActivityS
     public Task<DataResponse<MemberActivityDto>?> GetMemberActivityByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => api.GetDataResponseAsync<MemberActivityDto>($"{C}/get-by-id/{id}", cancellationToken);
 
+    public Task<DataResponse<IEnumerable<MemberResponsibilityDto>>?> GetMemberResponsibilitiesByDepartmentIdAsync(Guid id, CancellationToken cancellationToken = default)
+        => api.GetDataResponseAsync<IEnumerable<MemberResponsibilityDto>>($"{C}/get-department-leaders/{id}", cancellationToken);
+
     public Task<DataResponse<IEnumerable<MemberActivityDto>>?> GetAllMemberActivitiesAsync(CancellationToken cancellationToken = default)
         => api.GetDataResponseAsync<IEnumerable<MemberActivityDto>>($"{C}/get-all", cancellationToken);
 

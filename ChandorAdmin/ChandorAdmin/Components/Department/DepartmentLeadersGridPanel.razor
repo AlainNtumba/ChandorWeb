@@ -1,0 +1,119 @@
+@using ChandorAdmin.Components.GlobalNotification
+@using ChandorProject.Shared.DTOs.DepartmentTeamDto
+@using ChandorProject.Shared.DTOs.MemberActivity
+@using ChandorProject.Shared.DTOs.MemberRole
+@implements IDisposable
+
+@if (_dialogShell)
+{
+    <SfDialog @ref="_dialog"
+              CssClass="finance-mgmt-dialog"
+              ZIndex="100100"
+              IsModal="true"
+              ShowCloseIcon="true"
+              CloseOnEscape="false"
+              Header="@_dialogHeader">
+        <DialogEvents Opened="OnDialogOpenedAsync" Closed="OnDialogClosedAsync" />
+        <DialogTemplates>
+            <Content>
+                @if (_loading)
+                {
+                    <div class="d-flex justify-content-center p-4" aria-busy="true">
+                        <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Chargement…" />
+                    </div>
+                }
+                else if (!_renderGrid)
+                {
+                    <div class="d-flex justify-content-center p-4" aria-busy="true">
+                        <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Chargement…" />
+                    </div>
+                }
+                else
+                {
+                    <div class="finance-mgmt-grid-host">
+                        <SfGrid @ref="_gridRef"
+                                TValue="MemberResponsibilityDto"
+                                DataSource="@_gridData"
+                                Toolbar="@_toolbarItems"
+                                AllowSelection="true"
+                                AllowPaging="true"
+                                AllowSorting="true"
+                                AllowExcelExport="true"
+                                Width="100%">
+                            <GridEvents TValue="MemberResponsibilityDto"
+                                        OnActionBegin="OnActionBeginAsync"
+                                        OnToolbarClick="OnToolbarClickAsync" />
+                            <GridEditSettings AllowAdding="true"
+                                              AllowEditing="true"
+                                              AllowDeleting="false"
+                                              AllowEditOnDblClick="true"
+                                              Mode="EditMode.Dialog"
+                                              Dialog="@_editDialogSettings"
+                                              ShowDeleteConfirmDialog="false">
+                                <HeaderTemplate>
+                                    @{
+                                        var editRow = context as MemberResponsibilityDto;
+                                        @(editRow is null || editRow.RoleId == Guid.Empty ? "Ajouter" : "Modifier")
+                                    }
+                                </HeaderTemplate>
+                                <Template>
+                                    @{
+                                        var row = (MemberResponsibilityDto)context;
+                                    }
+                                    <div class="p-2">
+                                        <div class="mb-3">
+                                            <SfTextBox @bind-Value="row.Username"
+                                                       Placeholder="Nom d'utilisateur"
+                                                       FloatLabelType="FloatLabelType.Always"
+                                                       ShowClearButton="true"
+                                                       Width="100%"
+                                                       ValueChange="args => OnUsernameSearchAsync(args, row)" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <SfDropDownList TValue="Guid"
+                                                            TItem="DepartmentTeamDto"
+                                                            DataSource="@_teams"
+                                                            @bind-Value="row.DepartmentTeamId"
+                                                            Placeholder="Equipe"
+                                                            FloatLabelType="FloatLabelType.Always"
+                                                            AllowFiltering="true"
+                                                            Width="100%">
+                                                <DropDownListFieldSettings Text="Name" Value="Id" />
+                                            </SfDropDownList>
+                                        </div>
+                                        <div class="mb-3">
+                                            <SfDropDownList TValue="Guid"
+                                                            TItem="MemberRoleDto"
+                                                            DataSource="@_roles"
+                                                            @bind-Value="row.MemberRoleId"
+                                                            Placeholder="Responsabilité"
+                                                            FloatLabelType="FloatLabelType.Always"
+                                                            AllowFiltering="true"
+                                                            Width="100%">
+                                                <DropDownListFieldSettings Text="Name" Value="Id" />
+                                            </SfDropDownList>
+                                        </div>
+                                    </div>
+                                </Template>
+                            </GridEditSettings>
+                            <GridPageSettings PageSize="10" />
+                            <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Single" />
+                            <GridColumns>
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.RoleId)" IsPrimaryKey="true" Visible="false" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.MemberId)" Visible="false" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.MemberRoleId)" Visible="false" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.DepartmentTeamId)" Visible="false" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.Username)" HeaderText="Nom d'utilisateur" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.Name)" HeaderText="Nom" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.Postname)" HeaderText="Poste nom" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.RoleName)" HeaderText="Responsabilité" />
+                                <GridColumn Field="@nameof(MemberResponsibilityDto.RoleDescription)" HeaderText="Description" />
+                            </GridColumns>
+                        </SfGrid>
+                    </div>
+                }
+            </Content>
+        </DialogTemplates>
+    </SfDialog>
+}
+<NotificationDialog @ref="_notificationRef" />

@@ -758,6 +758,13 @@ span.e-label {
     z-index: 100100 !important;
 }
 
+/* Grid Add/Edit dialog must stack above the finance-mgmt parent dialog */
+.e-dlg-container:has([id$="_dialogEdit_wrapper"]),
+.e-dlg-overlay:has(+ .e-dlg-container [id$="_dialogEdit_wrapper"]),
+.e-dlg-container [id$="_dialogEdit_wrapper"] {
+    z-index: 100150 !important;
+}
+
 .finance-mgmt-dialog.e-dialog {
     width: min(92vw, 1120px) !important;
     min-width: min(92vw, 680px) !important;

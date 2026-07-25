@@ -13,6 +13,8 @@ public interface IMemberActivityService
 
     Task<DataResponse<MemberActivityDto>?> GetMemberActivityByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<DataResponse<IEnumerable<MemberResponsibilityDto>>?> GetMemberResponsibilitiesByDepartmentIdAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<DataResponse<IEnumerable<MemberActivityDto>>?> GetAllMemberActivitiesAsync(CancellationToken cancellationToken = default);
 
     Task<DataResponse<IReadOnlyList<MemberActivityDto>>?> GetPagedMemberActivitiesAsync(int page, int pageSize, CancellationToken cancellationToken = default);

@@ -60,7 +60,7 @@
 
                     <GridColumn HeaderText="Responsables" Width="140" TextAlign="TextAlign.Center">
                         <GridCommandColumns>
-                            <GridCommandColumn ID="ViewLeaders" ButtonOption="@(new CommandButtonOptions() { Content = "Voir" })" />
+                            <GridCommandColumn ID="ViewLeaders" Type="CommandButtonType.None" ButtonOption="@(new CommandButtonOptions() { Content = "Voir" })" />
                         </GridCommandColumns>
                     </GridColumn>
 
@@ -76,5 +76,6 @@
 </div>
 
 <DepartmentMembersGridPanel @ref="_membersPanel" />
+<DepartmentLeadersGridPanel @ref="_leadersPanel" />
 <DepartmentCommissionGridPanel @ref="_commissionPanel" />
 <NotificationDialog @ref="_notificationRef" />

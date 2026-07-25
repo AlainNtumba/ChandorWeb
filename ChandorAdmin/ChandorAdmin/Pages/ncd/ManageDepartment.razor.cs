@@ -13,6 +13,7 @@ public partial class ManageDepartment
     SfGrid<DepartmentDto>? _gridRef;
     NotificationDialog? _notificationRef;
     DepartmentMembersGridPanel? _membersPanel;
+    DepartmentLeadersGridPanel? _leadersPanel;
     DepartmentCommissionGridPanel? _commissionPanel;
 
     bool _loading = true;
@@ -229,6 +230,13 @@ public partial class ManageDepartment
         {
             if (_membersPanel is not null)
                 await _membersPanel.ShowAsync(department.Id, department.Name);
+            return;
+        }
+
+        if (string.Equals(args.CommandColumn?.ID, "ViewLeaders", StringComparison.OrdinalIgnoreCase))
+        {
+            if (_leadersPanel is not null)
+                await _leadersPanel.ShowAsync(department.Id, department.Name);
             return;
         }
 
