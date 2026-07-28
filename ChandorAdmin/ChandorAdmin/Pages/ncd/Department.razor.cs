@@ -1,60 +1,46 @@
+using ChandorAdmin.Components.DepartmentManagement;
+using ChandorAdmin.Components.GlobalNotification;
 using ChandorAdmin.Interfaces.Api;
-using ChandorProject.Shared.DTOs.ChurchProgram;
 using ChandorProject.Shared.DTOs.Department;
-using ChandorProject.Shared.DTOs.Member;
 using ChandorProject.Shared.Models;
 using Microsoft.AspNetCore.Components;
-using Syncfusion.Blazor.Grids;
-using Syncfusion.Blazor.Navigations;
+using Syncfusion.Blazor.Inputs;
 
 namespace ChandorAdmin.Pages.ncd;
 
 public partial class Department
 {
     [Inject] private IDepartmentService DepartmentService { get; set; } = null!;
-    [Inject] private IChurchProgramService ProgramService { get; set; } = null!;
 
     [Parameter] public Guid DepartmentId { get; set; }
-    public SfGrid<MemberDto>? MemberGridRef { get; set; }
-    public SfGrid<ChurchProgramDto>? ProgramGridRef { get; set; }
-    public IEnumerable<ChurchProgramDto> _depPrograms { get; set; } = Array.Empty<ChurchProgramDto>();
 
-    public IEnumerable<MemberDto> _depMembers { get; set; } = Array.Empty<MemberDto>();
-
-    public List<object> MemberToolbaritems { get; set; } = new List<object>
-    {
-        new ItemModel { Text = "Add", PrefixIcon = "e-add e-icons", TooltipText = "Add", Id = "AddMember" },
-        new ItemModel { Text = "Edit", PrefixIcon = "e-edit e-icons", TooltipText = "Edit", Id = "EditMember" },
-        new ItemModel { Text = "Delete", PrefixIcon = "e-delete e-icons", TooltipText = "Delete", Id = "DeleteMember" },
-        new ItemModel { Text = "Excel Export", PrefixIcon = "e-excelexport e-icons", TooltipText = "ExcelExport", Id = "Member_excelexport" },
-        "Search"
-    };
-
-    public List<object> ProgramToolbaritems { get; } =
-    [
-        new ItemModel { Text = "Add", PrefixIcon = "e-add e-icons", TooltipText = "Add", Id = "AddProgram" },
-        new ItemModel { Text = "Edit", PrefixIcon = "e-edit e-icons", TooltipText = "Edit", Id = "EditProgram" },
-        new ItemModel { Text = "Delete", PrefixIcon = "e-delete e-icons", TooltipText = "Delete", Id = "DeleteProgram" },
-        new ItemModel { Text = "Excel Export", PrefixIcon = "e-excelexport e-icons", TooltipText = "ExcelExport", Id = "Program_excelexport" },
-        "Search"
-    ];
-
+    DepartmentMemberGridPanel? _gridRef;
+    DepartmentMemberFilterSidebar? _filterRef;
+    DepartmentMemberAddDialog? _dialogRef;
+    NotificationDialog? _notificationRef;
     DepartmentDto? _department;
+
+    string? _searchValue;
+    string _searchVisibility = "none";
+    string _searchHeadBg = "#FFFFFF";
+    string _selectedGenderValue = string.Empty;
+    bool _didInitialWire;
+    bool _isDataLoaded;
     bool _pageLoading;
+    bool _syncingGenderFilter;
     string? _pageError;
     bool _invalidDepartmentId;
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (!_invalidDepartmentId)
-        {
-            var _members = await DepartmentService.GetDepartmentMembersAsync(DepartmentId);
-            var _programs = await ProgramService.GetDepartmentProgramAsync(DepartmentId);
+    readonly List<GenderFilterOption> _genderOptions =
+    [
+        new() { Value = string.Empty, Name = "Tous" },
+        new() { Value = "false", Name = "Femme" },
+        new() { Value = "true", Name = "Homme" }
+    ];
 
-            _depPrograms = _programs?.Data ?? Array.Empty<ChurchProgramDto>();
-            _depMembers = _members?.Data ?? Array.Empty<MemberDto>();
-        }
-    }
+    string PageTitleText => _department?.Name is { Length: > 0 } n
+        ? $"{n} | Chandelier d'Or"
+        : "Department | Chandelier d'Or";
 
     protected override async Task OnParametersSetAsync()
     {
@@ -64,6 +50,7 @@ public partial class Department
             _department = null;
             _pageError = null;
             _pageLoading = false;
+            _didInitialWire = false;
             return;
         }
 
@@ -71,11 +58,82 @@ public partial class Department
         await LoadDepartmentDetailsAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (_invalidDepartmentId || _pageLoading || _pageError is not null)
+            return;
+
+        if (!_isDataLoaded || _didInitialWire || _gridRef is null || _filterRef is null || _dialogRef is null)
+            return;
+
+        _didInitialWire = true;
+        _gridRef.DialogRef = _dialogRef;
+        _gridRef.NotificationRef = _notificationRef;
+        _filterRef.ContentRef = _gridRef;
+        _dialogRef.ContentRef = _gridRef;
+        _dialogRef.NotificationRef = _notificationRef;
+        _gridRef.FilterRef = _filterRef;
+        _filterRef.ToolbarSyncRequested = SyncToolbarFromSidebar;
+
+        await _gridRef.LoadData();
+        _filterRef.UpdateGrid();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) _ = LoadAsync();
+    }
+
+    Task RunSearchAsync() => _gridRef?.SearchAsync(_searchValue) ?? Task.CompletedTask;
+
+    Task OpenAddDialogAsync() => _dialogRef?.ShowAddDialog(DepartmentId) ?? Task.CompletedTask;
+
+    void OpenFilterMenu() => _filterRef?.ShowFilterMenu();
+
+    async Task OnSearchChanged(ChangedEventArgs args)
+    {
+        if (_gridRef is not null)
+            await _gridRef.SearchAsync(_searchValue);
+    }
+
+    void OnSearchCreated() => (_searchVisibility, _searchHeadBg) = ("", "");
+
+    void OnToolbarGenderChanged(string value)
+    {
+        if (_syncingGenderFilter || _filterRef is null)
+            return;
+
+        _syncingGenderFilter = true;
+        _selectedGenderValue = value ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(_selectedGenderValue))
+            _filterRef.ClearGenderFilter();
+        else
+            _filterRef.SetGenderFilter(_selectedGenderValue);
+
+        _syncingGenderFilter = false;
+    }
+
+    void SyncToolbarFromSidebar()
+    {
+        if (_syncingGenderFilter || _filterRef is null)
+            return;
+
+        _syncingGenderFilter = true;
+        _selectedGenderValue = _filterRef.GetSelectedGenderFilterValue();
+        _syncingGenderFilter = false;
+        InvokeAsync(StateHasChanged);
+    }
+
     async Task LoadDepartmentDetailsAsync()
     {
         _pageLoading = true;
         _pageError = null;
         _department = null;
+        _didInitialWire = false;
         await InvokeAsync(StateHasChanged);
 
         try
@@ -101,6 +159,13 @@ public partial class Department
         }
     }
 
+    async Task LoadAsync()
+    {
+        await Task.Delay(500);
+        _isDataLoaded = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
     static string FormatDepartmentPageError(DataResponse<DepartmentDto>? response)
     {
         if (response?.Message is { Length: > 0 } msg)
@@ -114,5 +179,11 @@ public partial class Department
         }
 
         return "Department was not found or could not be loaded.";
+    }
+
+    public sealed class GenderFilterOption
+    {
+        public string Value { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 }

@@ -1,0 +1,86 @@
+@using ChandorAdmin.Components.GlobalNotification
+@using ChandorAdmin.Configuration
+@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.MemberRole
+@using Syncfusion.Blazor.DropDowns
+@inject IMemberService MemberService
+@inject IMemberRoleService MemberRoleService
+@inject IDepartmentService DepartmentService
+
+<div id="dlg-content">
+    <div id="et-dialog-target">
+        @if (_createNewDialog)
+        {
+            <SfDialog @ref="_dialog"
+                      Width="min(100%, 420px)"
+                      Header="@_dialogHeader"
+                      CssClass="transact-dialog transact-dialog--chandor"
+                      ZIndex="100100"
+                      ShowCloseIcon="true"
+                      CloseOnEscape="false"
+                      IsModal="true">
+                <DialogTemplates>
+                    <Content>
+                        <div>
+                            <EditForm Model="@_editModel" id="@_formId" OnValidSubmit="OnValidSubmitAsync">
+                                <DataAnnotationsValidator />
+                                <CustomFormValidator @ref="_customFormValidator" />
+
+                                <table class="c-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfTextBox @bind-Value="@_editModel.Username"
+                                                               Placeholder="Nom d'utilisateur"
+                                                               FloatLabelType="FloatLabelType.Always"
+                                                               ShowClearButton="true"
+                                                               Width="100%"
+                                                               ValueChange="OnUsernameChangedAsync" />
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.Username)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TValue="Guid"
+                                                                    TItem="MemberRoleDto"
+                                                                    DataSource="@_roles"
+                                                                    @bind-Value="_editModel.RoleId"
+                                                                    Placeholder="Rôles"
+                                                                    FloatLabelType="FloatLabelType.Always"
+                                                                    AllowFiltering="true"
+                                                                    Width="100%">
+                                                        <DropDownListFieldSettings Text="Name" Value="Id" />
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.RoleId)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </EditForm>
+                        </div>
+                    </Content>
+                </DialogTemplates>
+
+                <DialogButtons>
+                    <DialogButton form="@_formId"
+                                  Type="Syncfusion.Blazor.Popups.ButtonType.Submit"
+                                  IsPrimary="true"
+                                  Content="Ajouter"
+                                  Disabled="@_saving" />
+                    <DialogButton Type="Syncfusion.Blazor.Popups.ButtonType.Button"
+                                  Content="Annuler"
+                                  IsPrimary="true"
+                                  OnClick="OnClickCancelAsync" />
+                </DialogButtons>
+            </SfDialog>
+        }
+    </div>
+</div>

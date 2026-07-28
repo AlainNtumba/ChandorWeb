@@ -1,87 +1,37 @@
-/* Main page wrapper */
-.page-wrapper {
-	height: 100vh;
-	overflow: hidden;
-	/*background-color: #f8f9fa;*/
-}
 
-/* Main bordered container */
-.main-container {
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-}
+    #et-transactions-host.transactions-page-root {
+        overflow: hidden;
+        background: linear-gradient(-141deg, #EEF5F7 14%, #EEF2FB 100%);
+    }
 
-/* Middle content */
-.content-area {
-	flex: 1;
-	min-height: 0;
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-}
+    .et-content.container-fluid {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
 
-/* Each row shares remaining height equally */
-.content-row-top,
-.content-row-bottom {
-	flex: 1;
-	min-height: 0;
-}
+    /* Reserve space only for the main column; the filter dock is position:fixed (not in flow). */
+    @media (min-width: 1100px) {
+        #et-transactions-host .transactions-main-pane {
+            margin-right: 270px;
+        }
+    }
 
-/* Inner boxes — dashboard surface tokens when inside .dashboard-page */
-.content-box {
-	height: 100%;
-	overflow: auto;
-	padding: 1rem;
-	background-color: #f7f7f7;
-}
+    @media (max-width: 1100px) {
+        #et-transactions-host .transactions-main-pane {
+            margin-right: 0;
+        }
+    }
 
-.dashboard-page .content-box {
-	background-color: var(--fd-stat-surface);
-	border: 1px solid var(--fd-border-subtle);
-	box-shadow: var(--fd-shadow-card);
-	border-radius: 6px;
-}
+    @media (min-width: 768px) {
+        .et-content .content-wrapper {
+            padding: 0;
+        }
+    }
 
-.dashboard-page .content-box h5 {
-	color: var(--fd-text);
-	font-weight: 700;
-	letter-spacing: -0.02em;
-}
-
-.dashboard-page .content-box p {
-	color: var(--fd-muted);
-}
-
-/* Mobile / tablet behavior */
-@media (max-width: 768px) {
-
-	.page-wrapper {
-		height: auto;
-		overflow: visible;
-	}
-
-	.main-container {
-		height: auto;
-	}
-
-	.border {
-		border: 1px solid #dee2e600 !important;
-	}
-
-	.content-area {
-		overflow: visible;
-	}
-
-	.content-row-top,
-	.content-row-bottom {
-		flex: none;
-		height: auto;
-	}
-
-	.content-box {
-		min-height: 250px;
-		overflow: auto;
-	}
-}
-
+    @media (max-width: 768px) {
+        .et-content .content-wrapper {
+            padding: 0 8px 8px 8px;
+            margin-top: 0;
+        }
+    }
