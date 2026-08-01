@@ -825,4 +825,39 @@ span.e-label {
     .finance-mgmt-dialog .finance-mgmt-grid-host .e-grid {
         max-height: calc(80vh - 5.5rem);
     }
+
+    .finance-mgmt-dialog.department-calendar-dialog.e-dialog {
+        max-height: 96vh !important;
+    }
+
+    .finance-mgmt-dialog.department-calendar-dialog.e-dialog .e-dlg-content {
+        max-height: calc(96vh - 3.5rem) !important;
+    }
+
+    .finance-mgmt-dialog.department-calendar-dialog .department-calendar-host {
+        max-height: calc(96vh - 5rem);
+    }
+
+    .finance-mgmt-dialog.department-calendar-dialog .department-calendar-host .e-schedule {
+        height: min(620px, calc(96vh - 6rem)) !important;
+    }
+}
+
+/* Department calendar: taller dialog so the month grid bottom row is fully visible */
+.finance-mgmt-dialog.department-calendar-dialog.e-dialog {
+    max-height: 92vh !important;
+}
+
+.finance-mgmt-dialog.department-calendar-dialog.e-dialog .e-dlg-content {
+    max-height: calc(92vh - 3.5rem) !important;
+    overflow: auto !important;
+}
+
+.finance-mgmt-dialog.department-calendar-dialog .department-calendar-host {
+    max-height: none;
+    height: auto;
+}
+
+.finance-mgmt-dialog.department-calendar-dialog .department-calendar-host .e-schedule {
+    height: 680px !important;
 }

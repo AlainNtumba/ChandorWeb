@@ -50,6 +50,7 @@ builder.Services.AddScoped<IAppUserService, AppUserService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IChurchProgramService, ChurchProgramService>();
 builder.Services.AddScoped<CalendarDataAdaptor>();
+builder.Services.AddScoped<DepartmentCalendarDataAdaptor>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDepartmentTeamService, DepartmentTeamService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

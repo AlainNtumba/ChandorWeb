@@ -77,7 +77,9 @@ else
         </div>
 
         <!-- Department Member Filter Sidebar -->
-        <DepartmentMemberFilterSidebar @ref="_filterRef" DepartmentName="@_department?.Name" />
+        <DepartmentMemberFilterSidebar @ref="_filterRef"
+                                       DepartmentId="DepartmentId"
+                                       DepartmentName="@_department?.Name" />
 
         <!-- Add Member Dialog -->
         <DepartmentMemberAddDialog @ref="_dialogRef" />

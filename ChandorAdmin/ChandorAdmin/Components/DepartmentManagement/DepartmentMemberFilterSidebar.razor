@@ -55,10 +55,15 @@
     </aside>
 </div>
 
+<DepartmentCalendar @ref="_calendarRef" DepartmentId="DepartmentId" />
+
 @code {
+    [Parameter] public Guid DepartmentId { get; set; }
     [Parameter] public string? DepartmentName { get; set; }
 
     public DepartmentMemberGridPanel? ContentRef { get; set; }
+
+    DepartmentCalendar? _calendarRef;
 
     bool _mobileDrawerOpen;
     bool _femaleChecked = true;
@@ -110,10 +115,8 @@
         StateHasChanged();
     }
 
-    void OnProgrammeClick()
-    {
-        // Wired to Programme component later.
-    }
+    Task OnProgrammeClick() =>
+        _calendarRef?.ShowAsync(DepartmentId, DepartmentName) ?? Task.CompletedTask;
 
     void OnFinanceClick()
     {

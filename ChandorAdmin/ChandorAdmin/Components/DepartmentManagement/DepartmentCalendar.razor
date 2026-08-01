@@ -1,0 +1,70 @@
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.Schedule
+@using Syncfusion.Blazor.Spinner
+@using ChandorAdmin.Data
+@using ChandorProject.Shared.DTOs.ChurchProgram
+@implements IDisposable
+
+@if (_dialogShell)
+{
+    <SfDialog @ref="_dialog"
+              CssClass="finance-mgmt-dialog department-calendar-dialog"
+              ZIndex="100100"
+              IsModal="true"
+              ShowCloseIcon="true"
+              CloseOnEscape="false"
+              Header="@_dialogHeader">
+        <DialogEvents Opened="OnDialogOpenedAsync" Closed="OnDialogClosedAsync" />
+        <DialogTemplates>
+            <Content>
+                @if (!string.IsNullOrEmpty(_userMessage))
+                {
+                    <div class="alert alert-@(_isError ? "danger" : "info") mb-2" role="status" aria-live="polite">
+                        @_userMessage
+                    </div>
+                }
+
+                @if (!_renderSchedule)
+                {
+                    <div class="d-flex justify-content-center p-4" aria-busy="true">
+                        <SfSpinner Visible="true" Type="SpinnerType.Material" Label="Chargement…" />
+                    </div>
+                }
+                else
+                {
+                    <div class="finance-mgmt-grid-host department-calendar-host">
+                        <SfSchedule TValue="ChurchProgramDto"
+                                    Height="680px"
+                                    ShowQuickInfo="true"
+                                    AllowDragAndDrop="false"
+                                    AllowResizing="false"
+                                    @bind-CurrentView="CurrentView"
+                                    @bind-SelectedDate="SelectedDate">
+                            <ScheduleEventSettings TValue="ChurchProgramDto"
+                                                   AllowAdding="true"
+                                                   AllowEditing="true"
+                                                   AllowDeleting="true"
+                                                   EnableIndicator="true"
+                                                   EnableTooltip="true">
+                                <SfDataManager AdaptorInstance="@typeof(DepartmentCalendarDataAdaptor)"
+                                               Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                                <ScheduleField>
+                                    <FieldSubject Name="Theme" Title="Thème" Validation="@ValidationRules" />
+                                    <FieldLocation Name="Lieu" Title="Lieu" Validation="@LocationValidationRules" />
+                                    <FieldDescription Name="Description" Title="Détails" Validation="@DescriptionValidationRules"></FieldDescription>
+                                </ScheduleField>
+                            </ScheduleEventSettings>
+                            <ScheduleEvents TValue="ChurchProgramDto"
+                                            OnActionFailure="OnScheduleActionFailure"
+                                            ActionCompleted="OnScheduleActionCompleted" />
+                            <ScheduleViews>
+                                <ScheduleView Option="View.Month" DisplayName="Calendrier"></ScheduleView>
+                                <ScheduleView Option="View.MonthAgenda" DisplayName="Agenda"></ScheduleView>
+                            </ScheduleViews>
+                        </SfSchedule>
+                    </div>
+                }
+            </Content>
+        </DialogTemplates>
+    </SfDialog>
+}
