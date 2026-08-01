@@ -1,11 +1,10 @@
-using System.Globalization;
-using System.Text.Json;
 using ChandorAdmin.Interfaces.Api;
 using ChandorProject.Shared.DTOs.ChurchProgram;
 using ChandorProject.Shared.Models;
-using Microsoft.Extensions.Logging;
 using Syncfusion.Blazor;
 using Syncfusion.Blazor.Data;
+using System.Globalization;
+using System.Text.Json;
 
 namespace ChandorAdmin.Data;
 
@@ -21,11 +20,14 @@ public sealed class CalendarDataAdaptor(
     /// <summary>Extra buffer so periodic queries include the edited occurrence.</summary>
     private static readonly TimeSpan MergeQueryPadding = TimeSpan.FromDays(14);
 
-    public override async Task<object> ReadAsync(DataManagerRequest dm, string? key = null)
+    public override async Task<object> ReadAsync(DataManagerRequest dataManagerRequest, string? key = null)
     {
         await Task.Delay(100);
-        var (start, end) = TryGetRange(dm);
+
+        var (start, end) = TryGetRange(dataManagerRequest);
+
         var response = await churchPrograms.GetPeriodicCongregationProgramsAsync(start, end).ConfigureAwait(false);
+
         if (response is not null && !response.Success)
         {
             logger.LogWarning("Calendar read failed: {Message}. Errors: {Errors}", response.Message, FormatApiErrors(response));
@@ -36,16 +38,17 @@ public sealed class CalendarDataAdaptor(
 
         var data = response?.Data?.ToList() ?? [];
 
-        return dm.RequiresCounts
+        return dataManagerRequest.RequiresCounts
             ? new DataResult { Result = data, Count = data.Count }
             : data;
     }
 
     public override async Task<object> InsertAsync(DataManager dm, object data, string key)
     {
-        await Task.Delay(100); 
+        await Task.Delay(100);
 
-        var item = CoerceTo<ChurchProgramDto>(data);
+        var item = (ChurchProgramDto)data; 
+
         var dto = new CongregationProgramDto
         {
             StartTime = item.StartTime,
@@ -75,17 +78,24 @@ public sealed class CalendarDataAdaptor(
         await Task.Delay(100); 
 
         var item = CoerceTo<ChurchProgramDto>(data);
+
         if (item.Id == Guid.Empty && !string.IsNullOrWhiteSpace(key) && Guid.TryParse(key, out var keyId))
             item.Id = keyId;
         if (item.Id == Guid.Empty)
         {
             logger.LogError("Update rejected: event Id is empty after coercion. Key: {Key}, keyField: {KeyField}.", key, keyField);
+            
             throw new InvalidOperationException("Identifiant d'événement manquant; impossible d'enregistrer les changements.");
         }
 
-        var merged = await MergeWithServerCopyAsync(item).ConfigureAwait(false);
-        var response = await churchPrograms.UpdateProgramAsync(merged).ConfigureAwait(false);
+        item.RecurrenceRule = item.RecurrenceRule ?? "";
+
+        item.RecurrenceException = item.RecurrenceException ?? "";
+
+        var response = await churchPrograms.UpdateProgramAsync((ChurchProgramDto)item).ConfigureAwait(false);
+
         ThrowIfApiFailed(response);
+
         if (response?.Data is null)
         {
             logger.LogError("Update program returned success but null data. Id: {Id}", item.Id);
@@ -93,6 +103,60 @@ public sealed class CalendarDataAdaptor(
         }
 
         return data;
+    }
+
+    public override async Task<object> BatchUpdateAsync(DataManager dataManager, object changedRecords, object addedRecords, object deletedRecords, string primaryColumnName, string key, int? dropIndex)
+    {
+        // Delete
+        if (deletedRecords is List<ChurchProgramDto> deletedItems && deletedItems.Count > 0)
+        {
+            foreach (var item in deletedItems)
+            {
+                await churchPrograms.DeleteProgramAsync(item.Id).ConfigureAwait(false);
+            }
+
+            // return deletedItems;
+        }
+
+        // Add
+        if (addedRecords is List<ChurchProgramDto> addedItems && addedItems.Count > 0)
+        {
+            foreach (var item in addedItems)
+            {
+                var dto = new CongregationProgramDto
+                {
+                    StartTime = item.StartTime,
+                    EndTime = item.EndTime,
+                    Theme = item.Theme,
+                    Lieu = item.Lieu,
+                    Description = item.Description,
+                    RecurrenceRule = item.RecurrenceRule,
+                    RecurrenceException = item.RecurrenceException,
+                    PosterLink = item.PosterLink,
+                    IsApproved = item.IsApproved
+                };
+
+                await churchPrograms.AddCongregationProgramAsync(dto).ConfigureAwait(false);
+            }
+
+            return addedItems;
+        }
+
+        // Update
+        if (changedRecords is List<ChurchProgramDto> updatedItems && updatedItems.Count > 0)
+        {
+            foreach (var data in updatedItems)
+            {
+                data.RecurrenceException = data.RecurrenceException ?? "";
+                data.RecurrenceRule = data.RecurrenceRule ?? "";
+                var item = CoerceTo<ChurchProgramDto>(data);
+                await churchPrograms.UpdateProgramAsync((ChurchProgramDto)item).ConfigureAwait(false);
+            }
+
+            return updatedItems;
+        }
+
+        return null!;
     }
 
     public override async Task<object> RemoveAsync(DataManager dm, object data, string keyField, string key)
@@ -106,7 +170,7 @@ public sealed class CalendarDataAdaptor(
             throw new InvalidOperationException("Identifiant d'événement introuvable; suppression impossible.");
         }
 
-        var response = await churchPrograms.DeleteProgramAsync(id).ConfigureAwait(false);
+        var response = await churchPrograms.DeleteProgramAsync((Guid)id).ConfigureAwait(false);
         ThrowIfApiFailed(response);
         return true;
     }
@@ -137,51 +201,6 @@ public sealed class CalendarDataAdaptor(
         if (response.Error is null)
             return string.Empty;
         return string.Join(" | ", response.Error.Where(s => !string.IsNullOrWhiteSpace(s))!);
-    }
-
-    private async Task<ChurchProgramDto> MergeWithServerCopyAsync(ChurchProgramDto edited, CancellationToken cancellationToken = default)
-    {
-        var start = (edited.StartTime - MergeQueryPadding);
-        var end = (edited.EndTime > edited.StartTime ? edited.EndTime : edited.StartTime) + MergeQueryPadding;
-        if (end <= start)
-            end = start + TimeSpan.FromDays(1);
-
-        var response = await churchPrograms
-            .GetPeriodicCongregationProgramsAsync(start, end, cancellationToken)
-            .ConfigureAwait(false);
-        if (response is not { Success: true, Data: not null })
-            return edited;
-
-        var existing = response.Data.FirstOrDefault(p => p.Id == edited.Id);
-        if (existing is null)
-            return edited;
-
-        if (string.IsNullOrWhiteSpace(edited.Theme) && !string.IsNullOrWhiteSpace(existing.Theme))
-            edited.Theme = existing.Theme;
-        if (string.IsNullOrWhiteSpace(edited.Lieu) && !string.IsNullOrWhiteSpace(existing.Lieu))
-            edited.Lieu = existing.Lieu;
-        if (string.IsNullOrWhiteSpace(edited.Description) && !string.IsNullOrWhiteSpace(existing.Description))
-            edited.Description = existing.Description;
-        if (string.IsNullOrWhiteSpace(edited.RecurrenceRule) && !string.IsNullOrWhiteSpace(existing.RecurrenceRule))
-            edited.RecurrenceRule = existing.RecurrenceRule;
-        if (string.IsNullOrWhiteSpace(edited.RecurrenceException) && !string.IsNullOrWhiteSpace(existing.RecurrenceException))
-            edited.RecurrenceException = existing.RecurrenceException;
-        if (string.IsNullOrWhiteSpace(edited.PosterLink) && !string.IsNullOrWhiteSpace(existing.PosterLink))
-            edited.PosterLink = existing.PosterLink;
-
-        if (edited.ProgramTypeId == Guid.Empty)
-            edited.ProgramTypeId = existing.ProgramTypeId;
-        if (edited.DepartmentId == Guid.Empty)
-            edited.DepartmentId = existing.DepartmentId;
-        if (edited.DepartmentTeamId == Guid.Empty)
-            edited.DepartmentTeamId = existing.DepartmentTeamId;
-
-        if (edited.StartTime == default)
-            edited.StartTime = existing.StartTime;
-        if (edited.EndTime == default)
-            edited.EndTime = existing.EndTime;
-
-        return edited;
     }
 
     private static (DateTime start, DateTime end) TryGetRange(DataManagerRequest dm)

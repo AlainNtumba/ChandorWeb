@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
-using Syncfusion.Blazor.Inputs;
 using Syncfusion.Blazor.Schedule;
 using ChandorProject.Shared.DTOs.ChurchProgram;
 
@@ -19,7 +17,7 @@ public partial class ChurchCalendar
     // Form validation
     static readonly Dictionary<string, object> ValidationMessages = new() { { "regex", "Caractères spéciaux non autorisés dans ce champ" } };
     ValidationRules ValidationRules { get; set; } = new ValidationRules { Required = true };
-    readonly ValidationRules LocationValidationRules = new ValidationRules { Required = true, RegexPattern = "^[A-Za-z-0-9-,()-/& ]{5,80}$", Messages = ValidationMessages };
+    readonly ValidationRules LocationValidationRules = new ValidationRules { Required = true, RegexPattern = "^[A-Za-z-0-9-,()-/&' ]{5,80}$", Messages = ValidationMessages };
     readonly ValidationRules DescriptionValidationRules = new ValidationRules { Required = true, MinLength = 5, MaxLength = 500 };
 
     private void OnScheduleActionFailure(ActionEventArgs<ChurchProgramDto> args)
