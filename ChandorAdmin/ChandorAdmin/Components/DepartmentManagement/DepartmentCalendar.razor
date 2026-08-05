@@ -3,6 +3,8 @@
 @using Syncfusion.Blazor.Spinner
 @using ChandorAdmin.Data
 @using ChandorProject.Shared.DTOs.ChurchProgram
+@using ChandorProject.Shared.DTOs.ProgramType
+@using ChandorProject.Shared.DTOs.DepartmentTeamDto
 @implements IDisposable
 
 @if (_dialogShell)
@@ -54,6 +56,26 @@
                                     <FieldDescription Name="Description" Title="Détails" Validation="@DescriptionValidationRules"></FieldDescription>
                                 </ScheduleField>
                             </ScheduleEventSettings>
+                            
+                            <ScheduleResources>
+                                <ScheduleResource TItem="ProgramTypeDto" TValue="Guid"
+                                    DataSource="@ProgramTypes"
+                                    Field="ProgramTypeId"
+                                    Title="Type de Programme"
+                                    Name="Type"
+                                    TextField="Name" IdField="Id">
+                                </ScheduleResource>
+
+                                <ScheduleResource TItem="DepartmentTeamDto" TValue="Guid"
+                                                  DataSource="@DepartmentTeams"
+                                                  Field="DepartmentTeamId"
+                                                  Title="Commission"
+                                                  Name="Team"
+                                                  TextField="Name" IdField="Id">
+                                </ScheduleResource>
+
+                            </ScheduleResources>
+
                             <ScheduleEvents TValue="ChurchProgramDto"
                                             OnActionFailure="OnScheduleActionFailure"
                                             ActionCompleted="OnScheduleActionCompleted" />

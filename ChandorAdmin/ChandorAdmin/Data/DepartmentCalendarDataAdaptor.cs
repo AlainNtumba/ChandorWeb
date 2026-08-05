@@ -3,6 +3,7 @@ using ChandorProject.Shared.DTOs.ChurchProgram;
 using ChandorProject.Shared.Models;
 using Syncfusion.Blazor;
 using Syncfusion.Blazor.Data;
+using System.Globalization;
 using System.Text.Json;
 
 namespace ChandorAdmin.Data;
@@ -34,7 +35,8 @@ public sealed class DepartmentCalendarDataAdaptor(
                 : Array.Empty<ChurchProgramDto>();
         }
 
-        var response = await churchPrograms.GetDepartmentProgramAsync(DepartmentId).ConfigureAwait(false);
+        var (start, end) = TryGetRange(dataManagerRequest);
+        var response = await churchPrograms.GetDepartmentProgramAsync(DepartmentId, start, end).ConfigureAwait(false);
 
         if (response is not null && !response.Success)
         {
@@ -224,6 +226,39 @@ public sealed class DepartmentCalendarDataAdaptor(
         if (response.Error is null)
             return string.Empty;
         return string.Join(" | ", response.Error.Where(s => !string.IsNullOrWhiteSpace(s))!);
+    }
+
+    private static (DateTime start, DateTime end) TryGetRange(DataManagerRequest dm)
+    {
+        if (dm.Params is IDictionary<string, object> p)
+        {
+            var start = TryGetDateTime(p, "StartDate") ?? TryGetDateTime(p, "startDate") ?? TryGetDateTime(p, "StartTime");
+            var end = TryGetDateTime(p, "EndDate") ?? TryGetDateTime(p, "endDate") ?? TryGetDateTime(p, "EndTime");
+            if (start is { } s && end is { } e)
+                return (s, e);
+        }
+
+        var now = DateTime.UtcNow;
+        var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
+        return (monthStart, monthEnd);
+    }
+
+    private static DateTime? TryGetDateTime(IDictionary<string, object> p, string name)
+    {
+        if (!p.TryGetValue(name, out var v) || v is null)
+            return null;
+
+        if (v is DateTime dt)
+            return dt;
+
+        if (v is DateTimeOffset dto)
+            return dto.UtcDateTime;
+
+        if (v is string s && DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
+            return parsed;
+
+        return null;
     }
 
     private static T CoerceTo<T>(object data) where T : new()

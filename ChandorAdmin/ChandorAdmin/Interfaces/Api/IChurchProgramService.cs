@@ -15,7 +15,11 @@ public interface IChurchProgramService
 
     Task<DataResponse<bool>?> DeleteProgramAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetDepartmentProgramAsync(Guid departmentId, CancellationToken cancellationToken = default);
+    Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetDepartmentProgramAsync(
+        Guid departmentId,
+        DateTime start,
+        DateTime end,
+        CancellationToken cancellationToken = default);
 
     Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetTeamProgramAsync(Guid teamId, CancellationToken cancellationToken = default);
 

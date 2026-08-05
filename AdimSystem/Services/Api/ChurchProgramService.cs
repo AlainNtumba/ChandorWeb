@@ -24,8 +24,18 @@ public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramSer
     public Task<DataResponse<bool>?> DeleteProgramAsync(Guid id, CancellationToken cancellationToken = default)
         => api.DeleteDataResponseAsync<bool>($"{C}/delete_church_program/{id}", cancellationToken);
 
-    public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetDepartmentProgramAsync(Guid departmentId, CancellationToken cancellationToken = default)
-        => api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get-department-program/{departmentId}", cancellationToken);
+    public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetDepartmentProgramAsync(
+        Guid departmentId,
+        DateTime start,
+        DateTime end,
+        CancellationToken cancellationToken = default)
+    {
+        var q =
+            $"departmentId={departmentId}" +
+            $"&start={Uri.EscapeDataString(start.ToUniversalTime().ToString("o"))}" +
+            $"&end={Uri.EscapeDataString(end.ToUniversalTime().ToString("o"))}";
+        return api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get-department-program?{q}", cancellationToken);
+    }
 
     public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetTeamProgramAsync(Guid teamId, CancellationToken cancellationToken = default)
         => api.GetDataResponseAsync<IEnumerable<ChurchProgramDto>>($"{C}/get-team-program/{teamId}", cancellationToken);

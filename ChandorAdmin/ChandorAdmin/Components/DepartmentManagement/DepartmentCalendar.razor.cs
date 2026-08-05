@@ -1,5 +1,8 @@
 using ChandorAdmin.Data;
+using ChandorAdmin.Interfaces.Api;
 using ChandorProject.Shared.DTOs.ChurchProgram;
+using ChandorProject.Shared.DTOs.DepartmentTeamDto;
+using ChandorProject.Shared.DTOs.ProgramType;
 using Microsoft.AspNetCore.Components;
 using Syncfusion.Blazor.Popups;
 using Syncfusion.Blazor.Schedule;
@@ -10,8 +13,12 @@ public partial class DepartmentCalendar : IDisposable
 {
     [Inject] private ILogger<DepartmentCalendar> Logger { get; set; } = default!;
     [Inject] private DepartmentCalendarDataAdaptor DataAdaptor { get; set; } = default!;
+    [Inject] public IDepartmentTeamService DepartmentTeamService { get; set; } = default!;
+    [Inject] public IProgramTypeService ProgramTypeService { get; set; } = default!;
 
     [Parameter] public Guid DepartmentId { get; set; }
+    public List<ProgramTypeDto> ProgramTypes { get; set; } = new List<ProgramTypeDto>();
+    public List<DepartmentTeamDto> DepartmentTeams { get; set; } = new List<DepartmentTeamDto>();
 
     SfDialog? _dialog;
     bool _dialogShell;
@@ -55,6 +62,11 @@ public partial class DepartmentCalendar : IDisposable
         _isError = false;
         CurrentView = View.Month;
         SelectedDate = DateTime.Today;
+
+        var _programType = await ProgramTypeService.GetAllProgramTypesAsync();
+        ProgramTypes = _programType?.Data?.ToList() ?? new List<ProgramTypeDto>();
+        var _departmentTeams = await DepartmentTeamService.GetDepartmentTeamsByDepartmentIdAsync(DepartmentId);
+        DepartmentTeams = _departmentTeams?.Data?.ToList() ?? new List<DepartmentTeamDto>();
 
         if (!_dialogShell)
         {
