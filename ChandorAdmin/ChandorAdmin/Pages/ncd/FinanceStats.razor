@@ -72,6 +72,7 @@
                     <SfChart @key="ChartRefreshKey"
                              Width="100%"
                              Height="300px"
+                             EnableAdaptiveRendering="true"
                              Theme="Theme.Material">
                         <ChartMargin Left="8" Right="36" Top="12" Bottom="8"></ChartMargin>
                         <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
@@ -136,20 +137,30 @@
                     <SfAccumulationChart @key="@($"exp-pie-{ChartRefreshKey}")"
                                          Width="100%"
                                          Height="320px"
+                                         EnableAdaptiveRendering="true"
                                          Theme="Theme.Material">
-                        <AccumulationChartMargin Left="8" Right="8" Top="8" Bottom="24"></AccumulationChartMargin>
+                        <AccumulationChartMargin Left="8" Right="8" Top="8" Bottom="8"></AccumulationChartMargin>
                         <AccumulationChartLegendSettings Visible="true"
-                                                         Position="LegendPosition.Bottom"
-                                                         Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></AccumulationChartLegendSettings>
+                                                         Position="LegendPosition.Right"
+                                                         Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"
+                                                         TextWrap="@Syncfusion.Blazor.TextWrap.Wrap"
+                                                         MaximumLabelWidth="100"
+                                                         Width="20%"
+                                                         Height="65%">
+                            <AccumulationChartLegendPageSettings ArrowSize="8">
+                                <AccumulationChartLegendPageSettingsTextStyle Color="fuchsia" />
+                            </AccumulationChartLegendPageSettings>
+                        </AccumulationChartLegendSettings>
                         <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
                         <AccumulationChartSeriesCollection>
                             <AccumulationChartSeries DataSource="@_expenseByCategory"
                                                      XName="@nameof(ExpenseCategoryDto.Category)"
                                                      YName="@nameof(ExpenseCategoryDto.Amount)"
                                                      InnerRadius="50%"
+                                                     Radius="75%"
                                                      Palettes="@ExpenseCompositionPalette">
                                 <AccumulationDataLabelSettings Visible="true"
-                                                               Position="AccumulationLabelPosition.Outside"></AccumulationDataLabelSettings>
+                                                               Position="AccumulationLabelPosition.Inside"></AccumulationDataLabelSettings>
                             </AccumulationChartSeries>
                         </AccumulationChartSeriesCollection>
                     </SfAccumulationChart>
@@ -164,21 +175,31 @@
                 <div class="dash-donut-host">
                     <SfAccumulationChart @key="@($"inc-pie-{ChartRefreshKey}")"
                                          Width="100%"
-                                         Height="300px"
+                                         Height="320px"
+                                         EnableAdaptiveRendering="true"
                                          Theme="Theme.Material">
                         <AccumulationChartMargin Left="8" Right="8" Top="8" Bottom="8"></AccumulationChartMargin>
                         <AccumulationChartLegendSettings Visible="true"
                                                          Position="LegendPosition.Right"
-                                                         Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></AccumulationChartLegendSettings>
+                                                         Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"
+                                                         TextWrap="@Syncfusion.Blazor.TextWrap.Wrap"
+                                                         MaximumLabelWidth="100"
+                                                         Width="20%"
+                                                         Height="65%">
+                            <AccumulationChartLegendPageSettings ArrowSize="8">
+                                <AccumulationChartLegendPageSettingsTextStyle Color="fuchsia" />
+                            </AccumulationChartLegendPageSettings>
+                        </AccumulationChartLegendSettings>
                         <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
                         <AccumulationChartSeriesCollection>
                             <AccumulationChartSeries DataSource="@_incomeByCategory"
                                                      XName="@nameof(IncomeCategoryDto.Category)"
                                                      YName="@nameof(IncomeCategoryDto.Amount)"
                                                      InnerRadius="50%"
+                                                     Radius="75%"
                                                      Palettes="@IncomeCompositionPalette">
                                 <AccumulationDataLabelSettings Visible="true"
-                                                               Position="AccumulationLabelPosition.Outside"></AccumulationDataLabelSettings>
+                                                               Position="AccumulationLabelPosition.Inside"></AccumulationDataLabelSettings>
                             </AccumulationChartSeries>
                         </AccumulationChartSeriesCollection>
                     </SfAccumulationChart>

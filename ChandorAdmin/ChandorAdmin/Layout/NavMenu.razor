@@ -13,8 +13,8 @@
     <div class="scroller">
         <nav class="sidebar-app-nav" aria-label="Application menu">
         <ul class="nav flex-column">
-                <SidebarAccordionNav ExclusiveExpand="true">
-                    <SidebarAccordionSection SectionId="management" Title="Administration" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-appbar">
+            <SidebarAccordionNav ExclusiveExpand="true">
+                <SidebarAccordionSection SectionId="management" Title="Administration" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-scheduler">
                         <li class="sidebar-accordion-subitem">
                             <NavLink class="nav-link sidebar-accordion-sublink" href="church-admin">
                                 <span class="displayText">Dashboard</span>
@@ -31,7 +31,21 @@
                             </NavLink>
                         </li>
                     </SidebarAccordionSection>
-                <SidebarAccordionSection SectionId="departments" Title="Departments" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-treeview">
+
+                <SidebarAccordionSection SectionId="finance" Title="Finance" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-stockchart">
+                    <li class="sidebar-accordion-subitem">
+                        <NavLink class="nav-link sidebar-accordion-sublink" href="finance-stats">
+                            <span class="displayText">Dashboard</span>
+                        </NavLink>
+                    </li>
+                    <li class="sidebar-accordion-subitem">
+                        <NavLink class="nav-link sidebar-accordion-sublink" href="finance-transactions">
+                            <span class="displayText">Transactions</span>
+                        </NavLink>
+                    </li>
+                </SidebarAccordionSection>
+                
+                <SidebarAccordionSection SectionId="departments" Title="Departments" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-diagram">
                     @if (_departmentsNavLoading)
                     {
                         <li class="sidebar-accordion-subitem" aria-live="polite">
@@ -61,18 +75,6 @@
                             </li>
                         }
                     }
-                </SidebarAccordionSection>
-                <SidebarAccordionSection SectionId="finance" Title="Finance" IconCssClass="syncfusion-blazor-icons syncfusion-blazor-icon-dropdownlist">
-                    <li class="sidebar-accordion-subitem">
-                        <NavLink class="nav-link sidebar-accordion-sublink" href="finance-stats">
-                            <span class="displayText">Dashboard</span>
-                        </NavLink>
-                    </li>
-                    <li class="sidebar-accordion-subitem">
-                        <NavLink class="nav-link sidebar-accordion-sublink" href="finance-transactions">
-                            <span class="displayText">Transactions</span>
-                        </NavLink>
-                    </li>
                 </SidebarAccordionSection>
             </SidebarAccordionNav>
         </ul>
