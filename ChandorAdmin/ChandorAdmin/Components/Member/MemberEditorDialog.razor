@@ -1,4 +1,4 @@
-﻿@using ChandorAdmin.Configuration
+@using ChandorAdmin.Configuration
 @using ChandorAdmin.Interfaces.Api
 @using ChandorProject.Shared.DTOs.AgeGroup
 @using ChandorProject.Shared.DTOs.Member
@@ -29,7 +29,7 @@
                                             <td class="e-rowcell">
                                                 <div>
                                                     <SfTextBox @bind-Value="@_editModel.Username"
-                                                               Placeholder="Username"
+                                                               Placeholder="Nom d'utilisateur"
                                                                FloatLabelType="FloatLabelType.Always" />
                                                 </div>
                                                 <span class="c-err-msg">
@@ -45,7 +45,7 @@
                                             <td class="e-rowcell">
                                                 <div>
                                                     <SfTextBox @bind-Value="@_editModel.Name"
-                                                               Placeholder="Name"
+                                                               Placeholder="Nom"
                                                                FloatLabelType="FloatLabelType.Always" />
                                                 </div>
                                                 <span class="c-err-msg">
@@ -55,7 +55,7 @@
                                             <td class="e-rowcell">
                                                 <div>
                                                     <SfTextBox @bind-Value="@_editModel.Postname"
-                                                               Placeholder="Postname"
+                                                               Placeholder="Poste nom"
                                                                FloatLabelType="FloatLabelType.Always" />
                                                 </div>
                                                 <span class="c-err-msg">
@@ -67,7 +67,7 @@
                                             <td class="e-rowcell">
                                                 <div>
                                                     <SfTextBox @bind-Value="@_editModel.Surname"
-                                                               Placeholder="Surname"
+                                                               Placeholder="Nom de famille"
                                                                FloatLabelType="FloatLabelType.Always" />
                                                 </div>
                                                 <span class="c-err-msg">
@@ -77,7 +77,7 @@
                                             <td class="e-rowcell">
                                                 <div>
                                                     <SfDatePicker TValue="DateTime"
-                                                                  Placeholder="Birthday"
+                                                                  Placeholder="Anniversaire"
                                                                   @bind-Value="@_editModel.Birthday"
                                                                   FloatLabelType="FloatLabelType.Always" />
                                                 </div>
@@ -96,7 +96,7 @@
                                                     <SfDropDownList TItem="MemberTypeDto" TValue="Guid"
                                                                     @bind-Value="@_editModel.MemberTypeId"
                                                                     DataSource="@_memberTypes"
-                                                                    Placeholder="Member Type"
+                                                                    Placeholder="Type de membre"
                                                                     FloatLabelType="FloatLabelType.Always">
                                                         <DropDownListFieldSettings Value="Id" Text="Name" />
                                                     </SfDropDownList>
@@ -116,7 +116,7 @@
                                                     <SfDropDownList TItem="AgeGroupDto" TValue="Guid"
                                                                     @bind-Value="@_editModel.AgeGroupId"
                                                                     DataSource="@_ageGroups"
-                                                                    Placeholder="Age Group"
+                                                                    Placeholder="Tranche d'âge"
                                                                     FloatLabelType="FloatLabelType.Always">
                                                         <DropDownListFieldSettings Value="Id" Text="GroupName" />
                                                     </SfDropDownList>
@@ -130,7 +130,7 @@
                                                     <SfDropDownList TItem="Gender" TValue="bool"
                                                                     @bind-Value="@_editModel.Gender"
                                                                     DataSource="@_genders"
-                                                                    Placeholder="Gender"
+                                                                    Placeholder="Genre"
                                                                     FloatLabelType="FloatLabelType.Always">
                                                         <DropDownListFieldSettings Value="Sex" Text="Name" />
                                                     </SfDropDownList>
@@ -144,7 +144,7 @@
                                             <td class="e-rowcell">
                                                 <div>
                                                     <SfTextBox @bind-Value="@_editModel.Country"
-                                                               Placeholder="Country"
+                                                               Placeholder="Pays"
                                                                FloatLabelType="FloatLabelType.Always" />
                                                 </div>
                                                 <span class="c-err-msg">
@@ -154,7 +154,7 @@
                                             <td class="e-rowcell">
                                                 <div>
                                                     <SfTextBox @bind-Value="@_editModel.Town"
-                                                               Placeholder="City"
+                                                               Placeholder="Ville"
                                                                FloatLabelType="FloatLabelType.Always" />
                                                 </div>
                                                 <span class="c-err-msg">

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using ChandorProject.Shared.Validation;
 
 namespace ChandorProject.Shared.DTOs.Finance;
