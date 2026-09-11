@@ -7,7 +7,7 @@
     @if (_renderGrid)
     {
         <SfGrid @ref="TransactGridRef"
-                TValue="TransactionDto"
+                TValue="TransactionViewDto"
                 Width="100%"
                 Height="100%"
                 AllowSelection="true"
@@ -16,7 +16,7 @@
                 AllowExcelExport="true"
                 Toolbar="@Toolbaritems"
                 DataSource="@GridData">
-            <GridEvents TValue="TransactionDto"
+            <GridEvents TValue="TransactionViewDto"
                         RowSelected="OnRowSelectChanged"
                         RowDeselected="OnRowDeselectChanged"
                         OnToolbarClick="ToolbarClickHandler">
@@ -26,10 +26,10 @@
             <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
             <GridColumns>
                 <GridColumn Type="ColumnType.CheckBox" Width="40"></GridColumn>
-                <GridColumn Field="@nameof(TransactionDto.TransactionCategory)" HeaderText="Catégorie" Width="178" ClipMode="ClipMode.EllipsisWithTooltip" ValidationRules="@_rules">
+                <GridColumn Field="@nameof(TransactionViewDto.TransactionCategory)" HeaderText="Catégorie" Width="178" ClipMode="ClipMode.EllipsisWithTooltip" ValidationRules="@_rules">
                     <Template>
                         @{
-                            var row = (TransactionDto)context;
+                            var row = (TransactionViewDto)context;
                             <div class="normalRes">
                                 <div class="category-text">@row.TransactionCategory</div>
                             </div>
@@ -49,14 +49,14 @@
                         }
                     </Template>
                 </GridColumn>
-                <GridColumn Field="@nameof(TransactionDto.TransactionDate)" HeaderText="Date" Format="d" Width="112" ValidationRules="@_rules"></GridColumn>
-                <GridColumn Field="@nameof(TransactionDto.AccountName)" HeaderText="Compte" Width="140" ValidationRules="@_rules"></GridColumn>
-                <GridColumn Field="@nameof(TransactionDto.TransactionNote)" HeaderText="Note" ClipMode="ClipMode.Ellipsis"></GridColumn>
-                <GridColumn Field="@nameof(TransactionDto.Id)" HeaderText="Id" IsPrimaryKey="true" Visible="false"></GridColumn>
-                <GridColumn Field="@nameof(TransactionDto.Amount)" HeaderText="Montant" Width="120" Format="C0" TextAlign="TextAlign.Right" ValidationRules="@_rules">
+                <GridColumn Field="@nameof(TransactionViewDto.TransactionDate)" HeaderText="Date" Format="d" Width="112" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(TransactionViewDto.AccountName)" HeaderText="Compte" Width="140" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(TransactionViewDto.TransactionNote)" HeaderText="Note" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(TransactionViewDto.Id)" HeaderText="Id" IsPrimaryKey="true" Visible="false"></GridColumn>
+                <GridColumn Field="@nameof(TransactionViewDto.Amount)" HeaderText="Montant" Width="120" Format="C0" TextAlign="TextAlign.Right" ValidationRules="@_rules">
                     <Template>
                         @{
-                            var row = (TransactionDto)context;
+                            var row = (TransactionViewDto)context;
                             <div class="normalRes">
                                 <div class="amt-payment @row.TransactionType">
                                     <span>@row.Amount.ToString("C0")</span>

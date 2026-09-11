@@ -3,13 +3,13 @@ using ChandorProject.Shared.Validation;
 
 namespace ChandorProject.Shared.DTOs.Finance;
 
-public class NewTransactionDto : NewChurchTransactionDto
+public class NewTransactionViewDto : NewChurchTransactionDto
 {
     public Guid DepartmentId { get; set; }
     public Guid DepartmentTeamId { get; set; }
 }
 
-public class TransactionDto 
+public class TransactionViewDto 
 {
     public Guid Id { get; set; }
     public DateTime TransactionDate { get; set; }
@@ -38,7 +38,7 @@ public class NewChurchTransactionDto
     public Guid AccountId { get; set; }
 }
 
-public class TransactionTypeDto
+public class TransactionTypeViewDto
 {
     public string Value { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

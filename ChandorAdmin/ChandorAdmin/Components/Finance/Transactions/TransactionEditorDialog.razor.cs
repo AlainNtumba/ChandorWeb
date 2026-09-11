@@ -46,13 +46,13 @@ public partial class TransactionEditorDialog
     bool _lookupsLoaded;
     DateTime _editorMinDate => new(2015, 1, 1, 0, 0, 0);
     DateTime _editorMaxDate => new(DateTime.Today.Year + 5, 12, 31, 23, 59, 59);
-    TransactionDto? _selectedRecord;
+    TransactionViewDto? _selectedRecord;
     string _buttonContent = "Ajouter";
     string _dialogHeader = "";
     string _formId = "transaction";
     bool _createNewDialog;
     bool _editIncome, _editExpense = true;
-    List<TransactionDto> _gridSelectedRecords = new();
+    List<TransactionViewDto> _gridSelectedRecords = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -139,7 +139,7 @@ public partial class TransactionEditorDialog
         _editModel.DepartmentTeamId = Guid.Empty;
     }
 
-    public async Task ShowEditDialog(TransactionDto selected)
+    public async Task ShowEditDialog(TransactionViewDto selected)
     {
         await EnsureLookupsLoadedAsync();
         _isAdd = false;
@@ -206,7 +206,7 @@ public partial class TransactionEditorDialog
             UpdateEditDialog();
     }
 
-    public async Task ShowAlertDialog(List<TransactionDto> selectedRecords)
+    public async Task ShowAlertDialog(List<TransactionViewDto> selectedRecords)
     {
         _gridSelectedRecords = selectedRecords;
 

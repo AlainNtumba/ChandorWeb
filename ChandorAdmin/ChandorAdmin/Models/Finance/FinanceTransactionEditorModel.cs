@@ -5,7 +5,7 @@ namespace ChandorAdmin.Models.Finance;
 
 /// <summary>
 /// Edit model for the finance transaction dialog; maps to <see cref="ChandorProject.Shared.DTOs.Finance.NewChurchTransactionDto"/> on insert
-/// and <see cref="ChandorProject.Shared.DTOs.Finance.TransactionDto"/> on edit.
+/// and <see cref="ChandorProject.Shared.DTOs.Finance.TransactionViewDto"/> on edit.
 /// </summary>
 public sealed class FinanceTransactionEditorModel
 {

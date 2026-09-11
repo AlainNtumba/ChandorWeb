@@ -260,7 +260,7 @@
         MinMaxAmount(rows);
     }
 
-    void MinMaxAmount(IEnumerable<TransactionDto> rows)
+    void MinMaxAmount(IEnumerable<TransactionViewDto> rows)
     {
         var slice = rows.ToList();
         if (slice.Count > 0)
@@ -270,12 +270,12 @@
         }
     }
 
-    public IEnumerable<TransactionDto> RefreshData()
+    public IEnumerable<TransactionViewDto> RefreshData()
     {
         if (ContentRef is null)
-            return Array.Empty<TransactionDto>();
+            return Array.Empty<TransactionViewDto>();
 
-        IEnumerable<TransactionDto> rows = ContentRef.AllTransactions;
+        IEnumerable<TransactionViewDto> rows = ContentRef.AllTransactions;
 
         var min = (decimal)(_minAmount ?? 0);
         var max = _maxAmount.HasValue ? (decimal)_maxAmount.Value : decimal.MaxValue;

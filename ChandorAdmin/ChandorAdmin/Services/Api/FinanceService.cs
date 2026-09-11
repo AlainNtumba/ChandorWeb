@@ -14,21 +14,21 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     // TRANSACTIONS
     // =========================
 
-    public Task<DataResponse<IEnumerable<TransactionDto>>?> InsertTransactionAsync( 
-        NewTransactionDto request, 
+    public Task<DataResponse<IEnumerable<TransactionViewDto>>?> InsertTransactionAsync( 
+        NewTransactionViewDto request, 
         CancellationToken cancellationToken = default)
-        => api.PostDataResponseAsync<IEnumerable<TransactionDto>>($"{C}/insert-transaction", JsonContent.Create(request), cancellationToken);
+        => api.PostDataResponseAsync<IEnumerable<TransactionViewDto>>($"{C}/insert-transaction", JsonContent.Create(request), cancellationToken);
 
-    public Task<DataResponse<IEnumerable<TransactionDto>>?> InsertChurchTransactionAsync(
+    public Task<DataResponse<IEnumerable<TransactionViewDto>>?> InsertChurchTransactionAsync(
         NewChurchTransactionDto request, 
         CancellationToken cancellationToken = default)
-        => api.PostDataResponseAsync<IEnumerable<TransactionDto>>($"{C}/insert-church-transaction", JsonContent.Create(request), cancellationToken);
+        => api.PostDataResponseAsync<IEnumerable<TransactionViewDto>>($"{C}/insert-church-transaction", JsonContent.Create(request), cancellationToken);
 
     // =========================
     // GET TRANSACTIONS
     // =========================
 
-    public Task<DataResponse<IEnumerable<TransactionDto>>?> GetDepartmentTransactionsAsync(
+    public Task<DataResponse<IEnumerable<TransactionViewDto>>?> GetDepartmentTransactionsAsync(
         Guid? departmentId, 
         DateTime? start, 
         DateTime? end,
@@ -38,10 +38,10 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
             $"{C}/get-department-transactions" +
             $"?departmentId={departmentId}&start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}";
 
-        return api.GetDataResponseAsync<IEnumerable<TransactionDto>>(url, cancellationToken);
+        return api.GetDataResponseAsync<IEnumerable<TransactionViewDto>>(url, cancellationToken);
     }
 
-    public Task<DataResponse<IEnumerable<TransactionDto>>?> GetChurchTransactionsAsync(
+    public Task<DataResponse<IEnumerable<TransactionViewDto>>?> GetChurchTransactionsAsync(
         DateTime? start, 
         DateTime? end, 
         CancellationToken cancellationToken = default)
@@ -50,7 +50,7 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
             $"{C}/get-church-transactions" +
             $"?start={ApiDateQueryFormatter.FormatQueryValue(start)}&end={ApiDateQueryFormatter.FormatQueryValue(end)}";
 
-        return api.GetDataResponseAsync<IEnumerable<TransactionDto>>(url, cancellationToken);
+        return api.GetDataResponseAsync<IEnumerable<TransactionViewDto>>(url, cancellationToken);
     }
 
     public Task<DataResponse<IEnumerable<FinanceActivityItemDto>>?> GetFinanceActivitiesAsync(
@@ -130,9 +130,9 @@ public sealed class FinanceService(ChandorApiHttp api) : IFinanceService
     // LOOKUPS
     // =========================
 
-    public Task<DataResponse<IEnumerable<TransactionTypeDto>>?> GetTransactionTypesAsync(
+    public Task<DataResponse<IEnumerable<TransactionTypeViewDto>>?> GetTransactionTypesAsync(
         CancellationToken cancellationToken = default)
-        => api.GetDataResponseAsync<IEnumerable<TransactionTypeDto>>($"{C}/get-transactions-types", cancellationToken);
+        => api.GetDataResponseAsync<IEnumerable<TransactionTypeViewDto>>($"{C}/get-transactions-types", cancellationToken);
 
 
 }

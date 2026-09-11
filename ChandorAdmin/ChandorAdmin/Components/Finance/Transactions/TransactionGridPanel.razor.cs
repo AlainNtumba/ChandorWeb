@@ -11,13 +11,13 @@ public partial class TransactionGridPanel
 {
     [Inject] public IFinanceService FinanceService { get; set; } = null!;
 
-    public SfGrid<TransactionDto>? TransactGridRef { get; set; }
+    public SfGrid<TransactionViewDto>? TransactGridRef { get; set; }
     public TransactionEditorDialog? DialogRef { get; set; }
     public TransactionFilterSidebar? FilterRef { get; set; }
 
     readonly ValidationRules _rules = new() { Required = true };
-    public IEnumerable<TransactionDto> GridData { get; private set; } = Array.Empty<TransactionDto>();
-    public IReadOnlyList<TransactionDto> AllTransactions { get; private set; } = Array.Empty<TransactionDto>();
+    public IEnumerable<TransactionViewDto> GridData { get; private set; } = Array.Empty<TransactionViewDto>();
+    public IReadOnlyList<TransactionViewDto> AllTransactions { get; private set; } = Array.Empty<TransactionViewDto>();
     public DateTime StartDate { get; private set; }
     public DateTime EndDate { get; private set; }
 
@@ -69,9 +69,9 @@ public partial class TransactionGridPanel
         GridRefresh(FilterRef?.RefreshData() ?? AllTransactions.OrderByDescending(t => t.TransactionDate).ToList());
     }
 
-    Task OnRowSelectChanged(RowSelectEventArgs<TransactionDto> _) => RefreshToolbarFromSelectionAsync();
+    Task OnRowSelectChanged(RowSelectEventArgs<TransactionViewDto> _) => RefreshToolbarFromSelectionAsync();
 
-    Task OnRowDeselectChanged(RowDeselectEventArgs<TransactionDto> _) => RefreshToolbarFromSelectionAsync();
+    Task OnRowDeselectChanged(RowDeselectEventArgs<TransactionViewDto> _) => RefreshToolbarFromSelectionAsync();
 
     public async Task RefreshToolbarFromSelectionAsync()
     {
@@ -137,7 +137,7 @@ public partial class TransactionGridPanel
         UpdateTotalBalance();
     }
 
-    public void GridRefresh(IEnumerable<TransactionDto> rows)
+    public void GridRefresh(IEnumerable<TransactionViewDto> rows)
     {
         GridData = rows;
         StateHasChanged();

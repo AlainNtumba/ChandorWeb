@@ -5,21 +5,21 @@ namespace ChandorAdmin.Interfaces.Api;
 
 public interface IFinanceService
 {
-    Task<DataResponse<IEnumerable<TransactionDto>>?> InsertTransactionAsync(
-        NewTransactionDto request, 
+    Task<DataResponse<IEnumerable<TransactionViewDto>>?> InsertTransactionAsync(
+        NewTransactionViewDto request, 
         CancellationToken cancellationToken = default);
 
-    Task<DataResponse<IEnumerable<TransactionDto>>?> InsertChurchTransactionAsync(
+    Task<DataResponse<IEnumerable<TransactionViewDto>>?> InsertChurchTransactionAsync(
         NewChurchTransactionDto request, 
         CancellationToken cancellationToken = default);
 
-    Task<DataResponse<IEnumerable<TransactionDto>>?> GetDepartmentTransactionsAsync(
+    Task<DataResponse<IEnumerable<TransactionViewDto>>?> GetDepartmentTransactionsAsync(
         Guid? departmentId, 
         DateTime? start, 
         DateTime? end, 
         CancellationToken cancellationToken = default);
 
-    Task<DataResponse<IEnumerable<TransactionDto>>?> GetChurchTransactionsAsync(
+    Task<DataResponse<IEnumerable<TransactionViewDto>>?> GetChurchTransactionsAsync(
         DateTime? start, 
         DateTime? end, 
         CancellationToken cancellationToken = default);
@@ -54,6 +54,6 @@ public interface IFinanceService
         Guid? departmentId,
         CancellationToken cancellationToken = default);
 
-    Task<DataResponse<IEnumerable<TransactionTypeDto>>?> GetTransactionTypesAsync(
+    Task<DataResponse<IEnumerable<TransactionTypeViewDto>>?> GetTransactionTypesAsync(
         CancellationToken cancellationToken = default);
 }
