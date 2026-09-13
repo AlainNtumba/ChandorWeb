@@ -51,6 +51,7 @@ builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IChurchProgramService, ChurchProgramService>();
 builder.Services.AddScoped<CalendarDataAdaptor>();
 builder.Services.AddScoped<DepartmentCalendarDataAdaptor>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDepartmentTeamService, DepartmentTeamService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -69,6 +70,9 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IOutreachesService, OutreachesService>();
 builder.Services.AddScoped<IProgramTypeService, ProgramTypeService>();
 builder.Services.AddScoped<ITelephoneService, TelephoneService>();
+builder.Services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ITransactionTypeService, TransactionTypeService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IChurchAdminDashboardService, ChurchAdminDashboardMockService>();
