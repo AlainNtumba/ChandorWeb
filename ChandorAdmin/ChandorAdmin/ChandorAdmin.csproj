@@ -42,6 +42,7 @@
 
   <ItemGroup>
     <Content Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="..\..\.env" LogicalName="ChandorAdmin.GlobalEnv" />
   </ItemGroup>
 
   <ItemGroup>
