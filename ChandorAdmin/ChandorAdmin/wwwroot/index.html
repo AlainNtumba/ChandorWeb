@@ -47,23 +47,7 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script>
-        (function () {
-            function loadBlazor() {
-                var s = document.createElement('script');
-                s.src = '_framework/blazor.webassembly.js';
-                document.body.appendChild(s);
-            }
-            if (!('serviceWorker' in navigator)) {
-                loadBlazor();
-                return;
-            }
-            navigator.serviceWorker.getRegistrations()
-                .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
-                .catch(function () { })
-                .finally(loadBlazor);
-        })();
-    </script>
+	<script src="_framework/blazor.webassembly.js"></script>
 	<script>
         function isSidebar(x, y) {
             var sidebarEle = document.elementFromPoint(x, y);

@@ -369,3 +369,9 @@
         border-radius: 24px;
     }
 }
+
+/* Square-corner variant: keep every element in this login view rounded-0. */
+.modern-login,
+.modern-login * {
+    border-radius: 0 !important;
+}
