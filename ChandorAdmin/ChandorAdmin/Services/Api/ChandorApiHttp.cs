@@ -102,8 +102,25 @@ public sealed class ChandorApiHttp
 
     private async Task<DataResponse<T>?> ReadDataResponseAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
+        if (!response.IsSuccessStatusCode
+            && string.Equals(
+                response.Content.Headers.ContentType?.MediaType,
+                "application/problem+json",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            var problemMessage = await TryReadProblemDetailsMessageAsync(response, cancellationToken).ConfigureAwait(false);
+            return new DataResponse<T>
+            {
+                Success = false,
+                Message = problemMessage ?? $"Request failed ({(int)response.StatusCode}).",
+                Error = [problemMessage ?? response.ReasonPhrase ?? string.Empty]
+            };
+        }
+
         var parsed = await TryReadDataResponseBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
-        if (parsed is not null)
+        if (parsed is not null && (response.IsSuccessStatusCode
+            || !string.IsNullOrWhiteSpace(parsed.Message)
+            || parsed.Error?.Any(error => !string.IsNullOrWhiteSpace(error)) == true))
             return parsed;
 
         if (response.IsSuccessStatusCode)

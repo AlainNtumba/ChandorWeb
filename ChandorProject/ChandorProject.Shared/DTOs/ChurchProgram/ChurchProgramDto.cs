@@ -34,6 +34,9 @@ public class ChurchProgramDto
     [StringLength(500, ErrorMessage = "The field exceeds the maximum allowed length.")]
     public string PosterLink { get; set; } = string.Empty;
 
+    [StringLength(500, ErrorMessage = "The field exceeds the maximum allowed length.")]
+    public string VideoLink { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "This field is required.")]
     public bool IsApproved { get; set; }
 

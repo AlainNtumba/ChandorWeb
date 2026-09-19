@@ -50,6 +50,7 @@ builder.Services.AddScoped<IAgeGroupService, AgeGroupService>();
 builder.Services.AddScoped<IAppUserService, AppUserService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IChurchProgramService, ChurchProgramService>();
+builder.Services.AddScoped<ChurchProgramPosterEditorState>();
 builder.Services.AddScoped<CalendarDataAdaptor>();
 builder.Services.AddScoped<DepartmentCalendarDataAdaptor>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();

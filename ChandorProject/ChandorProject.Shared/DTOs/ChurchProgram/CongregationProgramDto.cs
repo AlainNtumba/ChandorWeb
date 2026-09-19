@@ -10,5 +10,9 @@ public class CongregationProgramDto
     public string RecurrenceRule { get; set; } = string.Empty;
     public string RecurrenceException { get; set; } = string.Empty;
     public string PosterLink { get; set; } = string.Empty;
+    public string VideoLink { get; set; } = string.Empty;
     public bool IsApproved { get; set; }
+    public Guid ProgramTypeId { get; set; }
+    public Guid DepartmentId { get; set; }
+    public Guid DepartmentTeamId { get; set; }
 }

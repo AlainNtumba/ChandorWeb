@@ -3,7 +3,11 @@
 @using Syncfusion.Blazor.Data
 @using Syncfusion.Blazor.Schedule
 @using ChandorAdmin.Data
+@using ChandorAdmin.Components.ChurchProgram
 @using ChandorProject.Shared.DTOs.ChurchProgram
+@using ChandorProject.Shared.DTOs.Department
+@using ChandorProject.Shared.DTOs.DepartmentTeamDto
+@using ChandorProject.Shared.DTOs.ProgramType
 
 <PageTitle>Calendrier</PageTitle>
 
@@ -29,7 +33,100 @@
                 <FieldDescription Name="Description" Title="Détails" Validation="@DescriptionValidationRules"></FieldDescription>
             </ScheduleField>
         </ScheduleEventSettings>
-        <ScheduleEvents TValue="ChurchProgramDto" OnActionFailure="OnScheduleActionFailure" ActionCompleted="OnScheduleActionCompleted" />
+        <ScheduleTemplates>
+            <EditorTemplate>
+                @{
+                    var program = (context as ChurchProgramDto)!;
+                }
+                <div class="church-program-editor">
+                    @if (_lookupsLoading)
+                    {
+                        <div class="church-program-editor__notice">Chargement des types, départements et équipes…</div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(_lookupError))
+                    {
+                        <div class="church-program-editor__notice church-program-editor__notice--error" role="alert">@_lookupError</div>
+                    }
+                    <div class="church-program-editor__grid">
+                        <div class="church-program-editor__field">
+                            <label>Type de programme <span aria-hidden="true">*</span></label>
+                            <select class="form-select" @bind="program.ProgramTypeId" disabled="@_lookupsLoading">
+                                <option value="@Guid.Empty">Sélectionnez un type</option>
+                                @foreach (var item in _programTypes)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="church-program-editor__field">
+                            <label>Département <span aria-hidden="true">*</span></label>
+                            <select class="form-select"
+                                    value="@program.DepartmentId"
+                                    @onchange="args => OnDepartmentChangedAsync(program, args)"
+                                    disabled="@_lookupsLoading">
+                                <option value="@Guid.Empty">Sélectionnez un département</option>
+                                @foreach (var item in _departments)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="church-program-editor__field church-program-editor__field--wide">
+                        <label>Équipe du département <span aria-hidden="true">*</span></label>
+                        <select class="form-select"
+                                @bind="program.DepartmentTeamId"
+                                disabled="@(program.DepartmentId == Guid.Empty || _teamsLoading)">
+                            <option value="@Guid.Empty">@(_teamsLoading ? "Chargement des équipes…" : "Sélectionnez une équipe")</option>
+                            @foreach (var item in _departmentTeams)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="church-program-editor__field church-program-editor__field--wide">
+                        <label>Thème</label>
+                        <SfTextBox @bind-Value="program.Theme" Placeholder="Thème du programme"></SfTextBox>
+                    </div>
+                    <div class="church-program-editor__grid">
+                        <div class="church-program-editor__field">
+                            <label>Début</label>
+                            <SfDateTimePicker TValue="DateTime" @bind-Value="program.StartTime"></SfDateTimePicker>
+                        </div>
+                        <div class="church-program-editor__field">
+                            <label>Fin</label>
+                            <SfDateTimePicker TValue="DateTime" @bind-Value="program.EndTime"></SfDateTimePicker>
+                        </div>
+                    </div>
+                    <div class="church-program-editor__field church-program-editor__field--wide">
+                        <label>Lieu</label>
+                        <SfTextBox @bind-Value="program.Lieu" Placeholder="Lieu"></SfTextBox>
+                    </div>
+                    <div class="church-program-editor__field church-program-editor__field--wide">
+                        <label>Description</label>
+                        <SfTextBox @bind-Value="program.Description" Multiline="true" Placeholder="Détails du programme"></SfTextBox>
+                    </div>
+                    <div class="church-program-editor__field church-program-editor__field--wide">
+                        <label>Lien vidéo</label>
+                        <SfTextBox @bind-Value="program.VideoLink" Placeholder="https://..."></SfTextBox>
+                    </div>
+                    <div class="church-program-editor__field church-program-editor__field--wide">
+                        <label>Récurrence</label>
+                        <SfRecurrenceEditor @bind-Value="program.RecurrenceRule" StartDate="program.StartTime"></SfRecurrenceEditor>
+                    </div>
+                    <label class="church-program-editor__approval">
+                        <input type="checkbox" @bind="program.IsApproved" />
+                        Programme approuvé
+                    </label>
+                    <ChurchProgramPosterPicker State="PosterEditor" />
+                </div>
+            </EditorTemplate>
+        </ScheduleTemplates>
+        <ScheduleEvents TValue="ChurchProgramDto"
+                        OnPopupOpen="OnSchedulePopupOpen"
+                        OnActionBegin="OnScheduleActionBegin"
+                        OnActionFailure="OnScheduleActionFailure"
+                        ActionCompleted="OnScheduleActionCompleted" />
         <ScheduleViews>
             <ScheduleView Option="View.Month" DisplayName="Calendrier"></ScheduleView>
             <ScheduleView Option="View.MonthAgenda" DisplayName="Agenda"></ScheduleView>
