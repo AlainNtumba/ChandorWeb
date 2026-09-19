@@ -2,7 +2,10 @@
 @using ChandorAdmin.Models.ChurchProgram
 @using ChandorAdmin.Services
 @using Microsoft.Extensions.Options
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
 @inject IOptions<ChandorApiOptions> ApiOptions
+@inject IJSRuntime JS
 
 <section class="poster-picker" aria-labelledby="poster-picker-title">
     <div class="poster-picker__heading">
@@ -38,7 +41,8 @@
     <div class="poster-picker__actions">
         <label class="e-control e-btn e-primary poster-picker__upload">
             @(HasVisiblePoster ? "Remplacer le poster" : "Ajouter un poster")
-            <InputFile OnChange="OnFileSelectedAsync"
+            <InputFile @key="_fileInputKey"
+                       OnChange="OnFileSelectedAsync"
                        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
         </label>
 
@@ -68,10 +72,95 @@
     }
 </section>
 
+@if (_showCropper)
+{
+    <div class="image-cropper-backdrop" role="dialog" aria-modal="true" aria-labelledby="image-cropper-title">
+        <div class="image-cropper-dialog">
+            <div class="image-cropper-header">
+                <div>
+                    <h3 id="image-cropper-title">Recadrer et optimiser le poster</h3>
+                </div>
+                <button type="button" class="image-cropper-close" title="Fermer" @onclick="CancelCropAsync" disabled="@_isCropping">×</button>
+            </div>
+
+            <div class="image-cropper-stage">
+                <canvas id="@CropCanvasId" width="400" height="400" aria-label="Zone de recadrage du poster"></canvas>
+                <div class="image-cropper-grid" aria-label="Zone de recadrage redimensionnable">
+                    <span class="image-cropper-grid__line image-cropper-grid__line--v1"></span>
+                    <span class="image-cropper-grid__line image-cropper-grid__line--v2"></span>
+                    <span class="image-cropper-grid__line image-cropper-grid__line--h1"></span>
+                    <span class="image-cropper-grid__line image-cropper-grid__line--h2"></span>
+                    <span class="image-cropper-handle image-cropper-handle--nw" data-crop-handle="nw"></span>
+                    <span class="image-cropper-handle image-cropper-handle--n" data-crop-handle="n"></span>
+                    <span class="image-cropper-handle image-cropper-handle--ne" data-crop-handle="ne"></span>
+                    <span class="image-cropper-handle image-cropper-handle--e" data-crop-handle="e"></span>
+                    <span class="image-cropper-handle image-cropper-handle--se" data-crop-handle="se"></span>
+                    <span class="image-cropper-handle image-cropper-handle--s" data-crop-handle="s"></span>
+                    <span class="image-cropper-handle image-cropper-handle--sw" data-crop-handle="sw"></span>
+                    <span class="image-cropper-handle image-cropper-handle--w" data-crop-handle="w"></span>
+                </div>
+            </div>
+
+            <div class="image-cropper-help">Glissez l’image pour la déplacer · redimensionnez la grille avec ses poignées</div>
+
+            <div class="image-cropper-controls">
+                <label for="poster-crop-zoom">Zoom</label>
+                <input id="poster-crop-zoom"
+                       type="range"
+                       min="1"
+                       max="4"
+                       step="0.01"
+                       value="@_cropZoom"
+                       @oninput="OnZoomChangedAsync"
+                       disabled="@_isCropping" />
+                <button type="button" class="e-control e-btn e-flat" @onclick="() => RotateAsync(-90)" disabled="@_isCropping">↶ 90°</button>
+                <button type="button" class="e-control e-btn e-flat" @onclick="() => RotateAsync(90)" disabled="@_isCropping">↷ 90°</button>
+                <button type="button" class="e-control e-btn e-flat" @onclick="ResetCropAsync" disabled="@_isCropping">Réinitialiser</button>
+            </div>
+
+            <div class="image-cropper-meta">
+                Image originale : @_originalFileName · @FormatBytes(_originalFileSize)
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_cropError))
+            {
+                <div class="poster-picker__error image-cropper-error" role="alert">@_cropError</div>
+            }
+
+            <div class="image-cropper-footer">
+                <button type="button" class="e-control e-btn e-flat" @onclick="CancelCropAsync" disabled="@_isCropping">Annuler</button>
+                <button type="button" class="e-control e-btn e-primary" @onclick="ApplyCropAsync" disabled="@_isCropping">
+                    @if (_isCropping)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                        <span>Optimisation...</span>
+                    }
+                    else
+                    {
+                        <span>Appliquer le recadrage</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter, EditorRequired] public ChurchProgramPosterEditorState State { get; set; } = default!;
 
+    private const string CropCanvasId = "church-program-poster-cropper";
+    private const long TargetOptimizedSize = 300 * 1024;
+
     private string? _error;
+    private string? _cropError;
+    private string? _sourceDataUrl;
+    private string? _originalFileName;
+    private long _originalFileSize;
+    private double _cropZoom = 1;
+    private bool _showCropper;
+    private bool _initializeCropperAfterRender;
+    private bool _isCropping;
+    private int _fileInputKey;
 
     private bool IsCreate => State.ProgramId == Guid.Empty;
     private bool HasExistingPoster => !string.IsNullOrWhiteSpace(State.ExistingPosterLink);
@@ -121,18 +210,126 @@
                 return;
             }
 
-            State.Select(new ChurchProgramPosterUpload(file.Name, contentType, content));
+            _sourceDataUrl = $"data:{contentType};base64,{Convert.ToBase64String(content)}";
+            _originalFileName = file.Name;
+            _originalFileSize = file.Size;
+            _cropZoom = 1;
+            _cropError = null;
+            _showCropper = true;
+            _initializeCropperAfterRender = true;
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or InvalidOperationException)
         {
             _error = "Impossible de lire le fichier sélectionné.";
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_initializeCropperAfterRender || string.IsNullOrWhiteSpace(_sourceDataUrl))
+            return;
+
+        _initializeCropperAfterRender = false;
+        try
+        {
+            await JS.InvokeVoidAsync("chandorImageCropper.initialize", CropCanvasId, _sourceDataUrl);
+        }
+        catch (JSException)
+        {
+            _cropError = "Impossible d’initialiser l’éditeur d’image dans ce navigateur.";
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnZoomChangedAsync(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        if (!double.TryParse(args.Value?.ToString(), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var zoom))
+            return;
+
+        _cropZoom = Math.Clamp(zoom, 1, 4);
+        await JS.InvokeVoidAsync("chandorImageCropper.setZoom", CropCanvasId, _cropZoom);
+    }
+
+    private Task RotateAsync(int degrees) =>
+        JS.InvokeVoidAsync("chandorImageCropper.rotate", CropCanvasId, degrees).AsTask();
+
+    private async Task ResetCropAsync()
+    {
+        _cropZoom = 1;
+        await JS.InvokeVoidAsync("chandorImageCropper.reset", CropCanvasId);
+    }
+
+    private async Task ApplyCropAsync()
+    {
+        if (_isCropping)
+            return;
+
+        _isCropping = true;
+        _cropError = null;
+        try
+        {
+            var result = await JS.InvokeAsync<CroppedImageResult>(
+                "chandorImageCropper.exportImage",
+                CropCanvasId,
+                TargetOptimizedSize);
+
+            if (result is null || string.IsNullOrWhiteSpace(result.Base64))
+                throw new InvalidOperationException("Le navigateur n’a pas retourné l’image optimisée.");
+
+            var content = Convert.FromBase64String(result.Base64);
+            if (content.LongLength > ChurchProgramPosterEditorState.MaximumFileSize)
+                throw new InvalidOperationException("L’image optimisée dépasse encore la limite de 5 Mo.");
+
+            var baseName = Path.GetFileNameWithoutExtension(_originalFileName ?? "poster");
+            var extension = result.ContentType == "image/png" ? ".png" : ".webp";
+            State.Select(new ChurchProgramPosterUpload(
+                $"{baseName}-optimized{extension}",
+                result.ContentType,
+                content));
+
+            _error = null;
+            await CloseCropperAsync();
+        }
+        catch (Exception ex) when (ex is JSException or FormatException or InvalidOperationException)
+        {
+            _cropError = "Impossible d’optimiser cette image. Essayez une autre image.";
+        }
+        finally
+        {
+            _isCropping = false;
+        }
+    }
+
+    private async Task CancelCropAsync()
+    {
+        if (_isCropping)
+            return;
+        await CloseCropperAsync();
+    }
+
+    private async Task CloseCropperAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("chandorImageCropper.dispose", CropCanvasId);
+        }
+        catch (JSException)
+        {
+            // The canvas may already have been removed while closing the Scheduler editor.
+        }
+
+        _showCropper = false;
+        _sourceDataUrl = null;
+        _cropError = null;
+        _fileInputKey++;
     }
 
     private void RemoveSelectedPoster()
     {
         State.RemoveSelected();
         _error = null;
+        _fileInputKey++;
     }
 
     private void MarkPosterForDeletion()
@@ -174,5 +371,36 @@
         }
 
         return null;
+    }
+
+    private static string FormatBytes(long bytes) => bytes switch
+    {
+        >= 1024 * 1024 => $"{bytes / 1024d / 1024d:0.##} Mo",
+        >= 1024 => $"{bytes / 1024d:0.#} Ko",
+        _ => $"{bytes} octets"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_showCropper)
+            return;
+
+        try
+        {
+            await JS.InvokeVoidAsync("chandorImageCropper.dispose", CropCanvasId);
+        }
+        catch (JSException)
+        {
+            // The runtime or canvas can already be gone during component disposal.
+        }
+    }
+
+    private sealed class CroppedImageResult
+    {
+        public string Base64 { get; set; } = string.Empty;
+        public string ContentType { get; set; } = "image/webp";
+        public long Size { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

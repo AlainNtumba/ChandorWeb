@@ -88,3 +88,188 @@
     margin-top: .6rem;
     color: #b45309;
 }
+
+.image-cropper-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, .72);
+    backdrop-filter: blur(3px);
+}
+
+.image-cropper-dialog {
+    width: min(620px, 100%);
+    max-height: calc(100vh - 2rem);
+    padding: 1rem;
+    overflow-y: auto;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .3);
+}
+
+.image-cropper-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .85rem;
+}
+
+.image-cropper-header h3 {
+    margin: 0;
+    color: #111827;
+    font-size: 1.05rem;
+}
+
+.image-cropper-header p {
+    margin: .25rem 0 0;
+    color: #64748b;
+    font-size: .78rem;
+}
+
+.image-cropper-close {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: #475569;
+    font-size: 1.65rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.image-cropper-stage {
+    position: relative;
+    width: min(500px, 100%);
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #111827;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .2);
+    touch-action: none;
+    user-select: none;
+}
+
+.image-cropper-stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+}
+
+.image-cropper-stage canvas:active {
+    cursor: grabbing;
+}
+
+.image-cropper-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, .42), inset 0 0 0 2px rgba(255, 255, 255, .9);
+    touch-action: none;
+}
+
+.image-cropper-grid__line {
+    position: absolute;
+    background: rgba(255, 255, 255, .38);
+    pointer-events: none;
+}
+
+.image-cropper-grid__line--v1,
+.image-cropper-grid__line--v2 {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+}
+
+.image-cropper-grid__line--v1 { left: 33.333%; }
+.image-cropper-grid__line--v2 { left: 66.666%; }
+
+.image-cropper-grid__line--h1,
+.image-cropper-grid__line--h2 {
+    right: 0;
+    left: 0;
+    height: 1px;
+}
+
+.image-cropper-grid__line--h1 { top: 33.333%; }
+.image-cropper-grid__line--h2 { top: 66.666%; }
+
+.image-cropper-handle {
+    position: absolute;
+    z-index: 2;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #fff;
+    background: #2563eb;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, .45);
+    pointer-events: auto;
+}
+
+.image-cropper-handle--nw { top: 0; left: 0; cursor: nwse-resize; }
+.image-cropper-handle--n { top: 0; left: 50%; cursor: ns-resize; transform: translateX(-50%); }
+.image-cropper-handle--ne { top: 0; right: 0; cursor: nesw-resize; }
+.image-cropper-handle--e { top: 50%; right: 0; cursor: ew-resize; transform: translateY(-50%); }
+.image-cropper-handle--se { right: 0; bottom: 0; cursor: nwse-resize; }
+.image-cropper-handle--s { bottom: 0; left: 50%; cursor: ns-resize; transform: translateX(-50%); }
+.image-cropper-handle--sw { bottom: 0; left: 0; cursor: nesw-resize; }
+.image-cropper-handle--w { top: 50%; left: 0; cursor: ew-resize; transform: translateY(-50%); }
+
+.image-cropper-help,
+.image-cropper-meta {
+    margin-top: .55rem;
+    color: #64748b;
+    font-size: .75rem;
+    text-align: center;
+}
+
+.image-cropper-controls {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin-top: .85rem;
+    flex-wrap: wrap;
+}
+
+.image-cropper-controls label {
+    color: #374151;
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.image-cropper-controls input[type="range"] {
+    flex: 1 1 160px;
+    accent-color: #2563eb;
+}
+
+.image-cropper-error {
+    margin: .75rem 0 0;
+    text-align: center;
+}
+
+.image-cropper-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: .65rem;
+    margin-top: 1rem;
+    padding-top: .85rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+@media (max-width: 520px) {
+    .image-cropper-backdrop {
+        padding: .35rem;
+    }
+
+    .image-cropper-dialog {
+        max-height: calc(100vh - .7rem);
+        padding: .75rem;
+    }
+
+    .image-cropper-controls .e-btn {
+        flex: 1 1 auto;
+    }
+}
