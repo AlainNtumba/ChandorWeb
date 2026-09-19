@@ -1,9 +1,10 @@
 @using ChandorAdmin.Components.GlobalNotification
 @using ChandorAdmin.Configuration
-@using ChandorAdmin.Interfaces.Api
 @using ChandorProject.Shared.DTOs.Account
+@using ChandorProject.Shared.DTOs.Currency
+@using ChandorProject.Shared.DTOs.TransactionCategory
+@using ChandorProject.Shared.DTOs.TransactionType
 @implements IDisposable
-@inject IFinanceService FinanceService
 
 <div id="dlg-content">
     <SfDialogProvider />
@@ -26,28 +27,79 @@
                                 <DataAnnotationsValidator />
 
                                 <table class="c-table">
-                                    <tr>
-                                        <td class="e-rowcell">
-                                            <div>
-                                                <SfDropDownList TValue="string" TItem="TransType" 
-                                                    DataSource="@_transactionTypes" 
-                                                    @bind-Value="_editModel.TransactionType" 
-                                                    Placeholder="Type de transaction" 
-                                                    FloatLabelType="FloatLabelType.Always" 
-                                                    Width="100%">
-                                                    <DropDownListFieldSettings Text="Name" Value="Value" />
-                                                    <DropDownListEvents TValue="string" TItem="TransType" ValueChange="OnTransactionTypeChanged" />
-                                                </SfDropDownList>
-                                            </div>
-                                            <span class="c-err-msg">
-                                                <span><ValidationMessage For="@(() => _editModel.TransactionType)" /></span>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </table>
-
-                                <table class="c-table">
                                     <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TValue="Guid?"
+                                                                    TItem="TransactionTypeDto"
+                                                                    DataSource="@_transactionTypes"
+                                                                    @bind-Value="_editModel.TransactionTypeId"
+                                                                    Placeholder="Type de transaction"
+                                                                    FloatLabelType="FloatLabelType.Always"
+                                                                    Width="100%">
+                                                        <DropDownListFieldSettings Text="Name" Value="Id" />
+                                                        <DropDownListEvents TValue="Guid?" TItem="TransactionTypeDto" ValueChange="OnTransactionTypeChanged" />
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.TransactionTypeId)" /></span>
+                                                </span>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TValue="Guid?"
+                                                                    TItem="TransactionCategoryDto"
+                                                                    DataSource="@_categoryDataSource"
+                                                                    @bind-Value="_editModel.CategoryId"
+                                                                    Placeholder="Catégorie"
+                                                                    FloatLabelType="FloatLabelType.Always"
+                                                                    Width="100%">
+                                                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.CategoryId)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TValue="Guid?"
+                                                                    TItem="CurrencyDto"
+                                                                    DataSource="@_currencies"
+                                                                    @bind-Value="_editModel.CurrencyId"
+                                                                    Placeholder="Devise"
+                                                                    FloatLabelType="FloatLabelType.Always"
+                                                                    Width="100%">
+                                                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                                                        <DropDownListEvents TValue="Guid?" TItem="CurrencyDto" ValueChange="OnCurrencyChanged" />
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.CurrencyId)" /></span>
+                                                </span>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div>
+                                                    <SfDropDownList TValue="Guid?"
+                                                                    TItem="AccountDto"
+                                                                    DataSource="@_accountDataSource"
+                                                                    @bind-Value="_editModel.AccountId"
+                                                                    Placeholder="Compte affecté"
+                                                                    FloatLabelType="FloatLabelType.Always"
+                                                                    Width="100%">
+                                                        <DropDownListFieldSettings Text="AccountName" Value="Id"></DropDownListFieldSettings>
+                                                    </SfDropDownList>
+                                                </div>
+                                                <span class="c-err-msg">
+                                                    <span><ValidationMessage For="@(() => _editModel.AccountId)" /></span>
+                                                </span>
+                                            </td>
+                                        </tr>
+
                                         <tr>
                                             <td class="e-rowcell">
                                                 <div>
@@ -67,46 +119,12 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td class="e-rowcell">
+                                            <td class="e-rowcell" colspan="2">
                                                 <div>
-                                                    <SfDropDownList TValue="Guid?"
-                                                                    TItem="TransactionCategoryOption"
-                                                                    DataSource="@_categoryDataSource"
-                                                                    @bind-Value="_editModel.CategoryId"
-                                                                    Placeholder="Catégorie"
-                                                                    FloatLabelType="FloatLabelType.Always"
-                                                                    Width="100%">
-                                                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
-                                                    </SfDropDownList>
-                                                </div>
-                                                <span class="c-err-msg">
-                                                    <span><ValidationMessage For="@(() => _editModel.CategoryId)" /></span>
-                                                </span>
-                                            </td>
-                                            <td class="e-rowcell">
-                                                <div>
-                                                    <SfNumericTextBox TValue="decimal?" Placeholder="Montant" FloatLabelType="FloatLabelType.Always" Format="c2" Min="0.01m" Width="100%" @bind-Value="_editModel.Amount"></SfNumericTextBox>
+                                                    <SfNumericTextBox TValue="decimal?" Placeholder="Montant" FloatLabelType="FloatLabelType.Always" Format="n2" Min="0.01m" Width="100%" @bind-Value="_editModel.Amount"></SfNumericTextBox>
                                                 </div>
                                                 <span class="c-err-msg">
                                                     <span><ValidationMessage For="@(() => _editModel.Amount)" /></span>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="e-rowcell" colspan="2">
-                                                <div>
-                                                    <SfDropDownList TValue="Guid?"
-                                                                    TItem="AccountDto"
-                                                                    DataSource="@_accounts"
-                                                                    @bind-Value="_editModel.AccountId"
-                                                                    Placeholder="Compte affecté"
-                                                                    FloatLabelType="FloatLabelType.Always"
-                                                                    Width="100%">
-                                                        <DropDownListFieldSettings Text="AccountName" Value="Id"></DropDownListFieldSettings>
-                                                    </SfDropDownList>
-                                                </div>
-                                                <span class="c-err-msg">
-                                                    <span><ValidationMessage For="@(() => _editModel.AccountId)" /></span>
                                                 </span>
                                             </td>
                                         </tr>

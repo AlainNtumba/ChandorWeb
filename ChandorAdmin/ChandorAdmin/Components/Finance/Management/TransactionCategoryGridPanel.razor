@@ -1,6 +1,6 @@
 @using ChandorAdmin.Components.GlobalNotification
-@using ChandorProject.Shared.DTOs.Account
-@using ChandorProject.Shared.DTOs.Currency
+@using ChandorProject.Shared.DTOs.TransactionCategory
+@using ChandorProject.Shared.DTOs.TransactionType
 @implements IDisposable
 
 @if (_dialogShell)
@@ -11,7 +11,7 @@
               IsModal="true"
               ShowCloseIcon="true"
               CloseOnEscape="false"
-              Header="Gestion des comptes">
+              Header="Gestion des catégories">
         <DialogEvents Opened="OnDialogOpenedAsync" Closed="OnDialogClosedAsync" />
         <DialogTemplates>
             <Content>
@@ -25,7 +25,7 @@
                 {
                     <div class="finance-mgmt-grid-host">
                         <SfGrid @ref="_gridRef"
-                                TValue="AccountDto"
+                                TValue="TransactionCategoryDto"
                                 DataSource="@_gridData"
                                 Toolbar="@_toolbarItems"
                                 AllowSelection="true"
@@ -33,7 +33,7 @@
                                 AllowSorting="true"
                                 AllowExcelExport="true"
                                 Width="100%">
-                            <GridEvents TValue="AccountDto"
+                            <GridEvents TValue="TransactionCategoryDto"
                                         OnActionBegin="OnActionBeginAsync"
                                         OnToolbarClick="OnToolbarClickAsync" />
                             <GridEditSettings AllowAdding="true"
@@ -46,18 +46,17 @@
                             <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple" />
                             <GridColumns>
                                 <GridColumn Type="ColumnType.CheckBox" Width="40" />
-                                <GridColumn Field="@nameof(AccountDto.Id)" IsPrimaryKey="true" Visible="false" />
-                                <GridColumn Field="@nameof(AccountDto.AccountName)" HeaderText="Nom du compte" ValidationRules="@_requiredRules" />
-                                <GridColumn Field="@nameof(AccountDto.AccountNumber)" HeaderText="Numéro de compte" ValidationRules="@_requiredRules" />
-                                <GridForeignColumn TValue="CurrencyDto"
-                                                  Field="@nameof(AccountDto.CurrencyId)"
-                                                  HeaderText="Devise"
-                                                  ForeignKeyField="@nameof(CurrencyDto.Id)"
-                                                  ForeignKeyValue="@nameof(CurrencyDto.Name)"
-                                                  ForeignDataSource="@_currencies"
+                                <GridColumn Field="@nameof(TransactionCategoryDto.Id)" IsPrimaryKey="true" Visible="false" />
+                                <GridColumn Field="@nameof(TransactionCategoryDto.Name)" HeaderText="Nom" ValidationRules="@_requiredRules" />
+                                <GridForeignColumn TValue="TransactionTypeDto"
+                                                  Field="@nameof(TransactionCategoryDto.TransactionTypeId)"
+                                                  HeaderText="Type"
+                                                  ForeignKeyField="@nameof(TransactionTypeDto.Id)"
+                                                  ForeignKeyValue="@nameof(TransactionTypeDto.Name)"
+                                                  ForeignDataSource="@_transactionTypes"
                                                   ValidationRules="@_requiredRules"
-                                                  Width="140" />
-                                <GridColumn Field="@nameof(AccountDto.Description)" HeaderText="Description" />
+                                                  Width="160" />
+                                <GridColumn Field="@nameof(TransactionCategoryDto.Description)" HeaderText="Description" />
                             </GridColumns>
                         </SfGrid>
                     </div>

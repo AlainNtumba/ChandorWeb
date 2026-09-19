@@ -56,7 +56,6 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDepartmentTeamService, DepartmentTeamService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IExpensesService, ExpensesService>();
-builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<IExpensesTypeService, ExpensesTypeService>();
 builder.Services.AddScoped<IIncomeService, IncomeService>();
 builder.Services.AddScoped<IIncomeTypeService, IncomeTypeService>();

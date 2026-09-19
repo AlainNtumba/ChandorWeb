@@ -1,13 +1,10 @@
 using ChandorAdmin.Components.Finance.Transactions;
-using ChandorAdmin.Interfaces.Api;
 using Microsoft.AspNetCore.Components;
 
 namespace ChandorAdmin.Pages.ncd;
 
 public partial class Transactions
 {
-    [Inject] public IFinanceService FinanceService { get; set; } = null!;
-
     TransactionGridPanel? _gridRef;
     TransactionFilterSidebar? _filterRef;
     TransactionEditorDialog? _dialogRef;
@@ -41,7 +38,7 @@ public partial class Transactions
 
         var (start, end) = TransactionGridPanel.GetCalendarMonthBounds(DateTime.Today);
         _filterRef.SetDateRange(start, end);
-        await _gridRef.LoadTransactionsAsync(start, end);
+        await _gridRef.LoadTransactionsAsync(start, end, _filterRef.CurrencyId);
         _filterRef.RebuildCategoryList();
         _filterRef.ApplyToolbarTypeFilter(_typeFilter);
         _gridRef.UpdateTotalBalance();
