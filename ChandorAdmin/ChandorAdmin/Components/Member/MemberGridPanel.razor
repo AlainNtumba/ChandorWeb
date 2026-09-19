@@ -1,8 +1,11 @@
 @using ChandorAdmin.Interfaces.Api
+@using ChandorAdmin.Configuration
 @using ChandorProject.Shared.DTOs.Member
+@using Microsoft.Extensions.Options
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Navigations
 @inject IMemberService srv;
+@inject IOptions<ChandorApiOptions> ApiOptions;
 
 <div id="expense-grid-wrapper">
     @if (_renderGrid)
@@ -27,6 +30,26 @@
             <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
             <GridColumns>
                 <GridColumn Type="ColumnType.CheckBox" Width="40"></GridColumn>
+                <GridColumn HeaderText="Photo" Width="72" AllowSorting="false" AllowFiltering="false">
+                    <Template>
+                        @{
+                            var member = context as MemberDetailsDto;
+                        }
+                        @if (member is not null)
+                        {
+                            <div class="member-grid-avatar">
+                                @if (!string.IsNullOrWhiteSpace(member.ProfileImageUrl))
+                                {
+                                    <img src="@GetProfileImageUrl(member.ProfileImageUrl)" alt="Photo de @member.Name @member.Surname" />
+                                }
+                                else
+                                {
+                                    <span>@GetInitials(member.Name, member.Surname)</span>
+                                }
+                            </div>
+                        }
+                    </Template>
+                </GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.Name)" HeaderText="Nom" Width="120" ValidationRules="@_rules"></GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.Surname)" HeaderText="Prénom" Width="120" ValidationRules="@_rules"></GridColumn>
                 <GridColumn Field="@nameof(MemberDetailsDto.Postname)" HeaderText="Poste Nom" Width="120" ValidationRules="@_rules"></GridColumn>
@@ -40,5 +63,4 @@
         </SfGrid>
     }
 </div>
-
 

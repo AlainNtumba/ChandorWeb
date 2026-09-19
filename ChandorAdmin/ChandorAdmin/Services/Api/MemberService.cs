@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using ChandorAdmin.Interfaces.Api;
+using ChandorAdmin.Models.Member;
+using System.Net.Http.Headers;
 using ChandorProject.Shared.DTOs.Member;
 using ChandorProject.Shared.Models;
 
@@ -17,6 +19,24 @@ public sealed class MemberService(ChandorApiHttp api) : IMemberService
 
     public Task<DataResponse<MemberDto>?> UpdateMemberAsync(UpdateMemberDto member, CancellationToken cancellationToken = default)
         => api.PutDataResponseAsync<MemberDto>($"{C}/update-member", JsonContent.Create(member), cancellationToken);
+
+    public async Task<DataResponse<MemberProfileImageDto>?> UploadProfileImageAsync(
+        Guid memberId,
+        MemberProfileImageUpload image,
+        CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(image.Content);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType);
+        form.Add(fileContent, "file", image.FileName);
+        return await api.PutDataResponseAsync<MemberProfileImageDto>(
+            $"{C}/{memberId:D}/profile-image",
+            form,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<DataResponse<bool>?> DeleteProfileImageAsync(Guid memberId, CancellationToken cancellationToken = default)
+        => api.DeleteDataResponseAsync<bool>($"{C}/{memberId:D}/profile-image", cancellationToken);
 
     public Task<DataResponse<bool>?> DeleteMemberAsync(Guid id, CancellationToken cancellationToken = default)
         => api.DeleteDataResponseAsync<bool>($"{C}/delete-member/{id}", cancellationToken);
@@ -44,4 +64,7 @@ public sealed class MemberService(ChandorApiHttp api) : IMemberService
 
     public Task<DataResponse<IEnumerable<MemberDetailsDto>>?> GetMembersAsync(CancellationToken cancellationToken = default)
         => api.GetDataResponseAsync<IEnumerable<MemberDetailsDto>>($"{C}/get-members-details", cancellationToken);
+
+    public Task<DataResponse<IEnumerable<MemberDto>>?> GetAllMembersAsync(CancellationToken cancellationToken = default)
+        => api.GetDataResponseAsync<IEnumerable<MemberDto>>($"{C}/get-members", cancellationToken);
 }

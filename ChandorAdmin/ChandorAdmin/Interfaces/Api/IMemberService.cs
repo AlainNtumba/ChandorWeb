@@ -1,5 +1,6 @@
 using ChandorProject.Shared.DTOs.Member;
 using ChandorProject.Shared.Models;
+using ChandorAdmin.Models.Member;
 
 namespace ChandorAdmin.Interfaces.Api;
 
@@ -10,6 +11,10 @@ public interface IMemberService
     Task<DataResponse<MemberDto>?> AddMemberWithUserAsync(MemberRegistrationDto member, CancellationToken cancellationToken = default);
 
     Task<DataResponse<MemberDto>?> UpdateMemberAsync(UpdateMemberDto member, CancellationToken cancellationToken = default);
+
+    Task<DataResponse<MemberProfileImageDto>?> UploadProfileImageAsync(Guid memberId, MemberProfileImageUpload image, CancellationToken cancellationToken = default);
+
+    Task<DataResponse<bool>?> DeleteProfileImageAsync(Guid memberId, CancellationToken cancellationToken = default);
 
     Task<DataResponse<bool>?> DeleteMemberAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -28,4 +33,6 @@ public interface IMemberService
     Task<DataResponse<bool>?> ConfirmResetPasswordAsync(ConfirmResetPasswordDto request, CancellationToken cancellationToken = default);
 
     Task<DataResponse<IEnumerable<MemberDetailsDto>>?> GetMembersAsync(CancellationToken cancellationToken = default);
+
+    Task<DataResponse<IEnumerable<MemberDto>>?> GetAllMembersAsync(CancellationToken cancellationToken = default);
 }

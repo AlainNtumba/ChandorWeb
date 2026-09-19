@@ -44,9 +44,26 @@ public partial class MemberGridPanel
     {
         try
         {
-            var data = await srv.GetMembersAsync();
-            if (data is { Success: true, Data: not null })
-                AllMembers = data.Data.ToList();
+            var detailsTask = srv.GetMembersAsync();
+            var membersTask = srv.GetAllMembersAsync();
+            await Task.WhenAll(detailsTask, membersTask);
+            var details = await detailsTask;
+            var members = await membersTask;
+            if (details is { Success: true, Data: not null })
+            {
+                var imageByMemberId = members is { Success: true, Data: not null }
+                    ? members.Data.ToDictionary(member => member.Id)
+                    : new Dictionary<Guid, MemberDto>();
+                var rows = details.Data.ToList();
+                foreach (var row in rows)
+                {
+                    if (!imageByMemberId.TryGetValue(row.Id, out var member))
+                        continue;
+                    row.ProfileImageKey = member.ProfileImageKey;
+                    row.ProfileImageUrl = member.ProfileImageUrl;
+                }
+                AllMembers = rows;
+            }
             else
                 AllMembers = [];
         }
@@ -61,7 +78,7 @@ public partial class MemberGridPanel
         StateHasChanged();
     }
 
-    public async Task AddMember(NewMemberDto member)
+    public async Task<MemberDto?> AddMember(NewMemberDto member)
     {
         var insert = await srv.AddSimpleMemberAsync(member);
 
@@ -84,9 +101,11 @@ public partial class MemberGridPanel
 
             StateHasChanged();
         }
+
+        return insert is { Success: true, Data: not null } ? insert.Data : null;
     }
 
-    public async Task EditMember(UpdateMemberDto member)
+    public async Task<MemberDto?> EditMember(UpdateMemberDto member)
     {
         var edit = await srv.UpdateMemberAsync(member);
 
@@ -107,6 +126,8 @@ public partial class MemberGridPanel
             await NotificationRef.Notify(responseMessage, responseType, responseHeader);
             await LoadData();
         }
+
+        return edit is { Success: true, Data: not null } ? edit.Data : null;
     }
 
     public async Task DeleteMember(MemberDetailsDto member)
@@ -222,6 +243,25 @@ public partial class MemberGridPanel
             Note = member.Note,
             AgeGroupId = member.AgeGroupId,
             MemberTypeId = member.MemberTypeId,
+            ProfileImageKey = member.ProfileImageKey,
+            ProfileImageUrl = member.ProfileImageUrl,
         };
+    }
+
+    private string GetProfileImageUrl(string value)
+    {
+        if (Uri.TryCreate(value, UriKind.Absolute, out var absolute))
+            return absolute.ToString();
+        var configuredBase = new Uri(ApiOptions.Value.BaseUrl.TrimEnd('/') + "/");
+        var origin = new Uri(configuredBase.GetLeftPart(UriPartial.Authority) + "/");
+        return new Uri(origin, value.TrimStart('/')).ToString();
+    }
+
+    private static string GetInitials(string? name, string? surname)
+    {
+        var first = string.IsNullOrWhiteSpace(name) ? null : name.Trim()[0].ToString();
+        var second = string.IsNullOrWhiteSpace(surname) ? null : surname.Trim()[0].ToString();
+        var initials = string.Concat(first, second).ToUpperInvariant();
+        return initials.Length > 0 ? initials : "?";
     }
 }

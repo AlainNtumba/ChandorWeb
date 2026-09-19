@@ -1,5 +1,6 @@
 @using ChandorAdmin.Configuration
 @using ChandorAdmin.Interfaces.Api
+@using ChandorAdmin.Models.Member
 @using ChandorProject.Shared.DTOs.AgeGroup
 @using ChandorProject.Shared.DTOs.Member
 @using ChandorProject.Shared.DTOs.MemberType
@@ -23,6 +24,50 @@
                             <EditForm Model="@_editModel" id="@_formId" OnValidSubmit="OnValidSubmitAsync">
                                 <DataAnnotationsValidator />
                                 <CustomFormValidator @ref="@_customFormValidator" />
+                                <section class="member-photo-editor">
+                                    <div class="member-photo-editor__preview">
+                                        @if (!string.IsNullOrWhiteSpace(ProfilePreviewUrl))
+                                        {
+                                            <img src="@ProfilePreviewUrl" alt="Photo de profil de @_editModel.Name" />
+                                        }
+                                        else
+                                        {
+                                            <span>@MemberInitials</span>
+                                        }
+                                    </div>
+                                    <div class="member-photo-editor__content">
+                                        <div class="member-photo-editor__title">Photo de profil</div>
+                                        <div class="member-photo-editor__hint">JPEG, PNG ou WebP — 5 Mo maximum.</div>
+                                        <div class="member-photo-editor__actions">
+                                            <label class="e-control e-btn e-primary member-photo-editor__upload">
+                                                @(HasVisibleProfileImage ? "Remplacer" : "Ajouter une photo")
+                                                <InputFile @key="_profileInputKey"
+                                                           OnChange="OnProfileImageSelectedAsync"
+                                                           accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
+                                            </label>
+                                            @if (_selectedProfileImage is not null)
+                                            {
+                                                <button type="button" class="e-control e-btn e-flat" @onclick="RemoveSelectedProfileImage">Retirer</button>
+                                            }
+                                            else if (HasExistingProfileImage && !_deleteProfileImage)
+                                            {
+                                                <button type="button" class="e-control e-btn e-danger e-flat" @onclick="MarkProfileImageForDeletion">Supprimer</button>
+                                            }
+                                            else if (_deleteProfileImage)
+                                            {
+                                                <button type="button" class="e-control e-btn e-flat" @onclick="CancelProfileImageDeletion">Annuler la suppression</button>
+                                            }
+                                        </div>
+                                        @if (_deleteProfileImage)
+                                        {
+                                            <div class="member-photo-editor__pending">La photo sera supprimée lors de l’enregistrement.</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(_profileError))
+                                        {
+                                            <div class="member-photo-editor__error" role="alert">@_profileError</div>
+                                        }
+                                    </div>
+                                </section>
                                 <table class="c-table">
                                     <tbody>
                                         <tr>
@@ -41,6 +86,38 @@
                                 </table>
                                 <table class="c-table">
                                     <tbody>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div class="e-float-input e-control-wrapper">
+                                                    <input type="email" class="e-control e-textbox" @bind="_email1" />
+                                                    <span class="e-float-line"></span>
+                                                    <label class="e-float-text e-label-top">Email principal</label>
+                                                </div>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div class="e-float-input e-control-wrapper">
+                                                    <input type="email" class="e-control e-textbox" @bind="_email2" />
+                                                    <span class="e-float-line"></span>
+                                                    <label class="e-float-text e-label-top">Email secondaire</label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="e-rowcell">
+                                                <div class="e-float-input e-control-wrapper">
+                                                    <input type="tel" class="e-control e-textbox" @bind="_phone1" />
+                                                    <span class="e-float-line"></span>
+                                                    <label class="e-float-text e-label-top">Téléphone principal</label>
+                                                </div>
+                                            </td>
+                                            <td class="e-rowcell">
+                                                <div class="e-float-input e-control-wrapper">
+                                                    <input type="tel" class="e-control e-textbox" @bind="_phone2" />
+                                                    <span class="e-float-line"></span>
+                                                    <label class="e-float-text e-label-top">Téléphone secondaire</label>
+                                                </div>
+                                            </td>
+                                        </tr>
                                         <tr>
                                             <td class="e-rowcell">
                                                 <div>
@@ -215,10 +292,10 @@
                 <DialogButtons>
                     <DialogButton form="@_formId"
                                   Type="Syncfusion.Blazor.Popups.ButtonType.Submit"
-                                  IsPrimary="true" Content="@_buttonContent" />
+                                  IsPrimary="true" Disabled="@_isSaving" Content="@(_isSaving ? "Chargement..." : _buttonContent)" />
 
                     <DialogButton Type="Syncfusion.Blazor.Popups.ButtonType.Button"
-                                  Content="Cancel" IsPrimary="true" OnClick="OnClickCancel" />
+                                  Content="Cancel" Disabled="@_isSaving" IsPrimary="true" OnClick="OnClickCancel" />
                 </DialogButtons>
 
                 @* <DialogEvents Created="OnCreate"></DialogEvents> *@
@@ -226,5 +303,4 @@
         }
     </div>
 </div>
-
 

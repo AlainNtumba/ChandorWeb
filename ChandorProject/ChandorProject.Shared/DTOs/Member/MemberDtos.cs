@@ -21,6 +21,7 @@ public class MemberDto
     [StringLength(100, ErrorMessage = "The field exceeds the maximum allowed length.")]
     public string Postname { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "This field is required.")]
     [DataType(DataType.Date, ErrorMessage = "Invalid date format.")]
     public DateTime Birthday { get; set; }
 
@@ -41,6 +42,10 @@ public class MemberDto
 
     [StringLength(1000, ErrorMessage = "The field exceeds the maximum allowed length.")]
     public string Note { get; set; } = string.Empty;
+
+    public string? ProfileImageKey { get; set; }
+
+    public string? ProfileImageUrl { get; set; }
 
     [Required(ErrorMessage = "This field is required.")]
     public Guid AgeGroupId { get; set; }
@@ -78,6 +83,15 @@ public class MemberDetailsDto
     public DateTime Created { get; set; }
     public Guid AgeGroupId { get; set; }
     public Guid MemberTypeId { get; set; }
+    public string? ProfileImageKey { get; set; }
+    public string? ProfileImageUrl { get; set; }
+}
+
+public class MemberProfileImageDto
+{
+    public Guid MemberId { get; set; }
+    public string? ProfileImageKey { get; set; }
+    public string? ProfileImageUrl { get; set; }
 }
 
 public class NewMemberDto
@@ -98,6 +112,7 @@ public class NewMemberDto
     [StringLength(100, ErrorMessage = "The field exceeds the maximum allowed length.")]
     public string Postname { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "This field is required.")]
     [DataType(DataType.Date, ErrorMessage = "Invalid date format.")]
     public DateTime Birthday { get; set; }
 
@@ -125,8 +140,7 @@ public class NewMemberDto
     [Required(ErrorMessage = "This field is required.")]
     public Guid MemberTypeId { get; set; }
 
-    [Required(ErrorMessage = "This field is required.")]
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     [Phone(ErrorMessage = "Invalid phone number format.")]
     public string? NumPhone1 { get; set; }
@@ -188,5 +202,16 @@ public class UpdateMemberDto
 
     [Required(ErrorMessage = "This field is required.")]
     public Guid MemberTypeId { get; set; }
-}
 
+    [Phone(ErrorMessage = "Invalid phone number format.")]
+    public string? NumPhone1 { get; set; }
+
+    [Phone(ErrorMessage = "Invalid phone number format.")]
+    public string? NumPhone2 { get; set; }
+
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    public string? Email1 { get; set; }
+
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    public string? Email2 { get; set; }
+}
