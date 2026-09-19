@@ -37,25 +37,26 @@
                                     </div>
                                     <div class="member-photo-editor__content">
                                         <div class="member-photo-editor__title">Photo de profil</div>
-                                        <div class="member-photo-editor__hint">JPEG, PNG ou WebP — 5 Mo maximum.</div>
+                                        <div class="member-photo-editor__hint">JPEG, PNG ou WebP — compression automatique avant l’envoi.</div>
                                         <div class="member-photo-editor__actions">
                                             <label class="e-control e-btn e-primary member-photo-editor__upload">
-                                                @(HasVisibleProfileImage ? "Remplacer" : "Ajouter une photo")
+                                                @(_isOptimizingProfileImage ? "Compression..." : HasVisibleProfileImage ? "Remplacer" : "Ajouter une photo")
                                                 <InputFile @key="_profileInputKey"
                                                            OnChange="OnProfileImageSelectedAsync"
+                                                           disabled="@_isOptimizingProfileImage"
                                                            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
                                             </label>
                                             @if (_selectedProfileImage is not null)
                                             {
-                                                <button type="button" class="e-control e-btn e-flat" @onclick="RemoveSelectedProfileImage">Retirer</button>
+                                                <button type="button" class="e-control e-btn e-flat" disabled="@_isOptimizingProfileImage" @onclick="RemoveSelectedProfileImage">Retirer</button>
                                             }
                                             else if (HasExistingProfileImage && !_deleteProfileImage)
                                             {
-                                                <button type="button" class="e-control e-btn e-danger e-flat" @onclick="MarkProfileImageForDeletion">Supprimer</button>
+                                                <button type="button" class="e-control e-btn e-danger e-flat" disabled="@_isOptimizingProfileImage" @onclick="MarkProfileImageForDeletion">Supprimer</button>
                                             }
                                             else if (_deleteProfileImage)
                                             {
-                                                <button type="button" class="e-control e-btn e-flat" @onclick="CancelProfileImageDeletion">Annuler la suppression</button>
+                                                <button type="button" class="e-control e-btn e-flat" disabled="@_isOptimizingProfileImage" @onclick="CancelProfileImageDeletion">Annuler la suppression</button>
                                             }
                                         </div>
                                         @if (_deleteProfileImage)
@@ -292,10 +293,10 @@
                 <DialogButtons>
                     <DialogButton form="@_formId"
                                   Type="Syncfusion.Blazor.Popups.ButtonType.Submit"
-                                  IsPrimary="true" Disabled="@_isSaving" Content="@(_isSaving ? "Chargement..." : _buttonContent)" />
+                                  IsPrimary="true" Disabled="@(_isSaving || _isOptimizingProfileImage)" Content="@(_isSaving ? "Chargement..." : _buttonContent)" />
 
                     <DialogButton Type="Syncfusion.Blazor.Popups.ButtonType.Button"
-                                  Content="Cancel" Disabled="@_isSaving" IsPrimary="true" OnClick="OnClickCancel" />
+                                  Content="Cancel" Disabled="@(_isSaving || _isOptimizingProfileImage)" IsPrimary="true" OnClick="OnClickCancel" />
                 </DialogButtons>
 
                 @* <DialogEvents Created="OnCreate"></DialogEvents> *@
@@ -303,4 +304,3 @@
         }
     </div>
 </div>
-

@@ -8,15 +8,20 @@ using Syncfusion.Blazor.Popups;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
 
 namespace ChandorAdmin.Components.Member;
 
 public partial class MemberEditorDialog
 {
+    private const long MaximumSourceProfileImageSize = 20 * 1024 * 1024;
     private const long MaximumProfileImageSize = 5 * 1024 * 1024;
+    private const long TargetProfileImageSize = 200 * 1024;
+    private const int MaximumProfileImageDimension = 1024;
 
     [Inject] private IMemberService MemberService { get; set; } = default!;
     [Inject] private IOptions<ChandorApiOptions> ApiOptions { get; set; } = default!;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     public MemberGridPanel? ContentRef { get; set; }
     SfDialog? _memberDialog;
@@ -31,6 +36,7 @@ public partial class MemberEditorDialog
     bool _createNewDialog;
     bool _pendingDialogShow;
     bool _isSaving;
+    bool _isOptimizingProfileImage;
     bool _deleteProfileImage;
     int _profileInputKey;
     string _buttonContent = "Add";
@@ -292,6 +298,9 @@ public partial class MemberEditorDialog
 
     private async Task OnProfileImageSelectedAsync(InputFileChangeEventArgs args)
     {
+        if (_isOptimizingProfileImage)
+            return;
+
         _profileError = null;
         var file = args.File;
         if (file.Size <= 0)
@@ -299,15 +308,15 @@ public partial class MemberEditorDialog
             _profileError = "Le fichier sélectionné est vide.";
             return;
         }
-        if (file.Size > MaximumProfileImageSize)
+        if (file.Size > MaximumSourceProfileImageSize)
         {
-            _profileError = "La photo ne peut pas dépasser 5 Mo.";
+            _profileError = "La photo source ne peut pas dépasser 20 Mo.";
             return;
         }
 
         try
         {
-            await using var source = file.OpenReadStream(MaximumProfileImageSize);
+            await using var source = file.OpenReadStream(MaximumSourceProfileImageSize);
             using var destination = new MemoryStream((int)file.Size);
             await source.CopyToAsync(destination);
             var content = destination.ToArray();
@@ -318,13 +327,63 @@ public partial class MemberEditorDialog
                 return;
             }
 
-            _selectedProfileImage = new MemberProfileImageUpload(file.Name, contentType, content);
+            _isOptimizingProfileImage = true;
+            StateHasChanged();
+
+            var sourceDataUrl = $"data:{contentType};base64,{Convert.ToBase64String(content)}";
+            var optimized = await JS.InvokeAsync<CompressedImageResult>(
+                "chandorImageCompression.compress",
+                sourceDataUrl,
+                TargetProfileImageSize,
+                MaximumProfileImageDimension);
+
+            var optimizedContent = Convert.FromBase64String(optimized.Base64);
+            var useOptimizedImage = optimizedContent.Length < content.Length;
+            var selectedContent = useOptimizedImage ? optimizedContent : content;
+            var selectedContentType = useOptimizedImage ? optimized.ContentType : contentType;
+            var selectedFileName = useOptimizedImage
+                ? CreateOptimizedFileName(file.Name, selectedContentType)
+                : file.Name;
+
+            if (selectedContent.Length > MaximumProfileImageSize)
+            {
+                _profileError = "La photo optimisée dépasse encore la limite de 5 Mo.";
+                return;
+            }
+
+            _selectedProfileImage = new MemberProfileImageUpload(
+                selectedFileName,
+                selectedContentType,
+                selectedContent);
             _deleteProfileImage = false;
         }
         catch (IOException)
         {
             _profileError = "Impossible de lire la photo sélectionnée.";
         }
+        catch (JSException)
+        {
+            _profileError = "Impossible de compresser la photo sélectionnée.";
+        }
+        catch (FormatException)
+        {
+            _profileError = "Le résultat de la compression de la photo est invalide.";
+        }
+        finally
+        {
+            _isOptimizingProfileImage = false;
+        }
+    }
+
+    private static string CreateOptimizedFileName(string originalFileName, string contentType)
+    {
+        var baseName = Path.GetFileNameWithoutExtension(originalFileName);
+        var extension = contentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)
+            ? ".png"
+            : contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase)
+                ? ".jpg"
+                : ".webp";
+        return $"{baseName}-optimized{extension}";
     }
 
     private void RemoveSelectedProfileImage()
@@ -452,5 +511,18 @@ public partial class MemberEditorDialog
     {
         public bool Sex { get; set; }
         public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class CompressedImageResult
+    {
+        public CompressedImageResult()
+        {
+        }
+
+        public string Base64 { get; set; } = string.Empty;
+        public string ContentType { get; set; } = "image/webp";
+        public long Size { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }
