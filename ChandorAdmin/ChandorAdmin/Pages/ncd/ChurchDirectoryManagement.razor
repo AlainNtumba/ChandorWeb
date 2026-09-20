@@ -1,0 +1,109 @@
+@page "/church-directory-management"
+@using ChandorAdmin.Components.ChurchDirectory
+@using ChandorProject.Shared.DTOs.ChurchDirectory
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Popups
+@implements IDisposable
+
+<PageTitle>Annuaire de l’église</PageTitle>
+
+<div class="directory-page">
+    <header class="directory-header">
+        <div><div class="directory-eyebrow">Administration</div><h1>Annuaire de l’église</h1><p>Gérez les cellules, extensions, départements et leur organisation publique.</p></div>
+        <div class="directory-header-actions"><SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>@if (_selectedTab < 2) { <SfButton IsPrimary="true" OnClick="OpenNewDialog" Disabled="@_loading">@(_selectedTab == 0 ? "Nouveau type" : "Nouvel élément")</SfButton> }</div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_notice)) { <div class="directory-notice @(_noticeIsError ? "error" : "success")" role="alert"><span>@_notice</span><button type="button" @onclick="() => _notice = null">×</button></div> }
+    @if (_loading) { <div class="directory-loading"><span></span> Chargement…</div> }
+
+    <section class="directory-surface">
+        <SfTab CssClass="directory-tabs" @bind-SelectedItem="_selectedTab" @bind-SelectedItem:after="OnSelectedTabChangedAsync" OverflowMode="OverflowMode.Scrollable">
+            <TabItems>
+                <TabItem><ChildContent><TabHeader Text="Types" /></ChildContent><ContentTemplate>
+                    <div class="directory-tab-content">
+                        <div class="directory-toolbar"><select @bind="_typeFilter.IsActive" @bind:after="FilterTypesAsync"><option value="">Tous les statuts</option><option value="true">Actifs</option><option value="false">Inactifs</option></select><input type="search" value="@_typeFilter.Keyword" @oninput="OnTypeKeywordAsync" placeholder="Rechercher un type…" /></div>
+                        <DirectoryTypeGrid Items="_typePage.Items" Edit="EditType" Delete="DeleteTypeAsync" />
+                        @Pagination("TYPE", _typePage.Page, _typePage.TotalPages, _typePage.TotalCount)
+                    </div>
+                </ContentTemplate></TabItem>
+                <TabItem><ChildContent><TabHeader Text="Éléments" /></ChildContent><ContentTemplate>
+                    <div class="directory-tab-content">
+                        <div class="directory-toolbar">
+                            <select @bind="_itemFilter.TypeId" @bind:after="FilterItemTypeAsync"><option value="">Tous les types</option>@foreach (var type in _types) { <option value="@type.Id">@type.Name</option> }</select>
+                            <select @bind="_itemFilter.IsActive" @bind:after="FilterItemsAsync"><option value="">Tous les statuts</option><option value="true">Actifs</option><option value="false">Inactifs</option></select>
+                            <select @bind="_itemFilter.ParentId" @bind:after="FilterItemsAsync"><option value="">Tous les parents</option>@foreach (var item in ParentFilterOptions) { <option value="@item.Id">@item.Name</option> }</select>
+                            <input type="search" value="@_itemFilter.Keyword" @oninput="OnItemKeywordAsync" placeholder="Rechercher un élément…" />
+                        </div>
+                        <DirectoryItemGrid Items="_itemPage.Items" Edit="EditItem" Delete="DeleteItemAsync" />
+                        @Pagination("ITEM", _itemPage.Page, _itemPage.TotalPages, _itemPage.TotalCount)
+                    </div>
+                </ContentTemplate></TabItem>
+                <TabItem><ChildContent><TabHeader Text="Hiérarchie" /></ChildContent><ContentTemplate>
+                    <div class="directory-tab-content"><div class="directory-toolbar"><select @bind="_treeTypeId" @bind:after="LoadTreeAsync"><option value="@Guid.Empty">Sélectionnez un type</option>@foreach (var type in _types) { <option value="@type.Id">@type.Name</option> }</select></div>
+                    @if (_treeTypeId == Guid.Empty) { <div class="directory-empty">Sélectionnez un type.</div> } else if (_tree.Count == 0) { <div class="directory-empty">Aucun élément dans cette hiérarchie.</div> } else { <DirectoryTreeView Nodes="_tree" Edit="EditItem" AddChild="AddTreeChild" /> }</div>
+                </ContentTemplate></TabItem>
+                <TabItem><ChildContent><TabHeader Text="Prévisualisation" /></ChildContent><ContentTemplate>
+                    <div class="directory-tab-content"><div class="directory-toolbar"><select @bind="_previewTypeId" @bind:after="LoadPreviewAsync"><option value="@Guid.Empty">Sélectionnez un type</option>@foreach (var type in _publicTypes) { <option value="@type.Id">@type.Name</option> }</select><span class="directory-public-label">Données provenant uniquement des routes publiques</span></div><DirectoryPublicPreview DirectoryType="PreviewType" Items="_publicItems" Open="OpenPreviewDetail" /></div>
+                </ContentTemplate></TabItem>
+            </TabItems>
+        </SfTab>
+    </section>
+</div>
+
+@if (_dialogOpen)
+{
+    <SfDialog @bind-Visible="_dialogOpen" IsModal="true" Width="@(_dialogKind == "TYPE" ? "min(600px, 96vw)" : "min(900px, calc(100vw - 24px))")" Header="@_dialogTitle" ShowCloseIcon="false" CloseOnEscape="false" CssClass="directory-dialog">
+        <DialogTemplates><Content>
+            @if (_dialogKind == "TYPE")
+            {
+                <div class="directory-form-grid">
+                    <label><span>Code *</span><input @bind="_typeModel.Code" placeholder="CELL" /></label><label><span>Nom *</span><input @bind="_typeModel.Name" /></label>
+                    <label><span>Affichage *</span><select @bind="_typeModel.DisplayKind">@foreach (var kind in DisplayKinds) { <option value="@kind">@kind</option> }</select></label><label><span>Icône</span><input @bind="_typeModel.Icon" /></label>
+                    <label class="span-2"><span>Description</span><textarea rows="4" @bind="_typeModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_typeModel.SortOrder" /></label><label class="directory-check"><input type="checkbox" @bind="_typeModel.IsActive" /> Type actif</label>
+                </div>
+                <h4 class="directory-section-title">Image Hero</h4><DirectoryImagePicker ExistingImageUrl="_typeModel.HeroImageUrl" @bind-SelectedImage="_selectedImage" @bind-DeleteRequested="_deleteImage" />
+            }
+            else if (_dialogKind == "ITEM")
+            {
+                <div class="directory-subtabs"><button type="button" class='@SubTab("GENERAL")' @onclick='() => _itemSubTab = "GENERAL"'>Général</button><button type="button" class='@SubTab("DETAILS")' @onclick='() => _itemSubTab = "DETAILS"'>Détails</button><button type="button" class='@SubTab("CONTACTS")' @onclick='() => _itemSubTab = "CONTACTS"'>Contacts</button><button type="button" class='@SubTab("MEMBERS")' @onclick='() => _itemSubTab = "MEMBERS"'>Responsables</button><button type="button" class='@SubTab("IMAGE")' @onclick='() => _itemSubTab = "IMAGE"'>Image</button></div>
+                @if (_itemSubTab == "GENERAL")
+                {
+                    <div class="directory-form-grid">
+                        <label><span>Type *</span><select value="@_itemModel.TypeId" @onchange="OnItemTypeChanged"><option value="@Guid.Empty">Sélectionnez</option>@foreach (var type in _types) { <option value="@type.Id">@type.Name</option> }</select></label>
+                        <label><span>Parent</span><select @bind="_itemModel.ParentId"><option value="">Aucun parent</option>@foreach (var item in ParentOptions) { <option value="@item.Id">@item.Name</option> }</select></label>
+                        <label><span>Département associé</span><select @bind="_itemModel.DepartmentId"><option value="">Aucun département</option>@foreach (var department in _departments) { <option value="@department.Id">@department.Name</option> }</select></label>
+                        <label><span>Code *</span><input @bind="_itemModel.Code" /></label><label><span>Nom *</span><input @bind="_itemModel.Name" /></label><label><span>Ordre</span><input type="number" @bind="_itemModel.SortOrder" /></label>
+                        <label class="span-2"><span>Description</span><textarea rows="4" @bind="_itemModel.Description"></textarea></label><label class="directory-check"><input type="checkbox" @bind="_itemModel.IsActive" /> Élément actif</label>
+                    </div>
+                }
+                else if (_itemSubTab == "DETAILS")
+                {
+                    <div class="directory-detail-heading">Affichage <strong>@CurrentDisplayKind</strong></div>
+                    <div class="directory-form-grid">
+                    @if (CurrentDisplayKind == "LOCATION" && _itemModel.LocationDetails is not null)
+                    { <label><span>Zone</span><input @bind="_itemModel.LocationDetails.Area" /></label><label><span>Adresse</span><input @bind="_itemModel.LocationDetails.Address" /></label><label class="span-2"><span>Point de repère</span><input @bind="_itemModel.LocationDetails.ReferencePoint" /></label><label><span>Latitude</span><input type="number" step="any" @bind="_itemModel.LocationDetails.Latitude" /></label><label><span>Longitude</span><input type="number" step="any" @bind="_itemModel.LocationDetails.Longitude" /></label> }
+                    else if (_itemModel.DepartmentDetails is not null)
+                    { <label class="span-2"><span>Organisation</span><textarea rows="3" @bind="_itemModel.DepartmentDetails.Organization"></textarea></label><label class="span-2"><span>Mission</span><textarea rows="3" @bind="_itemModel.DepartmentDetails.Mission"></textarea></label><label class="span-2"><span>Historique</span><textarea rows="4" @bind="_itemModel.DepartmentDetails.History"></textarea></label> }
+                    else { <div class="directory-empty span-2">Sélectionnez d’abord un type dans l’onglet Général.</div> }
+                    </div>
+                }
+                else if (_itemSubTab == "CONTACTS") { <DirectoryContactsEditor Contacts="_itemModel.Contacts" /> }
+                else if (_itemSubTab == "MEMBERS") { <DirectoryMembersEditor Members="_itemModel.Members" AllMembers="_members" /> }
+                else { <DirectoryImagePicker ExistingImageUrl="_itemModel.ImageUrl" @bind-SelectedImage="_selectedImage" @bind-DeleteRequested="_deleteImage" /> }
+            }
+            else if (_dialogKind == "PREVIEW" && _previewDetail is not null)
+            {
+                <article class="directory-preview-detail">@if (!string.IsNullOrWhiteSpace(_previewDetail.ImageUrl)) { <img src="@_previewDetail.ImageUrl" alt="@_previewDetail.Name" /> }<p>@_previewDetail.Description</p>
+                    @if (_previewDetail.DisplayKind == "LOCATION") { <dl><dt>Zone</dt><dd>@(_previewDetail.LocationDetails?.Area ?? "—")</dd><dt>Adresse</dt><dd>@(_previewDetail.LocationDetails?.Address ?? "—")</dd><dt>Repère</dt><dd>@(_previewDetail.LocationDetails?.ReferencePoint ?? "—")</dd></dl> }
+                    else { <dl><dt>Organisation</dt><dd>@(_previewDetail.DepartmentDetails?.Organization ?? "—")</dd><dt>Mission</dt><dd>@(_previewDetail.DepartmentDetails?.Mission ?? "—")</dd><dt>Historique</dt><dd>@(_previewDetail.DepartmentDetails?.History ?? "—")</dd></dl> }
+                </article>
+            }
+        </Content></DialogTemplates>
+        <DialogButtons>@if (_dialogKind != "PREVIEW") { <DialogButton Content="@(_saving ? "Chargement..." : "Enregistrer")" IsPrimary="true" Disabled="@_saving" OnClick="SaveDialogAsync" /> }<DialogButton Content="Fermer" Disabled="@_saving" OnClick="CloseDialog" /></DialogButtons>
+    </SfDialog>
+}
+
+@code {
+    private RenderFragment Pagination(string target, int page, int totalPages, int totalCount) => @<div class="directory-pagination"><span>@totalCount résultat(s)</span><div><button type="button" disabled="@(page <= 1 || _loading)" @onclick="() => ChangePageAsync(target, page - 1)">Précédent</button><span>Page @(page == 0 ? 1 : page) / @Math.Max(1, totalPages)</span><button type="button" disabled="@(page >= totalPages || _loading)" @onclick="() => ChangePageAsync(target, page + 1)">Suivant</button></div></div>;
+    private string SubTab(string value) => _itemSubTab == value ? "active" : string.Empty;
+}

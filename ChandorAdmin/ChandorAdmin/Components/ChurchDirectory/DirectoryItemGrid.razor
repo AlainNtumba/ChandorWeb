@@ -1,0 +1,13 @@
+@using ChandorProject.Shared.DTOs.ChurchDirectory
+
+<div class="directory-table-wrap"><table class="directory-table"><thead><tr><th>Image</th><th>Nom</th><th>Code</th><th>Type</th><th>Parent</th><th>Département</th><th>Enfants</th><th>Responsable</th><th>Contact</th><th>Ordre</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+@if (Items.Count == 0) { <tr><td colspan="12" class="directory-empty">Aucun élément.</td></tr> }
+@foreach (var item in Items) { <tr><td>@if (!string.IsNullOrWhiteSpace(item.ImageUrl)) { <img class="directory-thumb" src="@item.ImageUrl" alt="" /> } else { <span class="directory-thumb-empty">—</span> }</td><td class="directory-strong">@item.Name</td><td><code>@item.Code</code></td><td>@item.TypeCode</td><td>@(item.ParentName ?? "—")</td><td>@(item.DepartmentName ?? "—")</td><td>@item.ChildCount</td><td>@(item.Members.FirstOrDefault(x => x.IsPrimary)?.MemberName ?? "—")</td><td>@Contact(item)</td><td>@item.SortOrder</td><td><span class="directory-status @(item.IsActive ? "active" : "inactive")">@(item.IsActive ? "Actif" : "Inactif")</span></td><td class="directory-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td></tr> }
+</tbody></table></div>
+
+@code {
+    [Parameter] public IReadOnlyList<ChurchDirectoryItemDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<ChurchDirectoryItemDto> Edit { get; set; }
+    [Parameter] public EventCallback<ChurchDirectoryItemDto> Delete { get; set; }
+    private static string Contact(ChurchDirectoryItemDto item) { var value = item.Contacts.FirstOrDefault(x => x.IsPrimary)?.Value ?? item.Contacts.FirstOrDefault()?.Value; return value ?? "—"; }
+}

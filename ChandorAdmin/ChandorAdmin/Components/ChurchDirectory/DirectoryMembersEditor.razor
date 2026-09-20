@@ -1,0 +1,39 @@
+@using ChandorProject.Shared.DTOs.ChurchDirectory
+@using ChandorProject.Shared.DTOs.Member
+
+<div class="directory-editor-list">
+    <div class="directory-editor-list__header"><strong>Responsables</strong></div>
+    <div class="directory-member-search"><input type="search" @bind="_search" @bind:event="oninput" placeholder="Rechercher un membre…" /></div>
+    <div class="directory-member-add"><select @bind="_selectedMemberId"><option value="@Guid.Empty">Sélectionnez un membre</option>@foreach (var member in AvailableMembers) { <option value="@member.Id">@MemberName(member)</option> }</select><button type="button" @onclick="Add">Ajouter</button></div>
+    @if (Members.Count == 0) { <div class="directory-empty-small">Aucun responsable.</div> }
+    @foreach (var row in Members.ToList())
+    {
+        var member = AllMembers.FirstOrDefault(x => x.Id == row.MemberId);
+        <div class="directory-member-row">
+            @if (!string.IsNullOrWhiteSpace(member?.ProfileImageUrl)) { <img src="@member.ProfileImageUrl" alt="" /> } else { <span class="directory-member-avatar">@Initials(member, row)</span> }
+            <strong>@(row.MemberName ?? MemberName(member))</strong><input placeholder="Rôle" @bind="row.Role" />
+            <label><input type="checkbox" value="@row.IsPrimary" @onchange="args => SetPrimary(row, (bool)args.Value!)" /> Principal</label>
+            <button type="button" class="danger" @onclick="() => Members.Remove(row)">Supprimer</button>
+        </div>
+    }
+</div>
+
+@code {
+    private Guid _selectedMemberId;
+    private string _search = string.Empty;
+    [Parameter, EditorRequired] public List<ChurchDirectoryMemberDto> Members { get; set; } = [];
+    [Parameter] public IReadOnlyList<MemberDto> AllMembers { get; set; } = [];
+    private IEnumerable<MemberDto> AvailableMembers => AllMembers
+        .Where(x => Members.All(row => row.MemberId != x.Id))
+        .Where(x => string.IsNullOrWhiteSpace(_search) || MemberName(x).Contains(_search, StringComparison.OrdinalIgnoreCase));
+    private void Add()
+    {
+        if (_selectedMemberId == Guid.Empty || Members.Any(x => x.MemberId == _selectedMemberId)) return;
+        var member = AllMembers.First(x => x.Id == _selectedMemberId);
+        Members.Add(new ChurchDirectoryMemberDto { MemberId = member.Id, MemberName = MemberName(member), Role = "Responsable", IsPrimary = Members.Count == 0 });
+        _selectedMemberId = Guid.Empty;
+    }
+    private void SetPrimary(ChurchDirectoryMemberDto item, bool value) { item.IsPrimary = value; if (value) foreach (var other in Members.Where(x => !ReferenceEquals(x, item))) other.IsPrimary = false; }
+    private static string MemberName(MemberDto? member) => member is null ? "Membre inconnu" : string.Join(" ", new[] { member.Name, member.Postname, member.Surname }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    private static string Initials(MemberDto? member, ChurchDirectoryMemberDto row) => member is null ? (row.MemberName?.FirstOrDefault().ToString() ?? "?") : $"{member.Name.FirstOrDefault()}{member.Surname.FirstOrDefault()}".ToUpperInvariant();
+}

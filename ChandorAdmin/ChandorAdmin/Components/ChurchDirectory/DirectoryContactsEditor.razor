@@ -1,0 +1,29 @@
+@using ChandorProject.Shared.DTOs.ChurchDirectory
+
+<div class="directory-editor-list">
+    <div class="directory-editor-list__header"><strong>Contacts</strong><button type="button" @onclick="Add">Ajouter un contact</button></div>
+    @if (Contacts.Count == 0) { <div class="directory-empty-small">Aucun contact.</div> }
+    @foreach (var contact in Contacts.ToList())
+    {
+        <div class="directory-contact-row">
+            <select @bind="contact.Type" @bind:after="() => NormalizePrimary(contact)">@foreach (var type in ContactTypes) { <option value="@type">@type</option> }</select>
+            <input placeholder="Libellé" @bind="contact.Label" />
+            <input placeholder="Valeur" @bind="contact.Value" />
+            <label><input type="checkbox" value="@contact.IsPrimary" @onchange="args => SetPrimary(contact, (bool)args.Value!)" /> Principal</label>
+            <button type="button" class="danger" @onclick="() => Remove(contact)">Supprimer</button>
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly string[] ContactTypes = ["PHONE", "EMAIL", "WHATSAPP", "WEBSITE", "FACEBOOK", "YOUTUBE", "ADDRESS"];
+    [Parameter, EditorRequired] public List<ChurchDirectoryContactDto> Contacts { get; set; } = [];
+    private void Add() => Contacts.Add(new ChurchDirectoryContactDto { Type = "PHONE" });
+    private void Remove(ChurchDirectoryContactDto item) => Contacts.Remove(item);
+    private void SetPrimary(ChurchDirectoryContactDto item, bool value) { item.IsPrimary = value; NormalizePrimary(item); }
+    private void NormalizePrimary(ChurchDirectoryContactDto item)
+    {
+        if (!item.IsPrimary) return;
+        foreach (var other in Contacts.Where(x => !ReferenceEquals(x, item) && x.Type == item.Type)) other.IsPrimary = false;
+    }
+}

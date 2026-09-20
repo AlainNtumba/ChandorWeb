@@ -1,0 +1,27 @@
+@using ChandorProject.Shared.DTOs.ChurchDirectory
+
+<ul class="directory-tree @(Depth == 0 ? "directory-tree--root" : "")">
+@foreach (var node in Nodes)
+{
+    <li>
+        <div class="directory-tree-node">
+            <button type="button" class="directory-tree-toggle" @onclick="() => Toggle(node.Id)">@(node.Children.Count == 0 ? "·" : IsExpanded(node.Id) ? "−" : "+")</button>
+            <span class="directory-tree-state @(node.IsActive ? "active" : "inactive")"></span>
+            <span class="directory-tree-name">@node.Name</span><small>@node.Children.Count enfant(s)</small>
+            <div class="directory-tree-actions"><button type="button" @onclick="() => Edit.InvokeAsync(node)">Modifier</button><button type="button" @onclick="() => AddChild.InvokeAsync(node)">Ajouter un enfant</button></div>
+        </div>
+        @if (node.Children.Count > 0 && IsExpanded(node.Id)) { <DirectoryTreeView Nodes="node.Children" Edit="Edit" AddChild="AddChild" Depth="@(Depth + 1)" /> }
+    </li>
+}
+</ul>
+
+@code {
+    private readonly HashSet<Guid> _expanded = [];
+    [Parameter] public IReadOnlyList<ChurchDirectoryTreeItemDto> Nodes { get; set; } = [];
+    [Parameter] public EventCallback<ChurchDirectoryItemDto> Edit { get; set; }
+    [Parameter] public EventCallback<ChurchDirectoryItemDto> AddChild { get; set; }
+    [Parameter] public int Depth { get; set; }
+    protected override void OnParametersSet() { if (Depth == 0 && _expanded.Count == 0) foreach (var node in Nodes) _expanded.Add(node.Id); }
+    private bool IsExpanded(Guid id) => _expanded.Contains(id);
+    private void Toggle(Guid id) { if (!_expanded.Add(id)) _expanded.Remove(id); }
+}

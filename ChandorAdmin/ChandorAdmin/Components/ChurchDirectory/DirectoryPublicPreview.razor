@@ -1,0 +1,26 @@
+@using ChandorProject.Shared.DTOs.ChurchDirectory
+
+@if (DirectoryType is null) { <div class="directory-empty">Sélectionnez un type pour afficher sa vue publique.</div> }
+else
+{
+    <section class="directory-public-preview">
+        <header class="directory-public-hero" style="background-image:linear-gradient(90deg,rgba(20,29,65,.88),rgba(49,60,117,.55)),url('@DirectoryType.HeroImageUrl')"><div><span>@DirectoryType.Code</span><h2>@DirectoryType.Name</h2><p>@DirectoryType.Description</p></div></header>
+        <div class="directory-public-grid">
+        @if (Items.Count == 0) { <div class="directory-empty">Aucun élément actif publié.</div> }
+        @foreach (var item in Items)
+        {
+            <article class="directory-public-card">
+                @if (!string.IsNullOrWhiteSpace(item.ImageUrl)) { <img src="@item.ImageUrl" alt="@item.Name" /> }
+                <div><span class="directory-public-code">@item.Code</span><h3>@item.Name</h3><p>@item.Description</p><dl><dt>Responsable</dt><dd>@(item.Members.FirstOrDefault(x => x.IsPrimary)?.MemberName ?? "—")</dd><dt>@(item.DisplayKind == "LOCATION" ? "Adresse" : "Mission")</dt><dd>@Details(item)</dd><dt>Contact</dt><dd>@(item.Contacts.FirstOrDefault(x => x.IsPrimary)?.Value ?? "—")</dd></dl><button type="button" @onclick="() => Open.InvokeAsync(item)">Voir les détails</button></div>
+            </article>
+        }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public ChurchDirectoryTypeDto? DirectoryType { get; set; }
+    [Parameter] public IReadOnlyList<ChurchDirectoryItemDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<ChurchDirectoryItemDto> Open { get; set; }
+    private static string Details(ChurchDirectoryItemDto item) => item.DisplayKind == "LOCATION" ? item.LocationDetails?.Address ?? item.LocationDetails?.Area ?? "—" : item.DepartmentDetails?.Mission ?? item.DepartmentDetails?.Organization ?? "—";
+}

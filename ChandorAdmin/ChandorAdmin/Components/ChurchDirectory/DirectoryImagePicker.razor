@@ -1,0 +1,63 @@
+@using ChandorAdmin.Models.ChurchDirectory
+
+<div class="directory-image-picker">
+    <div class="directory-image-picker__preview">
+        @if (!string.IsNullOrWhiteSpace(PreviewUrl)) { <img src="@PreviewUrl" alt="Aperçu de l’image" /> }
+        else { <span>Aucune image</span> }
+    </div>
+    <div class="directory-image-picker__controls">
+        <label class="directory-file-button">@(HasVisibleImage ? "Remplacer" : "Sélectionner une image")<InputFile @key="_inputKey" OnChange="OnFileSelectedAsync" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" /></label>
+        @if (SelectedImage is not null) { <button type="button" @onclick="ClearSelectedAsync">Retirer la sélection</button> }
+        else if (!string.IsNullOrWhiteSpace(ExistingImageUrl) && !DeleteRequested) { <button type="button" class="danger" @onclick="RequestDeleteAsync">Supprimer l’image</button> }
+        else if (DeleteRequested) { <button type="button" @onclick="CancelDeleteAsync">Annuler la suppression</button> }
+        <small>JPEG, PNG ou WebP — 5 Mo maximum.</small>
+        @if (!string.IsNullOrWhiteSpace(_error)) { <div class="directory-inline-error">@_error</div> }
+    </div>
+</div>
+
+@code {
+    private const long MaximumSize = 5 * 1024 * 1024;
+    private string? _error;
+    private int _inputKey;
+
+    [Parameter] public string? ExistingImageUrl { get; set; }
+    [Parameter] public DirectoryImageUpload? SelectedImage { get; set; }
+    [Parameter] public EventCallback<DirectoryImageUpload?> SelectedImageChanged { get; set; }
+    [Parameter] public bool DeleteRequested { get; set; }
+    [Parameter] public EventCallback<bool> DeleteRequestedChanged { get; set; }
+
+    private bool HasVisibleImage => SelectedImage is not null || (!DeleteRequested && !string.IsNullOrWhiteSpace(ExistingImageUrl));
+    private string? PreviewUrl => SelectedImage is not null ? $"data:{SelectedImage.ContentType};base64,{Convert.ToBase64String(SelectedImage.Content)}" : DeleteRequested ? null : ExistingImageUrl;
+
+    private async Task OnFileSelectedAsync(InputFileChangeEventArgs args)
+    {
+        _error = null;
+        var file = args.File;
+        if (file.Size <= 0 || file.Size > MaximumSize) { _error = "L’image doit avoir une taille comprise entre 1 octet et 5 Mo."; return; }
+        try
+        {
+            await using var source = file.OpenReadStream(MaximumSize);
+            using var buffer = new MemoryStream((int)file.Size);
+            await source.CopyToAsync(buffer);
+            var bytes = buffer.ToArray();
+            var contentType = DetectType(bytes);
+            if (contentType is null) { _error = "Sélectionnez une véritable image JPEG, PNG ou WebP."; return; }
+            await SelectedImageChanged.InvokeAsync(new DirectoryImageUpload(file.Name, contentType, bytes));
+            await DeleteRequestedChanged.InvokeAsync(false);
+        }
+        catch (IOException) { _error = "Impossible de lire cette image."; }
+    }
+
+    private async Task ClearSelectedAsync() { _inputKey++; await SelectedImageChanged.InvokeAsync(null); }
+    private async Task RequestDeleteAsync() { await SelectedImageChanged.InvokeAsync(null); await DeleteRequestedChanged.InvokeAsync(true); }
+    private Task CancelDeleteAsync() => DeleteRequestedChanged.InvokeAsync(false);
+
+    private static string? DetectType(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff) return "image/jpeg";
+        ReadOnlySpan<byte> png = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+        if (bytes.Length >= png.Length && bytes[..png.Length].SequenceEqual(png)) return "image/png";
+        if (bytes.Length >= 12 && bytes[..4].SequenceEqual("RIFF"u8) && bytes.Slice(8, 4).SequenceEqual("WEBP"u8)) return "image/webp";
+        return null;
+    }
+}
