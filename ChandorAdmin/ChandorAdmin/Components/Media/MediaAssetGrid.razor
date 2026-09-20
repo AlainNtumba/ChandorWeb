@@ -1,0 +1,30 @@
+@using ChandorProject.Shared.DTOs.Media
+
+<div class="media-table-wrap">
+    <table class="media-table">
+        <thead><tr><th>Aperçu</th><th>Type</th><th>Provider</th><th>URL</th><th>MIME</th><th>Durée</th><th>Actions</th></tr></thead>
+        <tbody>
+        @if (Items.Count == 0) { <tr><td colspan="7" class="media-empty">Aucun média.</td></tr> }
+        @foreach (var item in Items)
+        {
+            <tr>
+                <td>
+                    @if (item.AssetType == "IMAGE" && !string.IsNullOrWhiteSpace(item.Url)) { <img class="media-thumb" src="@item.Url" alt="Aperçu" /> }
+                    else if (!string.IsNullOrWhiteSpace(item.ThumbnailUrl)) { <img class="media-thumb" src="@item.ThumbnailUrl" alt="Aperçu" /> }
+                    else { <span class="media-file-icon">@TypeIcon(item.AssetType)</span> }
+                </td>
+                <td>@item.AssetType</td><td>@item.Provider</td><td class="media-url"><a href="@item.Url" target="_blank" rel="noopener">@item.Url</a></td><td>@(item.MimeType ?? "—")</td><td>@Duration(item.DurationSeconds)</td>
+                <td class="media-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<MediaAssetDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<MediaAssetDto> Edit { get; set; }
+    [Parameter] public EventCallback<MediaAssetDto> Delete { get; set; }
+    private static string TypeIcon(string type) => type switch { "VIDEO" => "▶", "AUDIO" => "♪", "DOCUMENT" => "PDF", _ => "◆" };
+    private static string Duration(int? seconds) => seconds is null ? "—" : TimeSpan.FromSeconds(seconds.Value).ToString(@"hh\:mm\:ss");
+}

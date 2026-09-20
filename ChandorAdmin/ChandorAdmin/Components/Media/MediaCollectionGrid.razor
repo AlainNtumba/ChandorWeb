@@ -1,0 +1,27 @@
+@using ChandorProject.Shared.DTOs.Media
+
+<div class="media-table-wrap">
+    <table class="media-table">
+        <thead><tr><th>Titre</th><th>Catégorie</th><th>Slug</th><th>Statut</th><th>Contenus</th><th>Médias</th><th>Publication</th><th>Ordre</th><th>Actions</th></tr></thead>
+        <tbody>
+        @if (Items.Count == 0) { <tr><td colspan="9" class="media-empty">Aucune collection.</td></tr> }
+        @foreach (var item in Items)
+        {
+            <tr>
+                <td class="media-strong">@item.Title</td><td>@item.CategoryCode</td><td><code>@item.Slug</code></td>
+                <td><span class="media-status @StatusClass(item.Status)">@item.Status</span></td>
+                <td>@item.ItemCount</td><td>@item.Media.Count</td><td>@(item.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td>@item.SortOrder</td>
+                <td class="media-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" @onclick="() => Attach.InvokeAsync(item)">Médias</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<MediaCollectionDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<MediaCollectionDto> Edit { get; set; }
+    [Parameter] public EventCallback<MediaCollectionDto> Attach { get; set; }
+    [Parameter] public EventCallback<MediaCollectionDto> Delete { get; set; }
+    private static string StatusClass(string status) => $"media-status--{status.ToLowerInvariant()}";
+}

@@ -1,0 +1,194 @@
+@page "/media-management"
+@using ChandorAdmin.Components.Media
+@using ChandorProject.Shared.DTOs.Media
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Popups
+@implements IDisposable
+
+<PageTitle>Gestion des médias</PageTitle>
+
+<div class="media-page">
+    <header class="media-page-header">
+        <div><div class="media-eyebrow">Administration</div><h1>Gestion des médias</h1><p>Organisez, publiez et prévisualisez les contenus visibles dans l’application.</p></div>
+        <div class="media-header-actions">
+            <SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>
+            @if (_selectedTab < 4) { <SfButton IsPrimary="true" OnClick="OpenNewDialog" Disabled="@_loading">@(_selectedTab == 3 ? "Ajouter un média" : "Nouveau")</SfButton> }
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_notice))
+    {
+        <div class="media-notice @(_noticeIsError ? "media-notice--error" : "media-notice--success")" role="alert">
+            <span>@_notice</span><button type="button" aria-label="Fermer" @onclick="() => _notice = null">×</button>
+        </div>
+    }
+    @if (_loading) { <div class="media-loading"><span></span> Chargement…</div> }
+
+    <section class="media-surface">
+        <SfTab CssClass="media-tabs" @bind-SelectedItem="_selectedTab" @bind-SelectedItem:after="OnSelectedTabChangedAsync" OverflowMode="OverflowMode.Scrollable">
+            <TabItems>
+                <TabItem>
+                    <ChildContent><TabHeader Text="Catégories" /></ChildContent>
+                    <ContentTemplate>
+                        <div class="media-tab-content"><MediaCategoryGrid Items="_categories" Edit="EditCategory" Delete="DeleteCategoryAsync" /></div>
+                    </ContentTemplate>
+                </TabItem>
+                <TabItem>
+                    <ChildContent><TabHeader Text="Collections" /></ChildContent>
+                    <ContentTemplate>
+                        <div class="media-tab-content">
+                            <div class="media-toolbar">
+                                <select aria-label="Catégorie" @bind="_collectionFilter.CategoryId" @bind:after="FilterCollectionsAsync"><option value="">Toutes les catégories</option>@foreach (var category in _categories) { <option value="@category.Id">@category.Name</option> }</select>
+                                <select aria-label="Statut" @bind="_collectionFilter.Status" @bind:after="FilterCollectionsAsync"><option value="">Tous les statuts</option>@foreach (var status in _statuses) { <option value="@status">@status</option> }</select>
+                                <input type="search" value="@_collectionFilter.Keyword" @oninput="OnCollectionKeywordAsync" placeholder="Rechercher une collection…" />
+                            </div>
+                            <MediaCollectionGrid Items="_collections.Items" Edit="EditCollection" Attach="OpenCollectionAttachment" Delete="DeleteCollectionAsync" />
+                            @Pagination("COLLECTION", _collections.Page, _collections.TotalPages, _collections.TotalCount)
+                        </div>
+                    </ContentTemplate>
+                </TabItem>
+                <TabItem>
+                    <ChildContent><TabHeader Text="Contenus" /></ChildContent>
+                    <ContentTemplate>
+                        <div class="media-tab-content">
+                            <div class="media-toolbar">
+                                <select aria-label="Catégorie" @bind="_itemFilter.CategoryId" @bind:after="FilterItemCategoryAsync"><option value="">Toutes les catégories</option>@foreach (var category in _categories) { <option value="@category.Id">@category.Name</option> }</select>
+                                <select aria-label="Collection" @bind="_itemFilter.CollectionId" @bind:after="FilterItemsAsync"><option value="">Toutes les collections</option>@foreach (var collection in FilterCollections) { <option value="@collection.Id">@collection.Title</option> }</select>
+                                <select aria-label="Statut" @bind="_itemFilter.Status" @bind:after="FilterItemsAsync"><option value="">Tous les statuts</option>@foreach (var status in _statuses) { <option value="@status">@status</option> }</select>
+                                <select aria-label="Type" @bind="_itemFilter.ItemType" @bind:after="FilterItemsAsync"><option value="">Tous les types</option>@foreach (var type in _itemTypes) { <option value="@type">@type</option> }</select>
+                                <input type="search" value="@_itemFilter.Keyword" @oninput="OnItemKeywordAsync" placeholder="Rechercher un contenu…" />
+                            </div>
+                            <MediaContentGrid Items="_items.Items" Edit="EditItem" Attach="OpenItemAttachment" Delete="DeleteItemAsync" />
+                            @Pagination("ITEM", _items.Page, _items.TotalPages, _items.TotalCount)
+                        </div>
+                    </ContentTemplate>
+                </TabItem>
+                <TabItem>
+                    <ChildContent><TabHeader Text="Médiathèque" /></ChildContent>
+                    <ContentTemplate>
+                        <div class="media-tab-content">
+                            <div class="media-toolbar">
+                                <select aria-label="Type" @bind="_assetFilter.AssetType" @bind:after="FilterAssetsAsync"><option value="">Tous les types</option>@foreach (var type in _assetTypes) { <option value="@type">@type</option> }</select>
+                                <select aria-label="Provider" @bind="_assetFilter.Provider" @bind:after="FilterAssetsAsync"><option value="">Tous les providers</option>@foreach (var provider in _providers) { <option value="@provider">@provider</option> }</select>
+                                <input type="search" value="@_assetFilter.Keyword" @oninput="OnAssetKeywordAsync" placeholder="Rechercher un média…" />
+                            </div>
+                            <MediaAssetGrid Items="_assets.Items" Edit="EditAsset" Delete="DeleteAssetAsync" />
+                            @Pagination("ASSET", _assets.Page, _assets.TotalPages, _assets.TotalCount)
+                        </div>
+                    </ContentTemplate>
+                </TabItem>
+                <TabItem>
+                    <ChildContent><TabHeader Text="Prévisualisation" /></ChildContent>
+                    <ContentTemplate>
+                        <div class="media-tab-content">
+                            <div class="media-toolbar">
+                                <select aria-label="Catégorie" @bind="_feedCategoryId" @bind:after="FilterFeedAsync"><option value="@Guid.Empty">Sélectionnez une catégorie</option>@foreach (var category in _categories.Where(x => x.IsActive)) { <option value="@category.Id">@category.Name</option> }</select>
+                                <select aria-label="Période" @bind="_feedPeriod" @bind:after="FilterFeedAsync">@foreach (var period in _periods) { <option value="@period">@period</option> }</select>
+                                <input type="search" value="@_feedKeyword" @oninput="OnFeedKeywordAsync" placeholder="Rechercher dans le feed…" />
+                            </div>
+                            <MediaFeedPreview Items="_feed.Items" Open="OpenFeedDetailAsync" />
+                            @Pagination("FEED", _feed.Page, _feed.TotalPages, _feed.TotalCount)
+                        </div>
+                    </ContentTemplate>
+                </TabItem>
+            </TabItems>
+        </SfTab>
+    </section>
+</div>
+
+@if (_dialogOpen)
+{
+    <SfDialog @bind-Visible="_dialogOpen" IsModal="true" Width="min(760px, 96vw)" Header="@_dialogTitle" ShowCloseIcon="false" CloseOnEscape="false" CssClass="media-dialog">
+        <DialogTemplates>
+            <Content>
+                @if (_dialogKind == "CATEGORY")
+                {
+                    <div class="media-form-grid">
+                        <label><span>Nom *</span><input @bind="_categoryModel.Name" /></label><label><span>Code *</span><input @bind="_categoryModel.Code" placeholder="NEWS" /></label>
+                        <label><span>Module</span><select @bind="_categoryModel.ModuleType"><option>CONTENT</option><option>EVENT</option><option>COMMERCE</option></select></label><label><span>Ordre</span><input type="number" @bind="_categoryModel.SortOrder" /></label>
+                        <label><span>Icône</span><input @bind="_categoryModel.Icon" /></label><label><span>Couleur de l’icône</span><input type="color" @bind="_categoryModel.IconColor" /></label>
+                        <label><span>Arrière-plan</span><input type="color" @bind="_categoryModel.IconBackground" /></label><label class="media-check"><input type="checkbox" @bind="_categoryModel.IsActive" /> Catégorie active</label>
+                    </div>
+                }
+                else if (_dialogKind == "COLLECTION")
+                {
+                    <div class="media-form-grid">
+                        <label><span>Catégorie *</span><select @bind="_collectionModel.CategoryId"><option value="@Guid.Empty">Sélectionnez</option>@foreach (var c in _categories) { <option value="@c.Id">@c.Name</option> }</select></label><label><span>Statut</span><select @bind="_collectionModel.Status">@foreach (var status in _statuses) { <option value="@status">@status</option> }</select></label>
+                        <label><span>Titre *</span><input @bind="_collectionModel.Title" /></label><label><span>Slug *</span><input @bind="_collectionModel.Slug" placeholder="mon-contenu" /></label>
+                        <label class="media-span-2"><span>Description</span><textarea rows="4" @bind="_collectionModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_collectionModel.SortOrder" /></label><label><span>Date de publication</span><input type="datetime-local" @bind="_collectionModel.PublishedAt" /></label>
+                    </div>
+                }
+                else if (_dialogKind == "ITEM")
+                {
+                    <div class="media-subtabs"><button type="button" class='@SubTabClass("GENERAL")' @onclick='() => _contentSubTab = "GENERAL"'>Général</button><button type="button" class='@SubTabClass("DETAILS")' @onclick='() => _contentSubTab = "DETAILS"'>Détails</button><button type="button" class='@SubTabClass("MEDIA")' @onclick='() => _contentSubTab = "MEDIA"'>Médias</button></div>
+                    @if (_contentSubTab == "GENERAL")
+                    {
+                        <div class="media-form-grid">
+                            <label><span>Catégorie *</span><select @bind="_itemModel.CategoryId"><option value="@Guid.Empty">Sélectionnez</option>@foreach (var c in _categories) { <option value="@c.Id">@c.Name</option> }</select></label><label><span>Collection</span><select @bind="_itemModel.CollectionId"><option value="">Sans collection</option>@foreach (var c in ItemCollections) { <option value="@c.Id">@c.Title</option> }</select></label>
+                            <label><span>Type *</span><select value="@_itemModel.ItemType" @onchange="OnItemTypeChanged">@foreach (var type in _itemTypes) { <option value="@type">@type</option> }</select></label><label><span>Statut</span><select @bind="_itemModel.Status">@foreach (var status in _statuses) { <option value="@status">@status</option> }</select></label>
+                            <label><span>Titre *</span><input @bind="_itemModel.Title" /></label><label><span>Slug *</span><input @bind="_itemModel.Slug" /></label><label class="media-span-2"><span>Description</span><textarea rows="4" @bind="_itemModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_itemModel.SortOrder" /></label><label><span>Publication</span><input type="datetime-local" @bind="_itemModel.PublishedAt" /></label>
+                        </div>
+                    }
+                    else if (_contentSubTab == "DETAILS")
+                    {
+                        <div class="media-form-grid">
+                            @if (_itemModel.ItemType == "EPISODE" && _itemModel.Episode is not null) { <label><span>Numéro</span><input type="number" @bind="_itemModel.Episode.EpisodeNumber" /></label><label><span>Orateur</span><input @bind="_itemModel.Episode.Speaker" /></label><label><span>Date d’enregistrement</span><input type="datetime-local" @bind="_itemModel.Episode.RecordedAt" /></label><label><span>Durée (secondes)</span><input type="number" @bind="_itemModel.Episode.DurationSeconds" /></label> }
+                            else if (_itemModel.ItemType == "EVENT" && _itemModel.Event is not null) { <label><span>Début *</span><input type="datetime-local" @bind="_itemModel.Event.StartsAt" /></label><label><span>Fin</span><input type="datetime-local" @bind="_itemModel.Event.EndsAt" /></label><label><span>Lieu</span><input @bind="_itemModel.Event.Location" /></label><label><span>URL d’inscription</span><input type="url" @bind="_itemModel.Event.RegistrationUrl" /></label> }
+                            else if (_itemModel.ItemType == "QUOTE" && _itemModel.Quote is not null) { <label class="media-span-2"><span>Citation</span><textarea rows="4" @bind="_itemModel.Quote.QuoteText"></textarea></label><label><span>Auteur</span><input @bind="_itemModel.Quote.Author" /></label> }
+                            else if (_itemModel.ItemType == "PRODUCT" && _itemModel.Product is not null) { <label><span>SKU</span><input @bind="_itemModel.Product.Sku" /></label><label><span>Prix</span><input type="number" step="0.01" @bind="_itemModel.Product.Price" /></label><label><span>Devise</span><input @bind="_itemModel.Product.Currency" /></label><label><span>Stock</span><input type="number" @bind="_itemModel.Product.StockQuantity" /></label><label class="media-span-2"><span>URL d’achat</span><input type="url" @bind="_itemModel.Product.PurchaseUrl" /></label> }
+                            else { <div class="media-empty media-span-2">Ce type de contenu ne nécessite aucun détail spécialisé.</div> }
+                        </div>
+                    }
+                    else { <div class="media-empty">Enregistrez d’abord le contenu, puis utilisez l’action « Médias » dans la grille pour attacher des fichiers.</div> }
+                }
+                else if (_dialogKind == "ASSET")
+                {
+                    @if (!_editingId.HasValue)
+                    {
+                        <div class="media-mode-switch"><button type="button" class='@ModeClass("UPLOAD")' @onclick='() => _assetEditorMode = "UPLOAD"'>Téléverser un fichier</button><button type="button" class='@ModeClass("EXTERNAL")' @onclick='() => _assetEditorMode = "EXTERNAL"'>Ajouter une URL externe</button></div>
+                    }
+                    @if (!_editingId.HasValue && _assetEditorMode == "UPLOAD")
+                    {
+                        <div class="media-upload-box"><InputFile OnChange="OnUploadSelectedAsync" accept="image/jpeg,image/png,image/webp,video/mp4,audio/mpeg,audio/wav,application/pdf,.jpg,.jpeg,.png,.webp,.mp4,.mp3,.wav,.pdf" /><strong>@(_uploadFile?.FileName ?? "Aucun fichier sélectionné")</strong><small>JPEG, PNG, WebP, MP4, MP3, WAV ou PDF — 100 Mo maximum.</small></div>
+                        <div class="media-form-grid"><label><span>Miniature URL (optionnel)</span><input type="url" @bind="_assetModel.ThumbnailUrl" /></label><label><span>Durée en secondes</span><input type="number" @bind="_assetModel.DurationSeconds" /></label></div>
+                    }
+                    else
+                    {
+                        <div class="media-form-grid">
+                            <label><span>Type *</span><select @bind="_assetModel.AssetType">@foreach (var type in _assetTypes) { <option value="@type">@type</option> }</select></label><label><span>Provider *</span><select @bind="_assetModel.Provider" disabled="@(_editingId.HasValue && _assetModel.Provider == "LOCAL")">@foreach (var provider in _providers.Where(x => x != "LOCAL" || _editingId.HasValue)) { <option value="@provider">@provider</option> }</select></label>
+                            <label class="media-span-2"><span>URL *</span><input type="url" @bind="_assetModel.Url" disabled="@(_editingId.HasValue && _assetModel.Provider == "LOCAL")" /></label><label class="media-span-2"><span>Miniature URL</span><input type="url" @bind="_assetModel.ThumbnailUrl" /></label><label><span>MIME</span><input @bind="_assetModel.MimeType" /></label><label><span>Durée (secondes)</span><input type="number" @bind="_assetModel.DurationSeconds" /></label>
+                        </div>
+                    }
+                    @if (_saving && _assetEditorMode == "UPLOAD") { <div class="media-progress"><div style="width:@_uploadProgress%"></div></div><div class="media-progress-label">Téléversement en cours…</div> }
+                    @if (!string.IsNullOrWhiteSpace(_fileError)) { <div class="media-inline-error">@_fileError</div> }
+                }
+                else if (_dialogKind == "ATTACHMENT")
+                {
+                    <div class="media-form-grid">
+                        <label class="media-span-2"><span>Média existant</span><select @bind="_attachmentAssetId"><option value="@Guid.Empty">Sélectionnez dans la médiathèque</option>@foreach (var asset in _attachmentAssets) { <option value="@asset.Id">@asset.AssetType · @asset.Provider · @ShortUrl(asset.Url)</option> }</select></label>
+                        <label><span>Rôle</span><select @bind="_attachmentRole">@foreach (var role in _roles) { <option value="@role">@role</option> }</select></label><label><span>Ordre</span><input type="number" @bind="_attachmentSortOrder" /></label>
+                    </div>
+                    <div class="media-or"><span>ou téléverser directement</span></div>
+                    <div class="media-upload-box"><InputFile OnChange="OnUploadSelectedAsync" accept="image/jpeg,image/png,image/webp,video/mp4,audio/mpeg,audio/wav,application/pdf,.jpg,.jpeg,.png,.webp,.mp4,.mp3,.wav,.pdf" /><strong>@(_attachmentUploadFile?.FileName ?? "Aucun nouveau fichier")</strong></div>
+                    @if (_attachedMedia.Count > 0) { <h4 class="media-attached-title">Médias attachés</h4><div class="media-attached-list">@foreach (var media in _attachedMedia) { <div><span><strong>@media.Role</strong> · @media.AssetType · @ShortUrl(media.Url)</span><button type="button" disabled="@_saving" @onclick="() => DetachAsync(media)">Détacher</button></div> }</div> }
+                    @if (_saving && _attachmentUploadFile is not null) { <div class="media-progress"><div style="width:@_uploadProgress%"></div></div> }
+                }
+                else if (_dialogKind == "FEED" && _feedDetail is not null)
+                {
+                    <article class="media-detail"><div class="media-feed-card__meta"><span>@_feedDetail.CategoryName</span><span>@_feedDetail.ItemType</span></div><p>@_feedDetail.Description</p><dl><dt>Date</dt><dd>@_feedDetail.ContentDate.ToLocalTime().ToString("f")</dd><dt>Lieu</dt><dd>@(_feedDetail.Location ?? "—")</dd><dt>Collection</dt><dd>@(_feedDetail.CollectionTitle ?? "—")</dd><dt>Médias</dt><dd>@_feedDetail.Media.Count</dd></dl></article>
+                }
+            </Content>
+        </DialogTemplates>
+        <DialogButtons>
+            @if (_dialogKind != "FEED") { <DialogButton Content="@(_saving ? "Chargement..." : "Enregistrer")" IsPrimary="true" Disabled="@_saving" OnClick="SaveDialogAsync" /> }
+            <DialogButton Content="Fermer" Disabled="@_saving" OnClick="CloseDialog" />
+        </DialogButtons>
+    </SfDialog>
+}
+
+@code {
+    private RenderFragment Pagination(string target, int page, int totalPages, int totalCount) => @<div class="media-pagination"><span>@totalCount résultat(s)</span><div><button type="button" disabled="@(page <= 1 || _loading)" @onclick="() => ChangePageAsync(target, page - 1)">Précédent</button><span>Page @(page == 0 ? 1 : page) / @Math.Max(1, totalPages)</span><button type="button" disabled="@(page >= totalPages || _loading)" @onclick="() => ChangePageAsync(target, page + 1)">Suivant</button></div></div>;
+    private string SubTabClass(string value) => _contentSubTab == value ? "active" : string.Empty;
+    private string ModeClass(string value) => _assetEditorMode == value ? "active" : string.Empty;
+    private static string ShortUrl(string? value) => string.IsNullOrWhiteSpace(value) ? "Sans URL" : value.Length > 48 ? $"{value[..45]}…" : value;
+}

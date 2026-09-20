@@ -66,6 +66,7 @@ builder.Services.AddScoped<IMemberActivityService, MemberActivityService>();
 builder.Services.AddScoped<IMemberRoleService, MemberRoleService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IMemberTypeService, MemberTypeService>();
+builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IMinistryService, MinistryService>();
 builder.Services.AddScoped<IMinistiesScheduleService, MinistiesScheduleService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

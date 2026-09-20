@@ -1,0 +1,21 @@
+@using ChandorProject.Shared.DTOs.Media
+
+<div class="media-feed-grid">
+    @if (Items.Count == 0) { <div class="media-empty media-feed-empty">Aucun contenu publié pour ces filtres.</div> }
+    @foreach (var item in Items)
+    {
+        <article class="media-feed-card" @onclick="() => Open.InvokeAsync(item)">
+            @if (!string.IsNullOrWhiteSpace(item.PosterLink)) { <img src="@item.PosterLink" alt="@item.Title" /> }
+            <div class="media-feed-card__body">
+                <div class="media-feed-card__meta"><span>@item.CategoryName</span><span>@item.ItemType</span></div>
+                <h3>@item.Title</h3><p>@item.Description</p>
+                <div class="media-feed-card__date">@item.ContentDate.ToLocalTime().ToString("dd MMM yyyy · HH:mm")</div>
+            </div>
+        </article>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<MediaFeedItemDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<MediaFeedItemDto> Open { get; set; }
+}
