@@ -1,0 +1,34 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<span class="searchable-select-bootstrap" aria-hidden="true"></span>
+
+@code {
+    private IJSObjectReference? _module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        _module = await JS.InvokeAsync<IJSObjectReference>(
+            "import", "./js/searchable-select.js");
+        await _module.InvokeVoidAsync("initialize");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null)
+            return;
+
+        try
+        {
+            await _module.InvokeVoidAsync("dispose");
+            await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The browser has already left the page.
+        }
+    }
+}

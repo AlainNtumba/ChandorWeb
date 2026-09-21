@@ -33,6 +33,7 @@
                                                     DataSource="@_transactionTypes" 
                                                     @bind-Value="_editModel.TransactionType" 
                                                     Placeholder="Type de transaction" 
+                                                    AllowFiltering="true"
                                                     FloatLabelType="FloatLabelType.Always" 
                                                     Width="100%">
                                                     <DropDownListFieldSettings Text="Name" Value="Value" />
@@ -74,6 +75,7 @@
                                                                     DataSource="@_categoryDataSource"
                                                                     @bind-Value="_editModel.CategoryId"
                                                                     Placeholder="Catégorie"
+                                                                    AllowFiltering="true"
                                                                     FloatLabelType="FloatLabelType.Always"
                                                                     Width="100%">
                                                         <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
@@ -100,6 +102,7 @@
                                                                     DataSource="@_accounts"
                                                                     @bind-Value="_editModel.AccountId"
                                                                     Placeholder="Compte affecté"
+                                                                    AllowFiltering="true"
                                                                     FloatLabelType="FloatLabelType.Always"
                                                                     Width="100%">
                                                         <DropDownListFieldSettings Text="AccountName" Value="Id"></DropDownListFieldSettings>
