@@ -48,6 +48,9 @@ public sealed class ChandorApiHttp
     public Task<DataResponse<T>?> PutDataResponseAsync<T>(string relativeVersionedPath, HttpContent content, CancellationToken cancellationToken = default)
         => SendDataResponseAsync<T>(HttpMethod.Put, relativeVersionedPath, content, cancellationToken);
 
+    public Task<DataResponse<T>?> PatchDataResponseAsync<T>(string relativeVersionedPath, HttpContent content, CancellationToken cancellationToken = default)
+        => SendDataResponseAsync<T>(HttpMethod.Patch, relativeVersionedPath, content, cancellationToken);
+
     public Task<DataResponse<T>?> DeleteDataResponseAsync<T>(string relativeVersionedPath, CancellationToken cancellationToken = default)
         => SendDataResponseAsync<T>(HttpMethod.Delete, relativeVersionedPath, content: null, cancellationToken);
 

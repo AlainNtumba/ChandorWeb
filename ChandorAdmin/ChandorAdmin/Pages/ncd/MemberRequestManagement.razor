@@ -1,0 +1,94 @@
+@page "/member-requests"
+@using ChandorAdmin.Components.MemberRequest
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Popups
+@implements IDisposable
+
+<PageTitle>Demandes membres</PageTitle>
+
+<div class="request-page">
+    <header class="request-header">
+        <div><div class="request-eyebrow">Administration</div><h1>Demandes membres</h1><p>Suivez et traitez les demandes reçues par l’église.</p></div>
+        <div class="request-header-actions"><SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>@if (_selectedTab == 2) { <SfButton IsPrimary="true" OnClick="OpenNewType" Disabled="@_loading">Nouveau type</SfButton> }</div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_notice)) { <div class="request-notice @(_noticeIsError ? "error" : "success")" role="alert"><span>@_notice</span><button type="button" @onclick="() => _notice = null">×</button></div> }
+    @if (_loading) { <div class="request-loading"><span></span> Chargement…</div> }
+
+    <section class="request-surface">
+        <SfTab CssClass="request-tabs" @bind-SelectedItem="_selectedTab" OverflowMode="OverflowMode.Scrollable">
+            <TabItems>
+                <TabItem><ChildContent><TabHeader Text="Tableau de bord" /></ChildContent><ContentTemplate>
+                    <div class="request-tab-content">
+                        <div class="request-dashboard-toolbar"><div><label>Du</label><input type="date" @bind="_summaryFrom" /></div><div><label>Au</label><input type="date" @bind="_summaryTo" /></div><SfButton OnClick="ApplySummaryPeriodAsync">Appliquer</SfButton><div class="request-total"><span>Total général</span><strong>@_summary.TotalCount</strong></div></div>
+                        <MemberRequestSummaryCards Summary="_summary" />
+                        <section class="request-chart-card"><h2>Demandes par type</h2>
+                            @if (_summary.ByType.Count == 0) { <div class="request-empty">Aucune donnée pour cette période.</div> }
+                            else { <div class="request-bars">@foreach (var item in _summary.ByType.OrderByDescending(x => x.Count)) { <div class="request-bar-row"><div><strong>@item.TypeName</strong><span>@item.TypeCode</span></div><div class="request-bar-track"><span style="width:@BarWidth(item.Count)%"></span></div><b>@item.Count</b></div> }</div> }
+                        </section>
+                    </div>
+                </ContentTemplate></TabItem>
+                <TabItem><ChildContent><TabHeader Text="Demandes" /></ChildContent><ContentTemplate>
+                    <div class="request-tab-content">
+                        <div class="request-filter-bar">
+                            <input class="request-search" type="search" value="@_requestFilter.Keyword" @oninput="OnRequestKeywordAsync" placeholder="Rechercher une personne, un téléphone, un sujet…" />
+                            <select @bind="_requestFilter.Type" @bind:after="ApplyRequestFiltersAsync"><option value="">Tous les types</option>@foreach (var type in _allTypes) { <option value="@type.Code">@type.OptionsName</option> }</select>
+                            <select @bind="_requestFilter.Status" @bind:after="ApplyRequestFiltersAsync"><option value="">Tous les statuts</option>@foreach (var status in _statuses) { <option value="@status">@StatusLabel(status)</option> }</select>
+                            <input type="date" @bind="_requestFilter.FromDate" @bind:after="ApplyRequestFiltersAsync" /><input type="date" @bind="_requestFilter.ToDate" @bind:after="ApplyRequestFiltersAsync" />
+                            <button type="button" @onclick="ResetRequestFiltersAsync">Réinitialiser</button>
+                        </div>
+                        <MemberRequestGrid Items="_requestPage.Items" View="OpenDetailAsync" Edit="OpenEditAsync" ChangeStatus="OpenStatusAsync" Delete="DeleteRequestAsync" />
+                        @Pagination("REQUEST", _requestPage.Page, _requestPage.TotalPages, _requestPage.TotalCount)
+                    </div>
+                </ContentTemplate></TabItem>
+                <TabItem><ChildContent><TabHeader Text="Types de demandes" /></ChildContent><ContentTemplate>
+                    <div class="request-tab-content">
+                        <div class="request-filter-bar"><input class="request-search" type="search" value="@_typeFilter.Keyword" @oninput="OnTypeKeywordAsync" placeholder="Rechercher un type…" /><select @bind="_typeFilter.IsActive" @bind:after="ApplyTypeFiltersAsync"><option value="">Tous les statuts</option><option value="true">Actifs</option><option value="false">Inactifs</option></select></div>
+                        <RequestTypeGrid Items="_typePage.Items" Edit="EditType" Delete="DeleteTypeAsync" />
+                        @Pagination("TYPE", _typePage.Page, _typePage.TotalPages, _typePage.TotalCount)
+                    </div>
+                </ContentTemplate></TabItem>
+            </TabItems>
+        </SfTab>
+    </section>
+</div>
+
+@if (_dialogOpen)
+{
+    <SfDialog @bind-Visible="_dialogOpen" IsModal="true" Width="@(_dialogKind == "DETAIL" ? "min(720px, 96vw)" : "min(640px, 96vw)")" Header="@_dialogTitle" ShowCloseIcon="false" CloseOnEscape="false" CssClass="request-dialog">
+        <DialogTemplates><Content>
+            @if (_dialogKind == "DETAIL" && _selectedRequest is not null)
+            {
+                <article class="request-detail">
+                    <div class="request-detail-heading"><div><span>@_selectedRequest.RequestTypeCode</span><h2>@_selectedRequest.Subject</h2></div><span class="request-status @StatusCss(_selectedRequest.Status)">@StatusLabel(_selectedRequest.Status)</span></div>
+                    <dl><dt>Personne</dt><dd>@FullName(_selectedRequest)</dd><dt>Téléphone</dt><dd><a href="tel:@_selectedRequest.Phone">@_selectedRequest.Phone</a></dd><dt>Adresse</dt><dd>@(_selectedRequest.Address ?? "—")</dd><dt>Profil</dt><dd>@if (_selectedRequest.MemberId.HasValue) { <a href="church-members">@MemberName(_selectedRequest.MemberId)</a> } else { <span>Visiteur</span> }</dd><dt>Création</dt><dd>@_selectedRequest.CreatedAt.ToLocalTime().ToString("f")</dd><dt>Modification</dt><dd>@(_selectedRequest.UpdatedAt?.ToLocalTime().ToString("f") ?? "—")</dd></dl>
+                    <section><h3>Message</h3><p>@_selectedRequest.Message</p></section>
+                </article>
+            }
+            else if (_dialogKind == "EDIT")
+            {
+                <div class="request-form-grid">
+                    <label><span>Type *</span><select @bind="_requestModel.RequestTypeId"><option value="@Guid.Empty">Sélectionnez</option>@foreach (var type in _allTypes) { <option value="@type.Id">@type.OptionsName</option> }</select></label><label><span>Statut *</span><select @bind="_requestModel.Status">@foreach (var status in _statuses) { <option value="@status">@StatusLabel(status)</option> }</select></label>
+                    <label><span>Nom *</span><input @bind="_requestModel.LastName" /></label><label><span>Postnom</span><input @bind="_requestModel.MiddleName" /></label><label><span>Prénom *</span><input @bind="_requestModel.FirstName" /></label><label><span>Téléphone *</span><input type="tel" @bind="_requestModel.Phone" /></label>
+                    <label class="span-2"><span>Membre lié</span><select @bind="_requestModel.MemberId"><option value="">Visiteur / aucun membre</option>@foreach (var member in _members) { <option value="@member.Id">@MemberName(member.Id)</option> }</select></label>
+                    <label class="span-2"><span>Adresse</span><input @bind="_requestModel.Address" /></label><label class="span-2"><span>Sujet *</span><input @bind="_requestModel.Subject" /></label><label class="span-2"><span>Message *</span><textarea rows="7" @bind="_requestModel.Message"></textarea></label>
+                </div>
+            }
+            else if (_dialogKind == "STATUS" && _selectedRequest is not null)
+            {
+                <div class="request-status-editor"><p><strong>@FullName(_selectedRequest)</strong><br />@_selectedRequest.Subject</p><label><span>Nouveau statut</span><select @bind="_statusModel">@foreach (var status in _statuses) { <option value="@status">@StatusLabel(status)</option> }</select></label></div>
+            }
+            else if (_dialogKind == "TYPE")
+            {
+                <div class="request-form-grid"><label><span>Code *</span><input @bind="_typeModel.Code" placeholder="PRAYER" /></label><label><span>Libellé *</span><input @bind="_typeModel.OptionsName" /></label><label class="span-2"><span>Description</span><textarea rows="5" @bind="_typeModel.Description"></textarea></label><label class="request-check"><input type="checkbox" @bind="_typeModel.IsActive" /> Type actif</label></div>
+            }
+        </Content></DialogTemplates>
+        <DialogButtons>@if (_dialogKind != "DETAIL") { <DialogButton Content="@(_saving ? "Chargement..." : "Enregistrer")" IsPrimary="true" Disabled="@_saving" OnClick="SaveDialogAsync" /> }<DialogButton Content="Fermer" Disabled="@_saving" OnClick="CloseDialog" /></DialogButtons>
+    </SfDialog>
+}
+
+@code {
+    private RenderFragment Pagination(string target, int page, int totalPages, int totalCount) => @<div class="request-pagination"><span>@totalCount résultat(s)</span><div><button type="button" disabled="@(page <= 1 || _loading)" @onclick="() => ChangePageAsync(target, page - 1)">Précédent</button><span>Page @(page == 0 ? 1 : page) / @Math.Max(1, totalPages)</span><button type="button" disabled="@(page >= totalPages || _loading)" @onclick="() => ChangePageAsync(target, page + 1)">Suivant</button></div></div>;
+    private int BarWidth(int value) => _summary.ByType.Count == 0 || _summary.ByType.Max(x => x.Count) == 0 ? 0 : Math.Max(3, (int)Math.Round(value * 100d / _summary.ByType.Max(x => x.Count)));
+    private static string StatusCss(string value) => $"status-{NormalizeStatus(value).ToLowerInvariant().Replace('_', '-')}";
+}

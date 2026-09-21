@@ -1,0 +1,8 @@
+@using ChandorProject.Shared.DTOs.RequestType
+
+<div class="request-table-wrap"><table class="request-table"><thead><tr><th>Code</th><th>Libellé</th><th>Description</th><th>Actif</th><th>Demandes</th><th>Actions</th></tr></thead><tbody>
+@if (Items.Count == 0) { <tr><td colspan="6" class="request-empty">Aucun type de demande.</td></tr> }
+@foreach (var item in Items) { <tr><td><code>@item.Code</code></td><td class="request-strong">@item.OptionsName</td><td>@(item.Description ?? "—")</td><td><span class="request-status @(item.IsActive ? "status-processed" : "status-cancelled")">@(item.IsActive ? "Actif" : "Inactif")</span></td><td>@item.RequestCount</td><td class="request-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td></tr> }
+</tbody></table></div>
+
+@code { [Parameter] public IReadOnlyList<RequestTypeDto> Items { get; set; } = []; [Parameter] public EventCallback<RequestTypeDto> Edit { get; set; } [Parameter] public EventCallback<RequestTypeDto> Delete { get; set; } }

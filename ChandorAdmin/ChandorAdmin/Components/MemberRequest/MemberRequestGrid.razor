@@ -1,0 +1,22 @@
+@using ChandorProject.Shared.DTOs.MemberRequest
+
+<div class="request-table-wrap"><table class="request-table"><thead><tr><th>Date</th><th>Type</th><th>Nom complet</th><th>Téléphone</th><th>Sujet</th><th>Profil</th><th>Statut</th><th>Modification</th><th>Actions</th></tr></thead><tbody>
+@if (Items.Count == 0) { <tr><td colspan="9" class="request-empty">Aucune demande.</td></tr> }
+@foreach (var item in Items)
+{
+    <tr><td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td><span class="request-type-code">@item.RequestTypeCode</span><div>@item.RequestTypeOptionsName</div></td><td class="request-strong">@FullName(item)</td><td><a href="tel:@item.Phone">@item.Phone</a></td><td><strong>@item.Subject</strong><div class="request-message-preview">@Preview(item.Message)</div></td><td>@(item.MemberId.HasValue ? "Membre" : "Visiteur")</td><td><span class="request-status @StatusClass(item.Status)">@StatusLabel(item.Status)</span></td><td>@(item.UpdatedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td class="request-actions"><button type="button" @onclick="() => View.InvokeAsync(item)">Voir</button><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" @onclick="() => ChangeStatus.InvokeAsync(item)">Statut</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td></tr>
+}
+</tbody></table></div>
+
+@code {
+    [Parameter] public IReadOnlyList<MemberRequestDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<MemberRequestDto> View { get; set; }
+    [Parameter] public EventCallback<MemberRequestDto> Edit { get; set; }
+    [Parameter] public EventCallback<MemberRequestDto> ChangeStatus { get; set; }
+    [Parameter] public EventCallback<MemberRequestDto> Delete { get; set; }
+    private static string FullName(MemberRequestDto item) => string.Join(" ", new[] { item.LastName, item.MiddleName, item.FirstName }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    private static string Preview(string text) => text.Length > 70 ? $"{text[..67]}…" : text;
+    private static string StatusClass(string value) => $"status-{NormalizeStatus(value).ToLowerInvariant().Replace('_', '-')}";
+    private static string StatusLabel(string value) => NormalizeStatus(value) switch { "PENDING" => "En attente", "IN_PROGRESS" => "En traitement", "PROCESSED" => "Traitée", "REJECTED" => "Rejetée", "CANCELLED" => "Annulée", _ => value };
+    private static string NormalizeStatus(string value) => value.Trim().Replace("-", "_").Replace(" ", "_").ToUpperInvariant();
+}

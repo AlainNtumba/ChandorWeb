@@ -1,0 +1,14 @@
+@using ChandorProject.Shared.DTOs.MemberRequest
+
+<div class="request-summary-grid">
+    @Card("En attente", Summary.PendingCount, "pending")
+    @Card("En traitement", Summary.InProgressCount, "progress")
+    @Card("Traitées", Summary.ProcessedCount, "processed")
+    @Card("Rejetées", Summary.RejectedCount, "rejected")
+    @Card("Annulées", Summary.CancelledCount, "cancelled")
+</div>
+
+@code {
+    [Parameter] public MemberRequestSummaryDto Summary { get; set; } = new();
+    private static RenderFragment Card(string label, int value, string css) => @<article class="request-summary-card @css"><span>@label</span><strong>@value</strong></article>;
+}

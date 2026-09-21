@@ -66,6 +66,7 @@ builder.Services.AddScoped<IIncomeTypeService, IncomeTypeService>();
 builder.Services.AddScoped<IMemberActivityService, MemberActivityService>();
 builder.Services.AddScoped<IMemberRoleService, MemberRoleService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<IMemberRequestService, MemberRequestService>();
 builder.Services.AddScoped<IMemberTypeService, MemberTypeService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IMinistryService, MinistryService>();
@@ -73,6 +74,7 @@ builder.Services.AddScoped<IMinistiesScheduleService, MinistiesScheduleService>(
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IOutreachesService, OutreachesService>();
 builder.Services.AddScoped<IProgramTypeService, ProgramTypeService>();
+builder.Services.AddScoped<IRequestTypeService, RequestTypeService>();
 builder.Services.AddScoped<ITelephoneService, TelephoneService>();
 builder.Services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
