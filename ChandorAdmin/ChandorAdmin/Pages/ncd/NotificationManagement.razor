@@ -12,18 +12,18 @@
     @if (_loading) { <div class="notification-loading"><span></span> Chargement…</div> }
 
     <section class="notification-surface">
-        <SfTab CssClass="notification-tabs" @bind-SelectedItem="_selectedTab" OverflowMode="OverflowMode.Scrollable"><TabItems>
-            <TabItem><ChildContent><TabHeader Text="Tableau de bord" /></ChildContent><ContentTemplate><div class="notification-tab-content">
+        <ChandorTabs CssClass="notification-tabs" @bind-SelectedItem="_selectedTab"><TabItems>
+            <TabItem><HeaderTemplate><ChandorTabHeader Text="Tableau de bord" IconCss="e-icons e-chart" /></HeaderTemplate><ContentTemplate><div class="notification-tab-content">
                 <div class="notification-dashboard-toolbar"><div><label>Du</label><input type="date" @bind="_summaryFrom" /></div><div><label>Au</label><input type="date" @bind="_summaryTo" /></div><SfButton OnClick="ApplySummaryPeriodAsync">Appliquer</SfButton></div>
                 <NotificationSummaryCards Summary="_summary" />
                 <div class="notification-metrics"><article><span>Destinataires enregistrés</span><strong>@_summary.TotalRecipients</strong></article><article><span>Notifications lues</span><strong>@_summary.TotalRead</strong></article><article><span>Taux de lecture</span><strong>@RecipientRate(_summary)</strong></article><article><span>Archivées</span><strong>@_summary.ArchivedCount</strong></article></div>
             </div></ContentTemplate></TabItem>
-            <TabItem><ChildContent><TabHeader Text="Notifications" /></ChildContent><ContentTemplate><div class="notification-tab-content">
+            <TabItem><HeaderTemplate><ChandorTabHeader Text="Notifications" IconCss="e-icons e-send" BadgeCount="_notificationPage.TotalCount" /></HeaderTemplate><ContentTemplate><div class="notification-tab-content">
                 <div class="notification-filter-bar"><input class="notification-search" type="search" value="@_filter.Keyword" @oninput="OnKeywordAsync" placeholder="Rechercher un titre ou un message…" /><select @bind="_filter.Status" @bind:after="ApplyFiltersAsync"><option value="">Tous les statuts</option>@foreach (var status in Statuses) { <option value="@status">@StatusLabel(status)</option> }</select><select @bind="_filter.AudienceType" @bind:after="ApplyFiltersAsync"><option value="">Toutes les audiences</option>@foreach (var audience in Audiences) { <option value="@audience">@AudienceLabel(audience)</option> }</select><select @bind="_filter.IsActive" @bind:after="ApplyFiltersAsync"><option value="">Tous</option><option value="true">Actives</option><option value="false">Inactives</option></select><input type="date" @bind="_filter.FromDate" @bind:after="ApplyFiltersAsync" /><input type="date" @bind="_filter.ToDate" @bind:after="ApplyFiltersAsync" /><button type="button" @onclick="ResetFiltersAsync">Réinitialiser</button></div>
                 <NotificationAdminGrid Items="_notificationPage.Items" View="OpenViewAsync" Edit="OpenEditAsync" Recipients="OpenRecipientsAsync" Publish="PublishAsync" Draft="MoveToDraftAsync" Archive="ArchiveAsync" Delete="DeleteAsync" />
                 @Pagination(_notificationPage.Page, _notificationPage.TotalPages, _notificationPage.TotalCount)
             </div></ContentTemplate></TabItem>
-        </TabItems></SfTab>
+        </TabItems></ChandorTabs>
     </section>
 </div>
 

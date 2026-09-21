@@ -17,16 +17,16 @@
     @if (_loading) { <div class="directory-loading"><span></span> Chargement…</div> }
 
     <section class="directory-surface">
-        <SfTab CssClass="directory-tabs" @bind-SelectedItem="_selectedTab" @bind-SelectedItem:after="OnSelectedTabChangedAsync" OverflowMode="OverflowMode.Scrollable">
+        <ChandorTabs CssClass="directory-tabs" @bind-SelectedItem="_selectedTab" @bind-SelectedItem:after="OnSelectedTabChangedAsync">
             <TabItems>
-                <TabItem><ChildContent><TabHeader Text="Types" /></ChildContent><ContentTemplate>
+                <TabItem><HeaderTemplate><ChandorTabHeader Text="Types" IconCss="e-icons e-list-unordered" BadgeCount="_typePage.TotalCount" /></HeaderTemplate><ContentTemplate>
                     <div class="directory-tab-content">
                         <div class="directory-toolbar"><select @bind="_typeFilter.IsActive" @bind:after="FilterTypesAsync"><option value="">Tous les statuts</option><option value="true">Actifs</option><option value="false">Inactifs</option></select><input type="search" value="@_typeFilter.Keyword" @oninput="OnTypeKeywordAsync" placeholder="Rechercher un type…" /></div>
                         <DirectoryTypeGrid Items="_typePage.Items" Edit="EditType" Delete="DeleteTypeAsync" />
                         @Pagination("TYPE", _typePage.Page, _typePage.TotalPages, _typePage.TotalCount)
                     </div>
                 </ContentTemplate></TabItem>
-                <TabItem><ChildContent><TabHeader Text="Éléments" /></ChildContent><ContentTemplate>
+                <TabItem><HeaderTemplate><ChandorTabHeader Text="Éléments" IconCss="e-icons e-table" BadgeCount="_itemPage.TotalCount" /></HeaderTemplate><ContentTemplate>
                     <div class="directory-tab-content">
                         <div class="directory-toolbar">
                             <select @bind="_itemFilter.TypeId" @bind:after="FilterItemTypeAsync"><option value="">Tous les types</option>@foreach (var type in _types) { <option value="@type.Id">@type.Name</option> }</select>
@@ -38,15 +38,15 @@
                         @Pagination("ITEM", _itemPage.Page, _itemPage.TotalPages, _itemPage.TotalCount)
                     </div>
                 </ContentTemplate></TabItem>
-                <TabItem><ChildContent><TabHeader Text="Hiérarchie" /></ChildContent><ContentTemplate>
+                <TabItem><HeaderTemplate><ChandorTabHeader Text="Hiérarchie" IconCss="e-icons e-people" BadgeCount="_tree.Count" BadgeTone="neutral" /></HeaderTemplate><ContentTemplate>
                     <div class="directory-tab-content"><div class="directory-toolbar"><select @bind="_treeTypeId" @bind:after="LoadTreeAsync"><option value="@Guid.Empty">Sélectionnez un type</option>@foreach (var type in _types) { <option value="@type.Id">@type.Name</option> }</select></div>
                     @if (_treeTypeId == Guid.Empty) { <div class="directory-empty">Sélectionnez un type.</div> } else if (_tree.Count == 0) { <div class="directory-empty">Aucun élément dans cette hiérarchie.</div> } else { <DirectoryTreeView Nodes="_tree" Edit="EditItem" AddChild="AddTreeChild" /> }</div>
                 </ContentTemplate></TabItem>
-                <TabItem><ChildContent><TabHeader Text="Prévisualisation" /></ChildContent><ContentTemplate>
+                <TabItem><HeaderTemplate><ChandorTabHeader Text="Prévisualisation" IconCss="e-icons e-eye" /></HeaderTemplate><ContentTemplate>
                     <div class="directory-tab-content"><div class="directory-toolbar"><select @bind="_previewTypeId" @bind:after="LoadPreviewAsync"><option value="@Guid.Empty">Sélectionnez un type</option>@foreach (var type in _publicTypes) { <option value="@type.Id">@type.Name</option> }</select><span class="directory-public-label">Données provenant uniquement des routes publiques</span></div><DirectoryPublicPreview DirectoryType="PreviewType" Items="_publicItems" Open="OpenPreviewDetail" /></div>
                 </ContentTemplate></TabItem>
             </TabItems>
-        </SfTab>
+        </ChandorTabs>
     </section>
 </div>
 

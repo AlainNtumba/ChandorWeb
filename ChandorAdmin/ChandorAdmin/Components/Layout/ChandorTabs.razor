@@ -1,0 +1,29 @@
+@using Syncfusion.Blazor.Navigations
+
+<div class="chandor-tabs-host rounded-0">
+    <SfTab CssClass="@ResolvedCssClass"
+           SelectedItem="@SelectedItem"
+           SelectedItemChanged="OnSelectedItemChangedAsync"
+           OverflowMode="@OverflowMode"
+           HeaderPlacement="@HeaderPlacement"
+           Height="@Height"
+           Width="@Width">
+        @ChildContent
+    </SfTab>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public int SelectedItem { get; set; }
+    [Parameter] public EventCallback<int> SelectedItemChanged { get; set; }
+    [Parameter] public OverflowMode OverflowMode { get; set; } = OverflowMode.Scrollable;
+    [Parameter] public HeaderPosition HeaderPlacement { get; set; } = HeaderPosition.Top;
+    [Parameter] public string Height { get; set; } = "auto";
+    [Parameter] public string Width { get; set; } = "100%";
+    [Parameter] public string? CssClass { get; set; }
+
+    private string ResolvedCssClass => string.Join(" ", new[] { "chandor-tabs", "rounded-0", CssClass }
+        .Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private Task OnSelectedItemChangedAsync(int value) => SelectedItemChanged.InvokeAsync(value);
+}

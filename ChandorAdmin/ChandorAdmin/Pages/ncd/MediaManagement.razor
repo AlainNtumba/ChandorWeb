@@ -25,16 +25,16 @@
     @if (_loading) { <div class="media-loading"><span></span> Chargement…</div> }
 
     <section class="media-surface">
-        <SfTab CssClass="media-tabs" @bind-SelectedItem="_selectedTab" @bind-SelectedItem:after="OnSelectedTabChangedAsync" OverflowMode="OverflowMode.Scrollable">
+        <ChandorTabs CssClass="media-tabs" @bind-SelectedItem="_selectedTab" @bind-SelectedItem:after="OnSelectedTabChangedAsync">
             <TabItems>
                 <TabItem>
-                    <ChildContent><TabHeader Text="Catégories" /></ChildContent>
+                    <HeaderTemplate><ChandorTabHeader Text="Catégories" IconCss="e-icons e-grid-view" BadgeCount="_categories.Count" /></HeaderTemplate>
                     <ContentTemplate>
                         <div class="media-tab-content"><MediaCategoryGrid Items="_categories" Edit="EditCategory" Delete="DeleteCategoryAsync" /></div>
                     </ContentTemplate>
                 </TabItem>
                 <TabItem>
-                    <ChildContent><TabHeader Text="Collections" /></ChildContent>
+                    <HeaderTemplate><ChandorTabHeader Text="Collections" IconCss="e-icons e-folder" BadgeCount="_collections.TotalCount" /></HeaderTemplate>
                     <ContentTemplate>
                         <div class="media-tab-content">
                             <div class="media-toolbar">
@@ -48,7 +48,7 @@
                     </ContentTemplate>
                 </TabItem>
                 <TabItem>
-                    <ChildContent><TabHeader Text="Contenus" /></ChildContent>
+                    <HeaderTemplate><ChandorTabHeader Text="Contenus" IconCss="e-icons e-list-unordered" BadgeCount="_items.TotalCount" /></HeaderTemplate>
                     <ContentTemplate>
                         <div class="media-tab-content">
                             <div class="media-toolbar">
@@ -64,7 +64,7 @@
                     </ContentTemplate>
                 </TabItem>
                 <TabItem>
-                    <ChildContent><TabHeader Text="Médiathèque" /></ChildContent>
+                    <HeaderTemplate><ChandorTabHeader Text="Médiathèque" IconCss="e-icons e-image" BadgeCount="_assets.TotalCount" /></HeaderTemplate>
                     <ContentTemplate>
                         <div class="media-tab-content">
                             <div class="media-toolbar">
@@ -78,7 +78,7 @@
                     </ContentTemplate>
                 </TabItem>
                 <TabItem>
-                    <ChildContent><TabHeader Text="Prévisualisation" /></ChildContent>
+                    <HeaderTemplate><ChandorTabHeader Text="Prévisualisation" IconCss="e-icons e-eye" /></HeaderTemplate>
                     <ContentTemplate>
                         <div class="media-tab-content">
                             <div class="media-toolbar">
@@ -92,7 +92,7 @@
                     </ContentTemplate>
                 </TabItem>
             </TabItems>
-        </SfTab>
+        </ChandorTabs>
     </section>
 </div>
 

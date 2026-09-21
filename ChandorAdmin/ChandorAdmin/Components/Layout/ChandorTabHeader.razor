@@ -1,0 +1,20 @@
+<span class="chandor-tab-header">
+    @if (!string.IsNullOrWhiteSpace(IconCss))
+    {
+        <span class="chandor-tab-header__icon @IconCss" aria-hidden="true"></span>
+    }
+    <span class="chandor-tab-header__text">@Text</span>
+    @if (BadgeCount.HasValue)
+    {
+        <span class="chandor-tab-header__badge @BadgeClass">@BadgeCount.Value</span>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
+    [Parameter] public string? IconCss { get; set; }
+    [Parameter] public int? BadgeCount { get; set; }
+    [Parameter] public string BadgeTone { get; set; } = "blue";
+
+    private string BadgeClass => $"chandor-tab-header__badge--{BadgeTone}";
+}

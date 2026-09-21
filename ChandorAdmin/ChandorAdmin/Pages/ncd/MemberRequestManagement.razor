@@ -16,9 +16,9 @@
     @if (_loading) { <div class="request-loading"><span></span> Chargement…</div> }
 
     <section class="request-surface">
-        <SfTab CssClass="request-tabs" @bind-SelectedItem="_selectedTab" OverflowMode="OverflowMode.Scrollable">
+        <ChandorTabs CssClass="request-tabs" @bind-SelectedItem="_selectedTab">
             <TabItems>
-                <TabItem><ChildContent><TabHeader Text="Tableau de bord" /></ChildContent><ContentTemplate>
+                <TabItem><HeaderTemplate><ChandorTabHeader Text="Tableau de bord" IconCss="e-icons e-chart" /></HeaderTemplate><ContentTemplate>
                     <div class="request-tab-content">
                         <div class="request-dashboard-toolbar"><div><label>Du</label><input type="date" @bind="_summaryFrom" /></div><div><label>Au</label><input type="date" @bind="_summaryTo" /></div><SfButton OnClick="ApplySummaryPeriodAsync">Appliquer</SfButton><div class="request-total"><span>Total général</span><strong>@_summary.TotalCount</strong></div></div>
                         <MemberRequestSummaryCards Summary="_summary" />
@@ -28,7 +28,7 @@
                         </section>
                     </div>
                 </ContentTemplate></TabItem>
-                <TabItem><ChildContent><TabHeader Text="Demandes" /></ChildContent><ContentTemplate>
+                <TabItem><HeaderTemplate><ChandorTabHeader Text="Demandes" IconCss="e-icons e-file-new" BadgeCount="_requestPage.TotalCount" /></HeaderTemplate><ContentTemplate>
                     <div class="request-tab-content">
                         <div class="request-filter-bar">
                             <input class="request-search" type="search" value="@_requestFilter.Keyword" @oninput="OnRequestKeywordAsync" placeholder="Rechercher une personne, un téléphone, un sujet…" />
@@ -41,7 +41,7 @@
                         @Pagination("REQUEST", _requestPage.Page, _requestPage.TotalPages, _requestPage.TotalCount)
                     </div>
                 </ContentTemplate></TabItem>
-                <TabItem><ChildContent><TabHeader Text="Types de demandes" /></ChildContent><ContentTemplate>
+                <TabItem><HeaderTemplate><ChandorTabHeader Text="Types de demandes" IconCss="e-icons e-list-unordered" BadgeCount="_typePage.TotalCount" BadgeTone="neutral" /></HeaderTemplate><ContentTemplate>
                     <div class="request-tab-content">
                         <div class="request-filter-bar"><input class="request-search" type="search" value="@_typeFilter.Keyword" @oninput="OnTypeKeywordAsync" placeholder="Rechercher un type…" /><select @bind="_typeFilter.IsActive" @bind:after="ApplyTypeFiltersAsync"><option value="">Tous les statuts</option><option value="true">Actifs</option><option value="false">Inactifs</option></select></div>
                         <RequestTypeGrid Items="_typePage.Items" Edit="EditType" Delete="DeleteTypeAsync" />
@@ -49,7 +49,7 @@
                     </div>
                 </ContentTemplate></TabItem>
             </TabItems>
-        </SfTab>
+        </ChandorTabs>
     </section>
 </div>
 

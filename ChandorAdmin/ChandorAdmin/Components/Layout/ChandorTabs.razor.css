@@ -1,0 +1,102 @@
+.chandor-tabs-host {
+    width: 100%;
+    overflow: hidden;
+    background: #fff;
+    border: 0;
+    border-radius: 0 !important;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs,
+.chandor-tabs-host ::deep .chandor-tabs.e-tab,
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header,
+.chandor-tabs-host ::deep .chandor-tabs .e-toolbar-items,
+.chandor-tabs-host ::deep .chandor-tabs .e-toolbar-item,
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-wrap,
+.chandor-tabs-host ::deep .chandor-tabs .e-text-wrap,
+.chandor-tabs-host ::deep .chandor-tabs .e-content {
+    border-radius: 0 !important;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs.e-tab {
+    border: 0;
+    background: #fff;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header {
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+    border: 0;
+    border-bottom: 1px solid #e3e6eb;
+    background: #fff;
+    box-shadow: none;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-toolbar-items {
+    height: 59px !important;
+    min-height: 59px !important;
+    padding: 0 26px;
+    background: #fff;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-toolbar-item {
+    height: 59px !important;
+    min-height: 59px !important;
+    margin: 0 38px 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-tab-wrap,
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-text-wrap,
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-tab-text {
+    display: flex;
+    align-items: center;
+    height: 59px !important;
+    min-height: 59px !important;
+    padding: 0 !important;
+    color: #596174;
+    background: transparent !important;
+    text-transform: none;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-toolbar-item.e-active .e-tab-text,
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-toolbar-item.e-active .chandor-tab-header {
+    color: #111827;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-toolbar-item.e-active .chandor-tab-header__icon {
+    color: #30394b;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-indicator {
+    bottom: 0 !important;
+    height: 3px !important;
+    border-radius: 0 !important;
+    background: #344054 !important;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-nav-left-arrow,
+.chandor-tabs-host ::deep .chandor-tabs .e-nav-right-arrow {
+    min-width: 44px;
+    height: 59px;
+    border: 0;
+    background: #fff;
+    color: #344054;
+}
+
+.chandor-tabs-host ::deep .chandor-tabs .e-content {
+    border: 0;
+    background: transparent;
+}
+
+@media (max-width: 700px) {
+    .chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-toolbar-items {
+        padding: 0 14px;
+    }
+
+    .chandor-tabs-host ::deep .chandor-tabs .e-tab-header .e-toolbar-item {
+        margin-right: 24px;
+    }
+}
