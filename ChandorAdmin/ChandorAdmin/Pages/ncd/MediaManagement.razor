@@ -106,7 +106,7 @@
                     <div class="media-form-grid">
                         <label><span>Nom *</span><input @bind="_categoryModel.Name" /></label><label><span>Code *</span><input @bind="_categoryModel.Code" placeholder="NEWS" /></label>
                         <label><span>Module</span><select @bind="_categoryModel.ModuleType"><option>CONTENT</option><option>EVENT</option><option>COMMERCE</option></select></label><label><span>Ordre</span><input type="number" @bind="_categoryModel.SortOrder" /></label>
-                        <label><span>Icône</span><input @bind="_categoryModel.Icon" /></label><label><span>Couleur de l’icône</span><input type="color" @bind="_categoryModel.IconColor" /></label>
+                        <label><span>Couleur de l’icône</span><input type="color" @bind="_categoryModel.IconColor" /></label>
                         <label><span>Arrière-plan</span><input type="color" @bind="_categoryModel.IconBackground" /></label><label class="media-check"><input type="checkbox" @bind="_categoryModel.IsActive" /> Catégorie active</label>
                     </div>
                 }
@@ -114,7 +114,7 @@
                 {
                     <div class="media-form-grid">
                         <label><span>Catégorie *</span><select @bind="_collectionModel.CategoryId"><option value="@Guid.Empty">Sélectionnez</option>@foreach (var c in _categories) { <option value="@c.Id">@c.Name</option> }</select></label><label><span>Statut</span><select @bind="_collectionModel.Status">@foreach (var status in _statuses) { <option value="@status">@status</option> }</select></label>
-                        <label><span>Titre *</span><input @bind="_collectionModel.Title" /></label><label><span>Slug *</span><input @bind="_collectionModel.Slug" placeholder="mon-contenu" /></label>
+                        <label><span>Titre *</span><input @bind="_collectionModel.Title" /></label>
                         <label class="media-span-2"><span>Description</span><textarea rows="4" @bind="_collectionModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_collectionModel.SortOrder" /></label><label><span>Date de publication</span><input type="datetime-local" @bind="_collectionModel.PublishedAt" /></label>
                     </div>
                 }
@@ -126,7 +126,7 @@
                         <div class="media-form-grid">
                             <label><span>Catégorie *</span><select @bind="_itemModel.CategoryId"><option value="@Guid.Empty">Sélectionnez</option>@foreach (var c in _categories) { <option value="@c.Id">@c.Name</option> }</select></label><label><span>Collection</span><select @bind="_itemModel.CollectionId"><option value="">Sans collection</option>@foreach (var c in ItemCollections) { <option value="@c.Id">@c.Title</option> }</select></label>
                             <label><span>Type *</span><select value="@_itemModel.ItemType" @onchange="OnItemTypeChanged">@foreach (var type in _itemTypes) { <option value="@type">@type</option> }</select></label><label><span>Statut</span><select @bind="_itemModel.Status">@foreach (var status in _statuses) { <option value="@status">@status</option> }</select></label>
-                            <label><span>Titre *</span><input @bind="_itemModel.Title" /></label><label><span>Slug *</span><input @bind="_itemModel.Slug" /></label><label class="media-span-2"><span>Description</span><textarea rows="4" @bind="_itemModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_itemModel.SortOrder" /></label><label><span>Publication</span><input type="datetime-local" @bind="_itemModel.PublishedAt" /></label>
+                            <label><span>Titre *</span><input @bind="_itemModel.Title" /></label><label class="media-span-2"><span>Description</span><textarea rows="4" @bind="_itemModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_itemModel.SortOrder" /></label><label><span>Publication</span><input type="datetime-local" @bind="_itemModel.PublishedAt" /></label>
                         </div>
                     }
                     else if (_contentSubTab == "DETAILS")
@@ -170,7 +170,36 @@
                     </div>
                     <div class="media-or"><span>ou téléverser directement</span></div>
                     <div class="media-upload-box"><InputFile OnChange="OnUploadSelectedAsync" accept="image/jpeg,image/png,image/webp,video/mp4,audio/mpeg,audio/wav,application/pdf,.jpg,.jpeg,.png,.webp,.mp4,.mp3,.wav,.pdf" /><strong>@(_attachmentUploadFile?.FileName ?? "Aucun nouveau fichier")</strong></div>
-                    @if (_attachedMedia.Count > 0) { <h4 class="media-attached-title">Médias attachés</h4><div class="media-attached-list">@foreach (var media in _attachedMedia) { <div><span><strong>@media.Role</strong> · @media.AssetType · @ShortUrl(media.Url)</span><button type="button" disabled="@_saving" @onclick="() => DetachAsync(media)">Détacher</button></div> }</div> }
+                    @if (_attachedMedia.Count > 0)
+                    {
+                        <h4 class="media-attached-title">Médias attachés</h4>
+                        <div class="media-attached-list">
+                            @foreach (var media in _attachedMedia)
+                            {
+                                var previewUrl = GetMediaPreviewUrl(media);
+                                <article class="media-attached-card">
+                                    <div class="media-attached-card__preview">
+                                        @if (!string.IsNullOrWhiteSpace(previewUrl))
+                                        {
+                                            <img src="@previewUrl" alt="Aperçu du média @media.Role" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="media-attached-card__fallback"><span class="e-icons @MediaTypeIcon(media.AssetType)" aria-hidden="true"></span><strong>@media.AssetType</strong></div>
+                                        }
+                                        <div class="media-attached-card__overlay">
+                                            <button type="button" class="media-detach-button" disabled="@(_saving || IsDetaching(media))" title="Détacher ce média" aria-label="Détacher ce média" @onclick="() => DetachAsync(media)" @onclick:stopPropagation="true">
+                                                <span class="e-icons @(IsDetaching(media) ? "e-spinner" : "e-trash")" aria-hidden="true"></span>
+                                                <span>@(IsDetaching(media) ? "Chargement…" : "Détacher")</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="media-attached-card__meta"><strong>@media.Role</strong><span>@media.AssetType · @ShortUrl(media.Url)</span></div>
+                                </article>
+                            }
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_attachmentError)) { <div class="media-inline-error" role="alert">@_attachmentError</div> }
                     @if (_saving && _attachmentUploadFile is not null) { <div class="media-progress"><div style="width:@_uploadProgress%"></div></div> }
                 }
                 else if (_dialogKind == "FEED" && _feedDetail is not null)

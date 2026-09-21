@@ -2,16 +2,15 @@
 
 <div class="media-table-wrap">
     <table class="media-table">
-        <thead><tr><th>Icône</th><th>Nom</th><th>Code</th><th>Module</th><th>Collections</th><th>Contenus</th><th>Ordre</th><th>Actif</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Nom</th><th>Code</th><th>Module</th><th>Collections</th><th>Contenus</th><th>Ordre</th><th>Actif</th><th>Actions</th></tr></thead>
         <tbody>
         @if (Items.Count == 0)
         {
-            <tr><td colspan="9" class="media-empty">Aucune catégorie.</td></tr>
+            <tr><td colspan="8" class="media-empty">Aucune catégorie.</td></tr>
         }
         @foreach (var item in Items)
         {
             <tr>
-                <td><span class="media-category-icon" style="color:@item.IconColor;background:@item.IconBackground">@(string.IsNullOrWhiteSpace(item.Icon) ? "◆" : item.Icon)</span></td>
                 <td class="media-strong">@item.Name</td><td><code>@item.Code</code></td><td>@item.ModuleType</td>
                 <td>@item.CollectionCount</td><td>@item.ItemCount</td><td>@item.SortOrder</td>
                 <td><span class="media-status @(item.IsActive ? "media-status--published" : "media-status--draft")">@(item.IsActive ? "Oui" : "Non")</span></td>

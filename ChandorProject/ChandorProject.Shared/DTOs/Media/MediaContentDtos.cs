@@ -24,7 +24,6 @@ public class MediaCategoryDto : MediaCategoryInputDto
 public class MediaCollectionInputDto
 {
     public Guid CategoryId { get; set; }
-    public string Slug { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Status { get; set; } = "DRAFT";
@@ -35,6 +34,7 @@ public class MediaCollectionInputDto
 public class MediaCollectionDto : MediaCollectionInputDto
 {
     public Guid Id { get; set; }
+    public string Slug { get; set; } = string.Empty;
     public string CategoryCode { get; set; } = string.Empty;
     public int ItemCount { get; set; }
     public IReadOnlyList<MediaLinkDto> Media { get; set; } = [];

@@ -1,10 +1,14 @@
+using ChandorAdmin.Configuration;
 using ChandorAdmin.Interfaces.Api;
 using ChandorAdmin.Models.Media;
 using ChandorProject.Shared.DTOs.Media;
 using ChandorProject.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Options;
 using Syncfusion.Blazor.Popups;
+using System.Globalization;
+using System.Text;
 
 namespace ChandorAdmin.Pages.ncd;
 
@@ -14,6 +18,7 @@ public partial class MediaManagement : IDisposable
 
     [Inject] private IMediaService MediaService { get; set; } = default!;
     [Inject] private SfDialogService DialogService { get; set; } = default!;
+    [Inject] private IOptions<ChandorApiOptions> ApiOptions { get; set; } = default!;
 
     private readonly string[] _statuses = ["DRAFT", "PUBLISHED", "ARCHIVED"];
     private readonly string[] _itemTypes = ["ARTICLE", "EPISODE", "EVENT", "QUOTE", "PRODUCT", "SERVICE_VIDEO", "SHORT_VIDEO"];
@@ -66,6 +71,8 @@ public partial class MediaManagement : IDisposable
     private int _attachmentSortOrder;
     private IReadOnlyList<MediaLinkDto> _attachedMedia = [];
     private MediaUploadFile? _attachmentUploadFile;
+    private string? _detachingMediaKey;
+    private string? _attachmentError;
     private MediaFeedDetailDto? _feedDetail;
 
     protected override async Task OnInitializedAsync() => await LoadInitialAsync();
@@ -228,7 +235,7 @@ public partial class MediaManagement : IDisposable
     private void EditCollection(MediaCollectionDto item)
     {
         _editingId = item.Id; _dialogKind = "COLLECTION"; _dialogTitle = "Modifier la collection";
-        _collectionModel = new MediaCollectionInputDto { CategoryId = item.CategoryId, Slug = item.Slug, Title = item.Title, Description = item.Description, Status = item.Status, SortOrder = item.SortOrder, PublishedAt = item.PublishedAt };
+        _collectionModel = new MediaCollectionInputDto { CategoryId = item.CategoryId, Title = item.Title, Description = item.Description, Status = item.Status, SortOrder = item.SortOrder, PublishedAt = item.PublishedAt };
         _dialogOpen = true;
     }
 
@@ -297,7 +304,7 @@ public partial class MediaManagement : IDisposable
 
     private async Task SaveCollectionAsync()
     {
-        if (_collectionModel.CategoryId == Guid.Empty || string.IsNullOrWhiteSpace(_collectionModel.Slug) || string.IsNullOrWhiteSpace(_collectionModel.Title)) { Error("La catégorie, le slug et le titre sont obligatoires."); return; }
+        if (_collectionModel.CategoryId == Guid.Empty || string.IsNullOrWhiteSpace(_collectionModel.Title)) { Error("La catégorie et le titre sont obligatoires."); return; }
         var response = _editingId.HasValue ? await MediaService.UpdateCollectionAsync(_editingId.Value, _collectionModel) : await MediaService.CreateCollectionAsync(_collectionModel);
         if (!Succeeded(response, "Impossible d’enregistrer la collection.")) return;
         Success("Collection enregistrée."); CloseDialog(); await Task.WhenAll(LoadCollectionsCoreAsync(), LoadCollectionLookupCoreAsync(), LoadCategoriesCoreAsync());
@@ -306,10 +313,36 @@ public partial class MediaManagement : IDisposable
     private async Task SaveItemAsync()
     {
         EnsureItemDetails();
-        if (_itemModel.CategoryId == Guid.Empty || string.IsNullOrWhiteSpace(_itemModel.Slug) || string.IsNullOrWhiteSpace(_itemModel.Title)) { Error("La catégorie, le slug et le titre sont obligatoires."); return; }
+        if (_itemModel.CategoryId == Guid.Empty || string.IsNullOrWhiteSpace(_itemModel.Title)) { Error("La catégorie et le titre sont obligatoires."); return; }
+        if (string.IsNullOrWhiteSpace(_itemModel.Slug)) _itemModel.Slug = CreateSlug(_itemModel.Title);
+        if (string.IsNullOrWhiteSpace(_itemModel.Slug)) { Error("Le titre doit contenir au moins une lettre ou un chiffre."); return; }
         var response = _editingId.HasValue ? await MediaService.UpdateItemAsync(_editingId.Value, _itemModel) : await MediaService.CreateItemAsync(_itemModel);
         if (!Succeeded(response, "Impossible d’enregistrer le contenu.")) return;
         Success("Contenu enregistré."); CloseDialog(); await Task.WhenAll(LoadItemsCoreAsync(), LoadCategoriesCoreAsync());
+    }
+
+    private static string CreateSlug(string value)
+    {
+        var normalized = value.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var slug = new StringBuilder(normalized.Length);
+        var separatorPending = false;
+
+        foreach (var character in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark) continue;
+            if (char.IsLetterOrDigit(character))
+            {
+                if (separatorPending && slug.Length > 0) slug.Append('-');
+                slug.Append(character);
+                separatorPending = false;
+            }
+            else
+            {
+                separatorPending = slug.Length > 0;
+            }
+        }
+
+        return slug.ToString();
     }
 
     private async Task SaveAssetAsync()
@@ -356,7 +389,7 @@ public partial class MediaManagement : IDisposable
             if (response is not { Success: true, Data: not null }) { ShowError(response, "Impossible de charger les médias disponibles."); return; }
             _attachmentAssets = response.Data.Items;
             _attachmentOwnerType = ownerType; _attachmentOwnerId = ownerId; _attachedMedia = media;
-            _attachmentAssetId = Guid.Empty; _attachmentRole = "PRIMARY"; _attachmentSortOrder = 0; _attachmentUploadFile = null;
+            _attachmentAssetId = Guid.Empty; _attachmentRole = "PRIMARY"; _attachmentSortOrder = 0; _attachmentUploadFile = null; _attachmentError = null; _detachingMediaKey = null;
             _dialogKind = "ATTACHMENT"; _dialogTitle = "Gérer les médias associés"; _dialogOpen = true;
         }
         finally { _loading = false; }
@@ -388,15 +421,59 @@ public partial class MediaManagement : IDisposable
 
     private async Task DetachAsync(MediaLinkDto media)
     {
-        var confirmed = await DialogService.ConfirmAsync("Détacher ce média ?", "Confirmation");
-        if (!confirmed) return;
-        var response = _attachmentOwnerType == "COLLECTION"
-            ? await MediaService.DetachCollectionMediaAsync(_attachmentOwnerId, media.Id, media.Role)
-            : await MediaService.DetachItemMediaAsync(_attachmentOwnerId, media.Id, media.Role);
-        if (!Succeeded(response, "Impossible de détacher ce média.")) return;
-        _attachedMedia = _attachedMedia.Where(x => x.Id != media.Id || x.Role != media.Role).ToList();
-        if (_attachmentOwnerType == "COLLECTION") await LoadCollectionsCoreAsync(); else await LoadItemsCoreAsync();
+        var key = MediaKey(media);
+        if (_detachingMediaKey is not null) return;
+
+        _detachingMediaKey = key;
+        _attachmentError = null;
+        try
+        {
+            var response = _attachmentOwnerType == "COLLECTION"
+                ? await MediaService.DetachCollectionMediaAsync(_attachmentOwnerId, media.Id, media.Role)
+                : await MediaService.DetachItemMediaAsync(_attachmentOwnerId, media.Id, media.Role);
+            if (response is not { Success: true })
+            {
+                _attachmentError = ResponseMessage(response, "Impossible de détacher ce média.");
+                return;
+            }
+
+            _attachedMedia = _attachedMedia.Where(x => x.Id != media.Id || x.Role != media.Role).ToList();
+            Success("Média détaché.");
+            if (_attachmentOwnerType == "COLLECTION") await LoadCollectionsCoreAsync(); else await LoadItemsCoreAsync();
+        }
+        catch (Exception ex)
+        {
+            _attachmentError = $"Impossible de détacher ce média : {ex.Message}";
+        }
+        finally
+        {
+            _detachingMediaKey = null;
+        }
     }
+
+    private static string MediaKey(MediaLinkDto media) => $"{media.Id:D}:{media.Role}";
+    private bool IsDetaching(MediaLinkDto media) => _detachingMediaKey == MediaKey(media);
+
+    private string? GetMediaPreviewUrl(MediaLinkDto media)
+    {
+        var value = string.Equals(media.AssetType, "IMAGE", StringComparison.OrdinalIgnoreCase)
+            ? media.Url
+            : media.ThumbnailUrl;
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        if (Uri.TryCreate(value, UriKind.Absolute, out var absolute)) return absolute.ToString();
+
+        var configuredBase = new Uri(ApiOptions.Value.BaseUrl.TrimEnd('/') + "/");
+        var origin = new Uri(configuredBase.GetLeftPart(UriPartial.Authority) + "/");
+        return new Uri(origin, value.TrimStart('/')).ToString();
+    }
+
+    private static string MediaTypeIcon(string type) => type.ToUpperInvariant() switch
+    {
+        "VIDEO" => "e-video",
+        "AUDIO" => "e-audio",
+        "DOCUMENT" => "e-file-document",
+        _ => "e-image"
+    };
 
     private async Task DeleteCategoryAsync(MediaCategoryDto item)
     {
@@ -438,7 +515,7 @@ public partial class MediaManagement : IDisposable
     private void CloseDialog()
     {
         if (_saving) return;
-        _dialogOpen = false; _dialogKind = string.Empty; _editingId = null; _uploadFile = null; _attachmentUploadFile = null; _uploadProgress = 0; _fileError = null;
+        _dialogOpen = false; _dialogKind = string.Empty; _editingId = null; _uploadFile = null; _attachmentUploadFile = null; _uploadProgress = 0; _fileError = null; _attachmentError = null; _detachingMediaKey = null;
     }
 
     private void ShowError<T>(DataResponse<T>? response, string fallback) => Error(ResponseMessage(response, fallback));
