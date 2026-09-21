@@ -1,0 +1,11 @@
+@using ChandorProject.Shared.DTOs.Notification
+
+<div class="notification-summary-grid">
+    @Card("Total", Summary.TotalCount, "total") @Card("Brouillons", Summary.DraftCount, "draft") @Card("Publiées", Summary.PublishedCount, "published")
+    @Card("Planifiées", Summary.ScheduledCount, "scheduled") @Card("Actives", Summary.ActiveCount, "active") @Card("Expirées", Summary.ExpiredCount, "expired")
+</div>
+
+@code {
+    [Parameter] public NotificationSummaryDto Summary { get; set; } = new();
+    private static RenderFragment Card(string label, int value, string css) => @<article class="notification-summary-card @css"><span>@label</span><strong>@value</strong></article>;
+}

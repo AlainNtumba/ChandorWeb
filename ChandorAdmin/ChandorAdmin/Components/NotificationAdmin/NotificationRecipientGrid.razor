@@ -1,0 +1,13 @@
+@using ChandorProject.Shared.DTOs.Notification
+
+<div class="notification-table-wrap"><table class="notification-table"><thead><tr><th>Membre</th><th>Identifiant</th><th>Livraison</th><th>Lecture</th><th>Rejet</th><th>État</th></tr></thead><tbody>
+@if (Items.Count == 0) { <tr><td colspan="6" class="notification-empty">Aucun destinataire pour ces filtres.</td></tr> }
+@foreach (var item in Items) { <tr><td><strong>@item.MemberName</strong></td><td>@item.Username</td><td>@Date(item.DeliveredAt)</td><td>@Date(item.ReadAt)</td><td>@Date(item.DismissedAt)</td><td><span class="notification-status @StateCss(item)">@State(item)</span></td></tr> }
+</tbody></table></div>
+
+@code {
+    [Parameter] public IReadOnlyList<NotificationRecipientAdminDto> Items { get; set; } = [];
+    private static string Date(DateTime? value) => value?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—";
+    private static string State(NotificationRecipientAdminDto item) => item.DismissedAt.HasValue ? "Rejetée" : item.ReadAt.HasValue ? "Lue" : "Non lue";
+    private static string StateCss(NotificationRecipientAdminDto item) => item.DismissedAt.HasValue ? "state-dismissed" : item.ReadAt.HasValue ? "state-read" : "state-unread";
+}

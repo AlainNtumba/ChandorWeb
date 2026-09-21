@@ -1,0 +1,70 @@
+@page "/administration/notifications"
+@using ChandorAdmin.Components.NotificationAdmin
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Popups
+@implements IDisposable
+
+<PageTitle>Notifications administratives</PageTitle>
+
+<div class="notification-page">
+    <header class="notification-header"><div><div class="notification-eyebrow">Administration</div><h1>Notifications</h1><p>Créez, planifiez et suivez les communications envoyées aux membres.</p></div><div class="notification-header-actions"><SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>@if (_selectedTab == 1) { <SfButton IsPrimary="true" OnClick="OpenCreate" Disabled="@_loading">Nouvelle notification</SfButton> }</div></header>
+    @if (!string.IsNullOrWhiteSpace(_notice)) { <div class="notification-notice @(_noticeIsError ? "error" : "success")" role="alert"><span>@_notice</span><button type="button" @onclick="() => _notice = null">×</button></div> }
+    @if (_loading) { <div class="notification-loading"><span></span> Chargement…</div> }
+
+    <section class="notification-surface">
+        <SfTab CssClass="notification-tabs" @bind-SelectedItem="_selectedTab" OverflowMode="OverflowMode.Scrollable"><TabItems>
+            <TabItem><ChildContent><TabHeader Text="Tableau de bord" /></ChildContent><ContentTemplate><div class="notification-tab-content">
+                <div class="notification-dashboard-toolbar"><div><label>Du</label><input type="date" @bind="_summaryFrom" /></div><div><label>Au</label><input type="date" @bind="_summaryTo" /></div><SfButton OnClick="ApplySummaryPeriodAsync">Appliquer</SfButton></div>
+                <NotificationSummaryCards Summary="_summary" />
+                <div class="notification-metrics"><article><span>Destinataires enregistrés</span><strong>@_summary.TotalRecipients</strong></article><article><span>Notifications lues</span><strong>@_summary.TotalRead</strong></article><article><span>Taux de lecture</span><strong>@RecipientRate(_summary)</strong></article><article><span>Archivées</span><strong>@_summary.ArchivedCount</strong></article></div>
+            </div></ContentTemplate></TabItem>
+            <TabItem><ChildContent><TabHeader Text="Notifications" /></ChildContent><ContentTemplate><div class="notification-tab-content">
+                <div class="notification-filter-bar"><input class="notification-search" type="search" value="@_filter.Keyword" @oninput="OnKeywordAsync" placeholder="Rechercher un titre ou un message…" /><select @bind="_filter.Status" @bind:after="ApplyFiltersAsync"><option value="">Tous les statuts</option>@foreach (var status in Statuses) { <option value="@status">@StatusLabel(status)</option> }</select><select @bind="_filter.AudienceType" @bind:after="ApplyFiltersAsync"><option value="">Toutes les audiences</option>@foreach (var audience in Audiences) { <option value="@audience">@AudienceLabel(audience)</option> }</select><select @bind="_filter.IsActive" @bind:after="ApplyFiltersAsync"><option value="">Tous</option><option value="true">Actives</option><option value="false">Inactives</option></select><input type="date" @bind="_filter.FromDate" @bind:after="ApplyFiltersAsync" /><input type="date" @bind="_filter.ToDate" @bind:after="ApplyFiltersAsync" /><button type="button" @onclick="ResetFiltersAsync">Réinitialiser</button></div>
+                <NotificationAdminGrid Items="_notificationPage.Items" View="OpenViewAsync" Edit="OpenEditAsync" Recipients="OpenRecipientsAsync" Publish="PublishAsync" Draft="MoveToDraftAsync" Archive="ArchiveAsync" Delete="DeleteAsync" />
+                @Pagination(_notificationPage.Page, _notificationPage.TotalPages, _notificationPage.TotalCount)
+            </div></ContentTemplate></TabItem>
+        </TabItems></SfTab>
+    </section>
+</div>
+
+@if (_dialogOpen)
+{
+    <SfDialog @bind-Visible="_dialogOpen" IsModal="true" Width="@(_dialogKind == "EDITOR" ? "min(840px, 96vw)" : "min(760px, 96vw)")" Header="@_dialogTitle" ShowCloseIcon="false" CloseOnEscape="false" CssClass="notification-dialog"><DialogTemplates><Content>
+        @if (_dialogKind == "EDITOR")
+        {
+            <div class="notification-subtabs"><button type="button" class='@EditorTabClass("CONTENT")' @onclick='() => _editorTab = "CONTENT"'>Contenu</button><button type="button" class='@EditorTabClass("AUDIENCE")' @onclick='() => _editorTab = "AUDIENCE"'>Audience</button><button type="button" class='@EditorTabClass("SCHEDULE")' @onclick='() => _editorTab = "SCHEDULE"'>Planification</button><button type="button" class='@EditorTabClass("PREVIEW")' @onclick='() => _editorTab = "PREVIEW"'>Aperçu</button></div>
+            @if (_editorTab == "CONTENT")
+            { <div class="notification-form"><label><span>Titre *</span><input maxlength="150" @bind="_model.Title" /></label><label><span>Message *</span><textarea rows="10" @bind="_model.Message"></textarea></label></div> }
+            else if (_editorTab == "AUDIENCE")
+            {
+                <div class="notification-form"><label><span>Type d’audience *</span><select value="@_model.AudienceType" @onchange="OnAudienceChanged">@foreach (var audience in Audiences) { <option value="@audience">@AudienceLabel(audience)</option> }</select></label></div>
+                @if (_model.AudienceType == "GLOBAL") { <div class="notification-global-audience"><strong>Tous les membres</strong><p>Les destinataires seront enregistrés au moment de la création ou de la publication.</p></div> }
+                else if (_model.AudienceType == "SPECIFIC")
+                { <div class="notification-selection"><input type="search" @bind="_memberSearch" @bind:event="oninput" placeholder="Rechercher un membre…" /><div class="notification-check-list">@foreach (var member in FilteredMembers) { <label><input type="checkbox" checked="@_model.MemberIds.Contains(member.Id)" @onchange="e => ToggleSelection(_model.MemberIds, member.Id, (bool)e.Value!)" /><span><strong>@MemberName(member)</strong><small>@member.Username</small></span></label> }</div></div> }
+                else if (_model.AudienceType == "MEMBER_TYPE")
+                { <div class="notification-check-list">@foreach (var item in _memberTypes) { <label><input type="checkbox" checked="@_model.MemberTypeIds.Contains(item.Id)" @onchange="e => ToggleSelection(_model.MemberTypeIds, item.Id, (bool)e.Value!)" /><span><strong>@item.Name</strong><small>@item.Description</small></span></label> }</div> }
+                else if (_model.AudienceType == "AGE_GROUP")
+                { <div class="notification-check-list">@foreach (var item in _ageGroups) { <label><input type="checkbox" checked="@_model.AgeGroupIds.Contains(item.Id)" @onchange="e => ToggleSelection(_model.AgeGroupIds, item.Id, (bool)e.Value!)" /><span><strong>@item.GroupName</strong><small>@item.FromAge–@item.ToAge ans</small></span></label> }</div> }
+                else if (_model.AudienceType == "DEPARTMENT_TEAM")
+                { <div class="notification-selection"><select @bind="_teamDepartmentId"><option value="">Tous les départements</option>@foreach (var department in _departments) { <option value="@department.Id">@department.Name</option> }</select><div class="notification-check-list">@foreach (var team in FilteredTeams) { <label><input type="checkbox" checked="@_model.DepartmentTeamIds.Contains(team.Id)" @onchange="e => ToggleSelection(_model.DepartmentTeamIds, team.Id, (bool)e.Value!)" /><span><strong>@team.Name</strong><small>@TeamName(team)</small></span></label> }</div></div> }
+            }
+            else if (_editorTab == "SCHEDULE")
+            { <div class="notification-form-grid"><label><span>Statut</span><select @bind="_model.Status">@foreach (var status in Statuses) { <option value="@status">@StatusLabel(status)</option> }</select></label><label class="notification-check"><input type="checkbox" @bind="_model.IsActive" /> Notification active</label><label><span>Date de publication</span><input type="datetime-local" @bind="_model.PublishedAt" /></label><label><span>Date d’expiration</span><input type="datetime-local" @bind="_model.ExpiresAt" /></label></div> }
+            else
+            { <article class="notification-preview"><div class="notification-preview__header"><span>@AudienceLabel(_model.AudienceType)</span><span class="notification-status @StatusCss(_model.Status)">@StatusLabel(_model.Status)</span></div><h2>@(string.IsNullOrWhiteSpace(_model.Title) ? "Titre de la notification" : _model.Title)</h2><p>@(string.IsNullOrWhiteSpace(_model.Message) ? "Le message apparaîtra ici." : _model.Message)</p><footer><span>@(_model.PublishedAt?.ToString("f") ?? "Publication immédiate ou non définie")</span>@if (_model.ExpiresAt.HasValue) { <span>Expire le @_model.ExpiresAt.Value.ToString("f")</span> }</footer></article> }
+        }
+        else if (_dialogKind == "DETAIL" && _selectedNotification is not null)
+        { <article class="notification-detail"><div><span class="notification-audience">@AudienceLabel(_selectedNotification.AudienceType)</span><span class="notification-status @StatusCss(_selectedNotification.Status)">@StatusLabel(_selectedNotification.Status)</span></div><p>@_selectedNotification.Message</p><dl><dt>Publication</dt><dd>@DateText(_selectedNotification.PublishedAt)</dd><dt>Expiration</dt><dd>@DateText(_selectedNotification.ExpiresAt)</dd><dt>Destinataires</dt><dd>@_selectedNotification.RecipientCount</dd><dt>Livrées</dt><dd>@_selectedNotification.DeliveredCount</dd><dt>Lues</dt><dd>@_selectedNotification.ReadCount</dd><dt>Rejetées</dt><dd>@_selectedNotification.DismissedCount</dd><dt>Active</dt><dd>@(_selectedNotification.IsActive ? "Oui" : "Non")</dd></dl></article> }
+        else if (_dialogKind == "RECIPIENTS")
+        { <div class="notification-recipient-filters"><input type="search" value="@_recipientFilter.Keyword" @oninput="OnRecipientKeywordAsync" placeholder="Rechercher un destinataire…" /><select @bind="_recipientFilter.State" @bind:after="OnRecipientStateChangedAsync"><option value="">Tous les états</option>@foreach (var state in RecipientStates) { <option value="@state">@RecipientStateLabel(state)</option> }</select></div><NotificationRecipientGrid Items="_recipientPage.Items" />@RecipientPagination(_recipientPage.Page, _recipientPage.TotalPages, _recipientPage.TotalCount) }
+    </Content></DialogTemplates><DialogButtons>@if (_dialogKind == "EDITOR") { <DialogButton Content="@(_saving ? "Chargement..." : "Enregistrer")" IsPrimary="true" Disabled="@_saving" OnClick="SaveAsync" /> }<DialogButton Content="Fermer" Disabled="@_saving" OnClick="CloseDialog" /></DialogButtons></SfDialog>
+}
+
+@code {
+    private RenderFragment Pagination(int page, int totalPages, int totalCount) => @<div class="notification-pagination"><span>@totalCount résultat(s)</span><div><button type="button" disabled="@(page <= 1 || _loading)" @onclick="() => ChangePageAsync(page - 1)">Précédent</button><span>Page @(page == 0 ? 1 : page) / @Math.Max(1,totalPages)</span><button type="button" disabled="@(page >= totalPages || _loading)" @onclick="() => ChangePageAsync(page + 1)">Suivant</button></div></div>;
+    private RenderFragment RecipientPagination(int page, int totalPages, int totalCount) => @<div class="notification-pagination"><span>@totalCount destinataire(s)</span><div><button type="button" disabled="@(page <= 1)" @onclick="() => ChangeRecipientPageAsync(page - 1)">Précédent</button><span>Page @(page == 0 ? 1 : page) / @Math.Max(1,totalPages)</span><button type="button" disabled="@(page >= totalPages)" @onclick="() => ChangeRecipientPageAsync(page + 1)">Suivant</button></div></div>;
+    private string EditorTabClass(string value) => _editorTab == value ? "active" : string.Empty;
+    private static string StatusCss(string value) => $"status-{Normalize(value).ToLowerInvariant()}";
+    private static string DateText(DateTime? value) => ToLocalEditorTime(value)?.ToString("f") ?? "—";
+    private static string RecipientStateLabel(string value) => value switch { "READ" => "Lues", "UNREAD" => "Non lues", "DISMISSED" => "Rejetées", _ => value };
+}

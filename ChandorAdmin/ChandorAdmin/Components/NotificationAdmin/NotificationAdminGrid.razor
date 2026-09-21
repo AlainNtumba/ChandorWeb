@@ -1,0 +1,22 @@
+@using ChandorProject.Shared.DTOs.Notification
+
+<div class="notification-table-wrap"><table class="notification-table"><thead><tr><th>Titre</th><th>Audience</th><th>Statut</th><th>Publication</th><th>Expiration</th><th>Destinataires</th><th>Lectures</th><th>Actions</th></tr></thead><tbody>
+@if (Items.Count == 0) { <tr><td colspan="8" class="notification-empty">Aucune notification.</td></tr> }
+@foreach (var item in Items)
+{
+    <tr><td><strong>@item.Title</strong><div class="notification-message-preview">@Preview(item.Message)</div></td><td><span class="notification-audience">@AudienceLabel(item.AudienceType)</span></td><td><span class="notification-status @StatusCss(item.Status)">@StatusLabel(item.Status)</span>@if (!item.IsActive) { <small class="notification-inactive">Inactive</small> }</td><td>@(item.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td>@(item.ExpiresAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td>@item.RecipientCount</td><td>@item.ReadCount / @item.RecipientCount</td><td class="notification-actions"><button type="button" @onclick="() => View.InvokeAsync(item)">Voir</button><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" @onclick="() => Recipients.InvokeAsync(item)">Destinataires</button>@if (Normalize(item.Status) != "PUBLISHED") { <button type="button" @onclick="() => Publish.InvokeAsync(item)">Publier</button> }@if (Normalize(item.Status) != "DRAFT") { <button type="button" @onclick="() => Draft.InvokeAsync(item)">Brouillon</button> }@if (Normalize(item.Status) != "ARCHIVED") { <button type="button" @onclick="() => Archive.InvokeAsync(item)">Archiver</button> }<button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td></tr>
+}
+</tbody></table></div>
+
+@code {
+    [Parameter] public IReadOnlyList<NotificationAdminDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<NotificationAdminDto> View { get; set; } [Parameter] public EventCallback<NotificationAdminDto> Edit { get; set; }
+    [Parameter] public EventCallback<NotificationAdminDto> Recipients { get; set; } [Parameter] public EventCallback<NotificationAdminDto> Publish { get; set; }
+    [Parameter] public EventCallback<NotificationAdminDto> Draft { get; set; } [Parameter] public EventCallback<NotificationAdminDto> Archive { get; set; }
+    [Parameter] public EventCallback<NotificationAdminDto> Delete { get; set; }
+    private static string Preview(string value) => value.Length > 80 ? $"{value[..77]}…" : value;
+    private static string Normalize(string value) => value.Trim().Replace("-", "_").Replace(" ", "_").ToUpperInvariant();
+    private static string StatusCss(string value) => $"status-{Normalize(value).ToLowerInvariant()}";
+    private static string StatusLabel(string value) => Normalize(value) switch { "DRAFT" => "Brouillon", "PUBLISHED" => "Publiée", "ARCHIVED" => "Archivée", _ => value };
+    private static string AudienceLabel(string value) => Normalize(value) switch { "GLOBAL" => "Tous les membres", "SPECIFIC" => "Membres précis", "MEMBER_TYPE" => "Types de membres", "AGE_GROUP" => "Tranches d’âge", "DEPARTMENT_TEAM" => "Équipes", _ => value };
+}
