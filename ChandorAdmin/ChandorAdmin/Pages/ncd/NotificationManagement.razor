@@ -13,7 +13,7 @@
 
     <section class="notification-surface">
         <ChandorTabs CssClass="notification-tabs" @bind-SelectedItem="_selectedTab"><TabItems>
-            <TabItem><HeaderTemplate><ChandorTabHeader Text="Tableau de bord" IconCss="e-icons e-chart" /></HeaderTemplate><ContentTemplate><div class="notification-tab-content">
+            <TabItem><HeaderTemplate><ChandorTabHeader Text="Tableau de bord" IconCss="e-icons e-chart" /></HeaderTemplate><ContentTemplate><div class="notification-tab-content notification-dashboard">
                 <div class="notification-dashboard-toolbar"><div><label>Du</label><input type="date" @bind="_summaryFrom" /></div><div><label>Au</label><input type="date" @bind="_summaryTo" /></div><SfButton OnClick="ApplySummaryPeriodAsync">Appliquer</SfButton></div>
                 <NotificationSummaryCards Summary="_summary" />
                 <div class="notification-metrics"><article><span>Destinataires enregistrés</span><strong>@_summary.TotalRecipients</strong></article><article><span>Notifications lues</span><strong>@_summary.TotalRead</strong></article><article><span>Taux de lecture</span><strong>@RecipientRate(_summary)</strong></article><article><span>Archivées</span><strong>@_summary.ArchivedCount</strong></article></div>

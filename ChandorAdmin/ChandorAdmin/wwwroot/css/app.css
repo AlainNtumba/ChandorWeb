@@ -119,3 +119,44 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+/* Global square design system: every application and third-party UI element. */
+:root {
+    --bs-border-radius: 0;
+    --bs-border-radius-sm: 0;
+    --bs-border-radius-lg: 0;
+    --bs-border-radius-xl: 0;
+    --bs-border-radius-xxl: 0;
+    --bs-border-radius-pill: 0;
+}
+
+html body #app *,
+html body #app *::before,
+html body #app *::after,
+html body [id][class],
+html body [id][class]::before,
+html body [id][class]::after,
+html body [class][class],
+html body [class][class]::before,
+html body [class][class]::after {
+    border-radius: 0 !important;
+}
+
+/* High-specificity override for controls rendered in portals (dialogs/popups). */
+html:root:root:root body *,
+html:root:root:root body *::before,
+html:root:root:root body *::after {
+    border-radius: 0 !important;
+}
+
+/* Loading indicators remain circular. */
+html body #app .spinner-border,
+html body #app .spinner-grow,
+html body #app .modern-login__spinner,
+html body #app .directory-loading > span,
+html body #app .media-loading > span,
+html body #app .request-loading > span,
+html body #app .notification-loading > span,
+html:root:root:root body .e-spinner-inner,
+html:root:root:root body .e-spinner-inner svg {
+    border-radius: 50% !important;
+}
