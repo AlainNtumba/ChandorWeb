@@ -185,12 +185,40 @@ public partial class ChurchDirectoryManagement : IDisposable
         _dialogKind = "TYPE"; _dialogTitle = "Nouveau type"; _dialogOpen = true;
     }
 
-    private void EditType(ChurchDirectoryTypeDto item)
+    private async Task EditType(ChurchDirectoryTypeDto item)
     {
-        _editingId = item.Id; _selectedImage = null; _deleteImage = false; _dialogKind = "TYPE"; _dialogTitle = "Modifier le type";
-        _typeModel = new ChurchDirectoryTypeInputDto { Code = item.Code, Name = item.Name, Description = item.Description, DisplayKind = item.DisplayKind, Icon = item.Icon, HeroImageUrl = item.HeroImageUrl, SortOrder = item.SortOrder, IsActive = item.IsActive };
-        _dialogOpen = true;
+        _loading = true;
+        try
+        {
+            var response = await DirectoryService.GetAdminTypeByIdAsync(item.Id);
+            if (response is not { Success: true, Data: not null })
+            {
+                ShowError(response, "Impossible de charger le détail de ce type.");
+                return;
+            }
+
+            var detail = response.Data;
+            _editingId = detail.Id; _selectedImage = null; _deleteImage = false; _dialogKind = "TYPE"; _dialogTitle = "Modifier le type";
+            _typeModel = MapTypeToForm(detail);
+            _dialogOpen = true;
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
+
+    private static ChurchDirectoryTypeInputDto MapTypeToForm(ChurchDirectoryTypeDto item) => new()
+    {
+        Code = item.Code,
+        Name = item.Name,
+        Description = item.Description,
+        DisplayKind = item.DisplayKind,
+        Icon = item.Icon,
+        HeroImageUrl = item.HeroImageUrl,
+        SortOrder = item.SortOrder,
+        IsActive = item.IsActive
+    };
 
     private void OpenNewItem(Guid? parentId = null, Guid? typeId = null)
     {
@@ -244,14 +272,15 @@ public partial class ChurchDirectoryManagement : IDisposable
         if (_selectedImage is not null)
         {
             var upload = await DirectoryService.UploadTypeHeroAsync(id, _selectedImage);
-            if (upload is not { Success: true }) { ShowError(upload, "Le type est enregistré, mais l’image Hero n’a pas pu être envoyée."); return; }
+            if (upload is not { Success: true, Data: not null }) { ShowError(upload, "Le type est enregistré, mais l’image Hero n’a pas pu être envoyée."); return; }
+            _typeModel = MapTypeToForm(upload.Data);
         }
         else if (_editingId.HasValue && _deleteImage)
         {
             var deletion = await DirectoryService.DeleteTypeHeroAsync(id);
             if (deletion is not { Success: true }) { ShowError(deletion, "Le type est enregistré, mais l’image Hero n’a pas pu être supprimée."); return; }
         }
-        Success("Type enregistré."); CloseDialog(); await ReloadAfterTypeMutationAsync();
+        Success("Type enregistré."); CloseDialogCore(); await ReloadAfterTypeMutationAsync();
     }
 
     private async Task SaveItemAsync()
@@ -273,7 +302,7 @@ public partial class ChurchDirectoryManagement : IDisposable
             var deletion = await DirectoryService.DeleteItemImageAsync(id);
             if (deletion is not { Success: true }) { ShowError(deletion, "L’élément est enregistré, mais son image n’a pas pu être supprimée."); return; }
         }
-        Success("Élément enregistré."); CloseDialog(); await ReloadAfterItemMutationAsync();
+        Success("Élément enregistré."); CloseDialogCore(); await ReloadAfterItemMutationAsync();
     }
 
     private async Task DeleteTypeAsync(ChurchDirectoryTypeDto item)
@@ -304,7 +333,8 @@ public partial class ChurchDirectoryManagement : IDisposable
     }
 
     private void OpenPreviewDetail(ChurchDirectoryItemDto item) { _previewDetail = item; _dialogKind = "PREVIEW"; _dialogTitle = item.Name; _dialogOpen = true; }
-    private void CloseDialog() { if (_saving) return; _dialogOpen = false; _dialogKind = string.Empty; _editingId = null; _selectedImage = null; _deleteImage = false; }
+    private void CloseDialog() { if (!_saving) CloseDialogCore(); }
+    private void CloseDialogCore() { _dialogOpen = false; _dialogKind = string.Empty; _editingId = null; _selectedImage = null; _deleteImage = false; }
 
     private void ShowError<T>(DataResponse<T>? response, string fallback) => Error(ResponseMessage(response, fallback));
     private static string ResponseMessage<T>(DataResponse<T>? response, string fallback)

@@ -1,0 +1,24 @@
+.directory-editor-list { display: grid; gap: 12px; }
+.directory-editor-list__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e9f0; }
+.directory-editor-list__header > div { display: flex; align-items: center; gap: 10px; }
+.directory-editor-list__header > div > span:last-child { display: flex; flex-direction: column; gap: 3px; }
+.directory-editor-list__header strong { color: #1f2937; font-size: .95rem; }
+.directory-editor-list__header small { color: #748095; font-size: .72rem; }
+.directory-editor-list__icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 7px; color: #313c75; background: #eef0fa; font-size: 18px; }
+.directory-add-button { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 8px 12px; border: 0; border-radius: 6px; color: #fff; background: #313c75; font-size: .76rem; font-weight: 750; cursor: pointer; }
+.directory-add-button:hover { background: #252f63; }
+.directory-contact-row { display: grid; grid-template-columns: 145px minmax(120px, .8fr) minmax(190px, 1.35fr) auto auto; gap: 10px; align-items: end; padding: 14px; border: 1px solid #e1e6ee; border-radius: 8px; background: #fafbfc; }
+.directory-contact-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.directory-contact-field > span { color: #58657a; font-size: .68rem; font-weight: 750; }
+.directory-contact-field input, .directory-contact-field select { width: 100%; min-width: 0; height: 39px; padding: 8px 10px; border: 1px solid #d4dbe7; border-radius: 6px; outline: 0; background: #fff; color: #1f2937; font: inherit; font-size: .8rem; }
+.directory-contact-field input:focus, .directory-contact-field select:focus { border-color: #6975ad; box-shadow: 0 0 0 3px rgb(49 60 117 / 10%); }
+.directory-primary-check { display: inline-flex; align-items: center; gap: 7px; min-height: 39px; color: #465267; font-size: .76rem; font-weight: 700; white-space: nowrap; }
+.directory-primary-check input { width: 17px; height: 17px; accent-color: #313c75; }
+.directory-remove-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 39px; padding: 8px 10px; border: 1px solid #f2c5c1; border-radius: 6px; color: #b42318; background: #fff1ef; font-size: .74rem; font-weight: 750; cursor: pointer; }
+.directory-remove-button:hover { color: #fff; background: #b42318; }
+.directory-empty-small { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 30px 18px; border: 1px dashed #d7deea; border-radius: 8px; color: #788499; text-align: center; background: #fafbfc; }
+.directory-empty-small .e-icons { font-size: 26px; color: #9aa5b6; }
+.directory-empty-small strong { color: #536075; font-size: .82rem; }
+.directory-empty-small small { max-width: 390px; font-size: .7rem; }
+@media (max-width: 780px) { .directory-editor-list__header { align-items: flex-start; flex-direction: column; }.directory-contact-row { grid-template-columns: 1fr 1fr; }.directory-contact-field--value { grid-column: 1 / -1; }.directory-remove-button { justify-self: end; } }
+@media (max-width: 520px) { .directory-contact-row { grid-template-columns: 1fr; }.directory-contact-field--value { grid-column: auto; }.directory-primary-check, .directory-remove-button { width: 100%; justify-content: center; } }

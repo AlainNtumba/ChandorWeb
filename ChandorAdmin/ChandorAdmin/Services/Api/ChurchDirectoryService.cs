@@ -15,6 +15,9 @@ public sealed class ChurchDirectoryService(ChandorApiHttp api) : IChurchDirector
     public Task<DataResponse<PagedResult<ChurchDirectoryTypeDto>>?> GetAdminTypesAsync(DirectoryFilterState filter, CancellationToken cancellationToken = default)
         => api.GetDataResponseAsync<PagedResult<ChurchDirectoryTypeDto>>($"{Types}/admin{TypeQuery(filter)}", cancellationToken);
 
+    public Task<DataResponse<ChurchDirectoryTypeDto>?> GetAdminTypeByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        => api.GetDataResponseAsync<ChurchDirectoryTypeDto>($"{Types}/admin/{id:D}", cancellationToken);
+
     public Task<DataResponse<PagedResult<ChurchDirectoryTypeDto>>?> GetPublicTypesAsync(DirectoryFilterState filter, CancellationToken cancellationToken = default)
         => api.GetDataResponseAsync<PagedResult<ChurchDirectoryTypeDto>>($"{Types}{TypeQuery(filter)}", cancellationToken);
 

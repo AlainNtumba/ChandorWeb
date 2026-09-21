@@ -7,6 +7,7 @@ namespace ChandorAdmin.Interfaces.Api;
 public interface IChurchDirectoryService
 {
     Task<DataResponse<PagedResult<ChurchDirectoryTypeDto>>?> GetAdminTypesAsync(DirectoryFilterState filter, CancellationToken cancellationToken = default);
+    Task<DataResponse<ChurchDirectoryTypeDto>?> GetAdminTypeByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<DataResponse<PagedResult<ChurchDirectoryTypeDto>>?> GetPublicTypesAsync(DirectoryFilterState filter, CancellationToken cancellationToken = default);
     Task<DataResponse<ChurchDirectoryTypeDto>?> CreateTypeAsync(ChurchDirectoryTypeInputDto input, CancellationToken cancellationToken = default);
     Task<DataResponse<ChurchDirectoryTypeDto>?> UpdateTypeAsync(Guid id, ChurchDirectoryTypeInputDto input, CancellationToken cancellationToken = default);

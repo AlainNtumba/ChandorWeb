@@ -1,16 +1,30 @@
+@using ChandorAdmin.Configuration
 @using ChandorAdmin.Models.ChurchDirectory
+@using Microsoft.Extensions.Options
+@inject IOptions<ChandorApiOptions> ApiOptions
 
 <div class="directory-image-picker">
     <div class="directory-image-picker__preview">
-        @if (!string.IsNullOrWhiteSpace(PreviewUrl)) { <img src="@PreviewUrl" alt="Aperçu de l’image" /> }
-        else { <span>Aucune image</span> }
+        @if (!string.IsNullOrWhiteSpace(ResolvedPreviewUrl))
+        {
+            <img src="@ResolvedPreviewUrl" alt="Aperçu de l’image Hero" />
+            <span class="directory-image-picker__state">@(SelectedImage is null ? "Image actuelle" : "Nouvelle image")</span>
+        }
+        else
+        {
+            <div class="directory-image-picker__empty"><span class="e-icons e-image" aria-hidden="true"></span><strong>Aucune image</strong><small>L’aperçu apparaîtra ici</small></div>
+        }
     </div>
     <div class="directory-image-picker__controls">
-        <label class="directory-file-button">@(HasVisibleImage ? "Remplacer" : "Sélectionner une image")<InputFile @key="_inputKey" OnChange="OnFileSelectedAsync" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" /></label>
-        @if (SelectedImage is not null) { <button type="button" @onclick="ClearSelectedAsync">Retirer la sélection</button> }
-        else if (!string.IsNullOrWhiteSpace(ExistingImageUrl) && !DeleteRequested) { <button type="button" class="danger" @onclick="RequestDeleteAsync">Supprimer l’image</button> }
-        else if (DeleteRequested) { <button type="button" @onclick="CancelDeleteAsync">Annuler la suppression</button> }
-        <small>JPEG, PNG ou WebP — 5 Mo maximum.</small>
+        <div class="directory-image-picker__copy"><strong>Image de couverture</strong><p>Choisissez une image horizontale nette pour présenter ce type dans l’annuaire.</p></div>
+        <div class="directory-image-picker__actions">
+            <label class="directory-file-button"><span class="e-icons e-image" aria-hidden="true"></span>@(HasVisibleImage ? "Remplacer" : "Choisir une image")<InputFile @key="_inputKey" OnChange="OnFileSelectedAsync" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" /></label>
+            @if (SelectedImage is not null) { <button type="button" class="secondary" @onclick="ClearSelectedAsync"><span class="e-icons e-close" aria-hidden="true"></span>Retirer</button> }
+            else if (!string.IsNullOrWhiteSpace(ExistingImageUrl) && !DeleteRequested) { <button type="button" class="danger" @onclick="RequestDeleteAsync"><span class="e-icons e-trash" aria-hidden="true"></span>Supprimer</button> }
+            else if (DeleteRequested) { <button type="button" class="secondary" @onclick="CancelDeleteAsync">Annuler la suppression</button> }
+        </div>
+        <div class="directory-image-picker__hint"><span>JPEG, PNG ou WebP</span><span>5 Mo maximum</span></div>
+        @if (SelectedImage is not null) { <div class="directory-image-picker__file"><span class="e-icons e-circle-check" aria-hidden="true"></span><span><strong>@SelectedImage.FileName</strong><small>@FormatSize(SelectedImage.Content.LongLength)</small></span></div> }
         @if (!string.IsNullOrWhiteSpace(_error)) { <div class="directory-inline-error">@_error</div> }
     </div>
 </div>
@@ -28,6 +42,7 @@
 
     private bool HasVisibleImage => SelectedImage is not null || (!DeleteRequested && !string.IsNullOrWhiteSpace(ExistingImageUrl));
     private string? PreviewUrl => SelectedImage is not null ? $"data:{SelectedImage.ContentType};base64,{Convert.ToBase64String(SelectedImage.Content)}" : DeleteRequested ? null : ExistingImageUrl;
+    private string? ResolvedPreviewUrl => ResolveImageUrl(PreviewUrl);
 
     private async Task OnFileSelectedAsync(InputFileChangeEventArgs args)
     {
@@ -51,6 +66,25 @@
     private async Task ClearSelectedAsync() { _inputKey++; await SelectedImageChanged.InvokeAsync(null); }
     private async Task RequestDeleteAsync() { await SelectedImageChanged.InvokeAsync(null); await DeleteRequestedChanged.InvokeAsync(true); }
     private Task CancelDeleteAsync() => DeleteRequestedChanged.InvokeAsync(false);
+
+    private string? ResolveImageUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        if (value.StartsWith("data:", StringComparison.OrdinalIgnoreCase)) return value;
+        var configuredBase = new Uri(ApiOptions.Value.BaseUrl.TrimEnd('/') + "/");
+        var origin = new Uri(configuredBase.GetLeftPart(UriPartial.Authority) + "/");
+        if (Uri.TryCreate(value, UriKind.Absolute, out var absolute))
+        {
+            if (absolute.AbsolutePath.StartsWith("/media/", StringComparison.OrdinalIgnoreCase))
+                return new Uri(origin, absolute.PathAndQuery.TrimStart('/')).ToString();
+            return absolute.ToString();
+        }
+        return new Uri(origin, value.TrimStart('/')).ToString();
+    }
+
+    private static string FormatSize(long bytes) => bytes >= 1024 * 1024
+        ? $"{bytes / 1024d / 1024d:0.##} Mo"
+        : $"{bytes / 1024d:0.#} Ko";
 
     private static string? DetectType(ReadOnlySpan<byte> bytes)
     {

@@ -57,8 +57,9 @@
             @if (_dialogKind == "TYPE")
             {
                 <div class="directory-form-grid">
-                    <label><span>Code *</span><input @bind="_typeModel.Code" placeholder="CELL" /></label><label><span>Nom *</span><input @bind="_typeModel.Name" /></label>
-                    <label><span>Affichage *</span><select @bind="_typeModel.DisplayKind">@foreach (var kind in DisplayKinds) { <option value="@kind">@kind</option> }</select></label><label><span>Icône</span><input @bind="_typeModel.Icon" /></label>
+                    @if (!_editingId.HasValue) { <label><span>Code *</span><input @bind="_typeModel.Code" placeholder="CELL" /></label> }
+                    <label><span>Nom *</span><input @bind="_typeModel.Name" /></label>
+                    <label><span>Affichage *</span><select @bind="_typeModel.DisplayKind">@foreach (var kind in DisplayKinds) { <option value="@kind">@kind</option> }</select></label>
                     <label class="span-2"><span>Description</span><textarea rows="4" @bind="_typeModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_typeModel.SortOrder" /></label><label class="directory-check"><input type="checkbox" @bind="_typeModel.IsActive" /> Type actif</label>
                 </div>
                 <h4 class="directory-section-title">Image Hero</h4><DirectoryImagePicker ExistingImageUrl="_typeModel.HeroImageUrl" @bind-SelectedImage="_selectedImage" @bind-DeleteRequested="_deleteImage" />
@@ -72,7 +73,8 @@
                         <label><span>Type *</span><select value="@_itemModel.TypeId" @onchange="OnItemTypeChanged"><option value="@Guid.Empty">Sélectionnez</option>@foreach (var type in _types) { <option value="@type.Id">@type.Name</option> }</select></label>
                         <label><span>Parent</span><select @bind="_itemModel.ParentId"><option value="">Aucun parent</option>@foreach (var item in ParentOptions) { <option value="@item.Id">@item.Name</option> }</select></label>
                         <label><span>Département associé</span><select @bind="_itemModel.DepartmentId"><option value="">Aucun département</option>@foreach (var department in _departments) { <option value="@department.Id">@department.Name</option> }</select></label>
-                        <label><span>Code *</span><input @bind="_itemModel.Code" /></label><label><span>Nom *</span><input @bind="_itemModel.Name" /></label><label><span>Ordre</span><input type="number" @bind="_itemModel.SortOrder" /></label>
+                        @if (!_editingId.HasValue) { <label><span>Code *</span><input @bind="_itemModel.Code" /></label> }
+                        <label><span>Nom *</span><input @bind="_itemModel.Name" /></label><label><span>Ordre</span><input type="number" @bind="_itemModel.SortOrder" /></label>
                         <label class="span-2"><span>Description</span><textarea rows="4" @bind="_itemModel.Description"></textarea></label><label class="directory-check"><input type="checkbox" @bind="_itemModel.IsActive" /> Élément actif</label>
                     </div>
                 }

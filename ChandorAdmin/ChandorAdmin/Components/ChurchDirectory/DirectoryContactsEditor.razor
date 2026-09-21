@@ -1,16 +1,19 @@
 @using ChandorProject.Shared.DTOs.ChurchDirectory
 
 <div class="directory-editor-list">
-    <div class="directory-editor-list__header"><strong>Contacts</strong><button type="button" @onclick="Add">Ajouter un contact</button></div>
-    @if (Contacts.Count == 0) { <div class="directory-empty-small">Aucun contact.</div> }
+    <div class="directory-editor-list__header">
+        <div><span class="directory-editor-list__icon e-icons e-link" aria-hidden="true"></span><span><strong>Contacts</strong><small>Ajoutez les moyens de contact visibles dans l’annuaire.</small></span></div>
+        <button type="button" class="directory-add-button" @onclick="Add"><span class="e-icons e-plus" aria-hidden="true"></span>Ajouter un contact</button>
+    </div>
+    @if (Contacts.Count == 0) { <div class="directory-empty-small"><span class="e-icons e-link" aria-hidden="true"></span><strong>Aucun contact</strong><small>Utilisez le bouton ci-dessus pour ajouter un téléphone, un email ou un lien.</small></div> }
     @foreach (var contact in Contacts.ToList())
     {
         <div class="directory-contact-row">
-            <select @bind="contact.Type" @bind:after="() => NormalizePrimary(contact)">@foreach (var type in ContactTypes) { <option value="@type">@type</option> }</select>
-            <input placeholder="Libellé" @bind="contact.Label" />
-            <input placeholder="Valeur" @bind="contact.Value" />
-            <label><input type="checkbox" value="@contact.IsPrimary" @onchange="args => SetPrimary(contact, (bool)args.Value!)" /> Principal</label>
-            <button type="button" class="danger" @onclick="() => Remove(contact)">Supprimer</button>
+            <label class="directory-contact-field"><span>Type</span><select @bind="contact.Type" @bind:after="() => NormalizePrimary(contact)">@foreach (var type in ContactTypes) { <option value="@type">@ContactTypeLabel(type)</option> }</select></label>
+            <label class="directory-contact-field"><span>Libellé</span><input placeholder="Ex. Bureau" @bind="contact.Label" /></label>
+            <label class="directory-contact-field directory-contact-field--value"><span>Coordonnée *</span><input placeholder="Téléphone, email, lien…" @bind="contact.Value" /></label>
+            <label class="directory-primary-check"><input type="checkbox" checked="@contact.IsPrimary" @onchange="args => SetPrimary(contact, (bool)args.Value!)" /><span>Principal</span></label>
+            <button type="button" class="directory-remove-button" title="Supprimer ce contact" aria-label="Supprimer ce contact" @onclick="() => Remove(contact)"><span class="e-icons e-trash" aria-hidden="true"></span><span>Supprimer</span></button>
         </div>
     }
 </div>
@@ -26,4 +29,5 @@
         if (!item.IsPrimary) return;
         foreach (var other in Contacts.Where(x => !ReferenceEquals(x, item) && x.Type == item.Type)) other.IsPrimary = false;
     }
+    private static string ContactTypeLabel(string type) => type switch { "PHONE" => "Téléphone", "EMAIL" => "Email", "WHATSAPP" => "WhatsApp", "WEBSITE" => "Site web", "FACEBOOK" => "Facebook", "YOUTUBE" => "YouTube", "ADDRESS" => "Adresse", _ => type };
 }

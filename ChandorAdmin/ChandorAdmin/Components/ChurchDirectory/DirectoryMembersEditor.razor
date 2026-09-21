@@ -2,18 +2,21 @@
 @using ChandorProject.Shared.DTOs.Member
 
 <div class="directory-editor-list">
-    <div class="directory-editor-list__header"><strong>Responsables</strong></div>
-    <div class="directory-member-search"><input type="search" @bind="_search" @bind:event="oninput" placeholder="Rechercher un membre…" /></div>
-    <div class="directory-member-add"><select @bind="_selectedMemberId"><option value="@Guid.Empty">Sélectionnez un membre</option>@foreach (var member in AvailableMembers) { <option value="@member.Id">@MemberName(member)</option> }</select><button type="button" @onclick="Add">Ajouter</button></div>
-    @if (Members.Count == 0) { <div class="directory-empty-small">Aucun responsable.</div> }
+    <div class="directory-editor-list__header"><div><span class="directory-editor-list__icon e-icons e-people" aria-hidden="true"></span><span><strong>Responsables</strong><small>Sélectionnez les membres responsables de cet élément.</small></span></div></div>
+    <div class="directory-member-toolbar">
+        <label class="directory-member-search"><span class="e-icons e-search" aria-hidden="true"></span><input type="search" @bind="_search" @bind:event="oninput" placeholder="Rechercher un membre…" /></label>
+        <div class="directory-member-add"><select @bind="_selectedMemberId"><option value="@Guid.Empty">Sélectionnez un membre</option>@foreach (var member in AvailableMembers) { <option value="@member.Id">@MemberName(member)</option> }</select><button type="button" disabled="@(_selectedMemberId == Guid.Empty)" @onclick="Add"><span class="e-icons e-plus" aria-hidden="true"></span>Ajouter</button></div>
+    </div>
+    @if (Members.Count == 0) { <div class="directory-empty-small"><span class="e-icons e-people" aria-hidden="true"></span><strong>Aucun responsable</strong><small>Recherchez puis sélectionnez un membre pour l’ajouter.</small></div> }
     @foreach (var row in Members.ToList())
     {
         var member = AllMembers.FirstOrDefault(x => x.Id == row.MemberId);
         <div class="directory-member-row">
             @if (!string.IsNullOrWhiteSpace(member?.ProfileImageUrl)) { <img src="@member.ProfileImageUrl" alt="" /> } else { <span class="directory-member-avatar">@Initials(member, row)</span> }
-            <strong>@(row.MemberName ?? MemberName(member))</strong><input placeholder="Rôle" @bind="row.Role" />
-            <label><input type="checkbox" value="@row.IsPrimary" @onchange="args => SetPrimary(row, (bool)args.Value!)" /> Principal</label>
-            <button type="button" class="danger" @onclick="() => Members.Remove(row)">Supprimer</button>
+            <div class="directory-member-identity"><strong>@(row.MemberName ?? MemberName(member))</strong><small>Membre de l’église</small></div>
+            <label class="directory-member-role"><span>Rôle</span><input placeholder="Ex. Responsable" @bind="row.Role" /></label>
+            <label class="directory-primary-check"><input type="checkbox" checked="@row.IsPrimary" @onchange="args => SetPrimary(row, (bool)args.Value!)" /><span>Principal</span></label>
+            <button type="button" class="directory-remove-button" title="Retirer ce responsable" aria-label="Retirer ce responsable" @onclick="() => Members.Remove(row)"><span class="e-icons e-trash" aria-hidden="true"></span><span>Supprimer</span></button>
         </div>
     }
 </div>
