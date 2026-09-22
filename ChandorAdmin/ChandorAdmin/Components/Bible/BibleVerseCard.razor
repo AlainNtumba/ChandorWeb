@@ -1,0 +1,22 @@
+@using ChandorProject.Shared.DTOs.Bible
+
+<article class="bible-verse-card">
+    <div class="bible-verse-card__date">@Verse.PublicationDate.ToString("dd MMMM yyyy", Culture)</div>
+    <h1>@DisplayReference</h1>
+    <blockquote>« @Verse.Content »</blockquote>
+    <section>
+        <span>Pensée du jour</span>
+        <p>@Verse.DailyThought</p>
+    </section>
+</article>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Culture =
+        System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
+
+    [Parameter, EditorRequired] public BibleVerseDto Verse { get; set; } = default!;
+
+    private string DisplayReference => string.IsNullOrWhiteSpace(Verse.Reference)
+        ? $"{Verse.BookName} {Verse.Chapter}:{Verse.Verse}"
+        : Verse.Reference;
+}

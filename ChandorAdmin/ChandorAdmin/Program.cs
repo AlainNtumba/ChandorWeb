@@ -49,6 +49,7 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IAgeGroupService, AgeGroupService>();
 builder.Services.AddScoped<IAppUserService, AppUserService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<IBibleVerseApiService, BibleVerseApiService>();
 builder.Services.AddScoped<IChurchProgramService, ChurchProgramService>();
 builder.Services.AddScoped<IChurchDirectoryService, ChurchDirectoryService>();
 builder.Services.AddScoped<ChurchProgramPosterEditorState>();

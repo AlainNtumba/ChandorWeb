@@ -1,0 +1,60 @@
+@page "/verset-du-jour"
+@attribute [AllowAnonymous]
+@layout AnonymousLayout
+@using ChandorAdmin.Components.Bible
+@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.Bible
+@inject IBibleVerseApiService BibleService
+@implements IDisposable
+
+<PageTitle>Verset du jour | Chandelier d'Or</PageTitle>
+
+<main class="verse-day-page">
+    <header><div class="verse-day-eyebrow">Chandelier d'Or</div><h1>Verset du jour</h1><p>Une parole et une pensée pour accompagner votre journée.</p></header>
+
+    @if (_loading)
+    {
+        <div class="verse-day-loading" role="status"><span></span><strong>Chargement du verset…</strong></div>
+    }
+    else if (_verse is not null)
+    {
+        <BibleVerseCard Verse="_verse" />
+    }
+    else
+    {
+        <section class="verse-day-empty" role="alert"><span class="e-icons e-info" aria-hidden="true"></span><h2>Aucun verset programmé aujourd’hui</h2><p>@(_errorMessage ?? "Revenez prochainement pour découvrir une nouvelle parole.")</p><button type="button" @onclick="LoadAsync">Réessayer</button></section>
+    }
+</main>
+
+@code {
+    private BibleVerseDto? _verse;
+    private bool _loading;
+    private string? _errorMessage;
+    private CancellationTokenSource? _cts;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _cts?.Cancel(); _cts?.Dispose(); _cts = new CancellationTokenSource();
+        _loading = true; _verse = null; _errorMessage = null;
+        try
+        {
+            var response = await BibleService.GetVerseOfTheDayAsync(_cts.Token);
+            if (response is { Success: true, Data: not null }) _verse = response.Data;
+            else _errorMessage = ResponseMessage(response, "Aucun verset n’est disponible pour aujourd’hui.");
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception) { _errorMessage = "Impossible de joindre l’API. Vérifiez votre connexion puis réessayez."; }
+        finally { _loading = false; }
+    }
+
+    private static string ResponseMessage<T>(ChandorProject.Shared.Models.DataResponse<T>? response, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(response?.Message)) return response.Message;
+        var errors = string.Join(" ", response?.Error?.Where(x => !string.IsNullOrWhiteSpace(x)) ?? []);
+        return string.IsNullOrWhiteSpace(errors) ? fallback : errors;
+    }
+
+    public void Dispose() { _cts?.Cancel(); _cts?.Dispose(); }
+}

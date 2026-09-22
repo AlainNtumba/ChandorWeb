@@ -1,0 +1,29 @@
+@using ChandorProject.Shared.DTOs.Bible
+
+<EditForm Model="Model" OnValidSubmit="OnValidSubmit" FormName="@FormName">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="bible-form-summary" />
+    <div class="bible-form-grid">
+        <label><span>Livre *</span><InputText @bind-Value="Model.BookName" placeholder="Ex. Jean" disabled="@IsSubmitting" /><ValidationMessage For="@(() => Model.BookName)" /></label>
+        <label><span>Chapitre *</span><InputNumber @bind-Value="Model.Chapter" min="1" disabled="@IsSubmitting" /><ValidationMessage For="@(() => Model.Chapter)" /></label>
+        <label><span>Verset ou plage *</span><InputText @bind-Value="Model.Verse" placeholder="Ex. 16 ou 16-18" disabled="@IsSubmitting" /><ValidationMessage For="@(() => Model.Verse)" /></label>
+        <label><span>Date de publication *</span><InputDate TValue="DateOnly" @bind-Value="Model.PublicationDate" disabled="@IsSubmitting" /></label>
+        <label class="span-2"><span>Contenu *</span><InputTextArea @bind-Value="Model.Content" rows="6" disabled="@IsSubmitting" /><ValidationMessage For="@(() => Model.Content)" /></label>
+        <label class="span-2"><span>Pensée du jour *</span><InputTextArea @bind-Value="Model.DailyThought" rows="5" disabled="@IsSubmitting" /><ValidationMessage For="@(() => Model.DailyThought)" /></label>
+    </div>
+    <div class="bible-form-actions">
+        <button type="button" class="secondary" disabled="@IsSubmitting" @onclick="Cancel">Annuler</button>
+        <button type="submit" class="primary" disabled="@IsSubmitting">
+            @if (IsSubmitting) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Chargement...</span> }
+            else { <span>Enregistrer</span> }
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired] public CreateBibleVerseDto Model { get; set; } = default!;
+    [Parameter] public bool IsSubmitting { get; set; }
+    [Parameter] public string FormName { get; set; } = "bible-verse-form";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback Cancel { get; set; }
+}

@@ -149,7 +149,15 @@
                     }
                     @if (!_editingId.HasValue && _assetEditorMode == "UPLOAD")
                     {
-                        <div class="media-upload-box"><InputFile OnChange="OnUploadSelectedAsync" accept="image/jpeg,image/png,image/webp,video/mp4,audio/mpeg,audio/wav,application/pdf,.jpg,.jpeg,.png,.webp,.mp4,.mp3,.wav,.pdf" /><strong>@(_uploadFile?.FileName ?? "Aucun fichier sélectionné")</strong><small>JPEG, PNG, WebP, MP4, MP3, WAV ou PDF — 100 Mo maximum.</small></div>
+                        <div class="media-upload-box">
+                            <InputFile OnChange="OnUploadSelectedAsync" accept="image/jpeg,image/png,image/webp,video/mp4,audio/mpeg,audio/wav,application/pdf,.jpg,.jpeg,.png,.webp,.mp4,.mp3,.wav,.pdf" />
+                            @if (!string.IsNullOrWhiteSpace(_uploadPreviewUrl))
+                            {
+                                <div class="media-upload-preview"><img src="@_uploadPreviewUrl" alt="Aperçu de @_uploadFile?.FileName" /></div>
+                            }
+                            <strong>@(_uploadFile?.FileName ?? "Aucun fichier sélectionné")</strong>
+                            <small>JPEG, PNG, WebP, MP4, MP3, WAV ou PDF — 100 Mo maximum.</small>
+                        </div>
                         <div class="media-form-grid"><label><span>Miniature URL (optionnel)</span><input type="url" @bind="_assetModel.ThumbnailUrl" /></label><label><span>Durée en secondes</span><input type="number" @bind="_assetModel.DurationSeconds" /></label></div>
                     }
                     else
@@ -169,7 +177,17 @@
                         <label><span>Rôle</span><select @bind="_attachmentRole">@foreach (var role in _roles) { <option value="@role">@role</option> }</select></label><label><span>Ordre</span><input type="number" @bind="_attachmentSortOrder" /></label>
                     </div>
                     <div class="media-or"><span>ou téléverser directement</span></div>
-                    <div class="media-upload-box"><InputFile OnChange="OnUploadSelectedAsync" accept="image/jpeg,image/png,image/webp,video/mp4,audio/mpeg,audio/wav,application/pdf,.jpg,.jpeg,.png,.webp,.mp4,.mp3,.wav,.pdf" /><strong>@(_attachmentUploadFile?.FileName ?? "Aucun nouveau fichier")</strong></div>
+                    <div class="media-upload-box">
+                        <InputFile OnChange="OnUploadSelectedAsync" accept="image/jpeg,image/png,image/webp,video/mp4,audio/mpeg,audio/wav,application/pdf,.jpg,.jpeg,.png,.webp,.mp4,.mp3,.wav,.pdf" />
+                        @if (!string.IsNullOrWhiteSpace(_attachmentUploadPreviewUrl))
+                        {
+                            <div class="media-upload-preview media-upload-preview--attachment">
+                                <img src="@_attachmentUploadPreviewUrl" alt="Aperçu de @_attachmentUploadFile?.FileName" />
+                                <span>Aperçu de l’image sélectionnée</span>
+                            </div>
+                        }
+                        <strong>@(_attachmentUploadFile?.FileName ?? "Aucun nouveau fichier")</strong>
+                    </div>
                     @if (_attachedMedia.Count > 0)
                     {
                         <h4 class="media-attached-title">Médias attachés</h4>

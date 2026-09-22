@@ -1,0 +1,34 @@
+@using ChandorProject.Shared.DTOs.Bible
+
+<div class="bible-table-wrap">
+    <table class="bible-table">
+        <thead><tr><th>Date</th><th>Référence</th><th>Contenu</th><th>Pensée du jour</th><th>Actions</th></tr></thead>
+        <tbody>
+            @if (Items.Count == 0)
+            {
+                <tr><td colspan="5" class="bible-empty">Aucun verset enregistré.</td></tr>
+            }
+            @foreach (var item in Items)
+            {
+                <tr>
+                    <td><time datetime="@item.PublicationDate.ToString("yyyy-MM-dd")">@item.PublicationDate.ToString("dd/MM/yyyy")</time></td>
+                    <td><strong>@Reference(item)</strong></td>
+                    <td><div class="bible-preview">@Preview(item.Content, 95)</div></td>
+                    <td><div class="bible-preview">@Preview(item.DailyThought, 75)</div></td>
+                    <td><div class="bible-actions"><button type="button" disabled="@Disabled" @onclick="() => View.InvokeAsync(item)">Voir</button><button type="button" disabled="@Disabled" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" disabled="@Disabled" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></div></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<BibleVerseDto> Items { get; set; } = [];
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<BibleVerseDto> View { get; set; }
+    [Parameter] public EventCallback<BibleVerseDto> Edit { get; set; }
+    [Parameter] public EventCallback<BibleVerseDto> Delete { get; set; }
+
+    private static string Reference(BibleVerseDto item) => string.IsNullOrWhiteSpace(item.Reference) ? $"{item.BookName} {item.Chapter}:{item.Verse}" : item.Reference;
+    private static string Preview(string value, int length) => value.Length <= length ? value : $"{value[..(length - 1)]}…";
+}

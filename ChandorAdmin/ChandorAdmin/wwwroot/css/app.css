@@ -156,6 +156,8 @@ html body #app .directory-loading > span,
 html body #app .media-loading > span,
 html body #app .request-loading > span,
 html body #app .notification-loading > span,
+html:root:root:root body .spinner-border,
+html:root:root:root body .spinner-grow,
 html:root:root:root body .e-spinner-inner,
 html:root:root:root body .e-spinner-inner svg {
     border-radius: 50% !important;

@@ -61,6 +61,7 @@ public partial class MediaManagement : IDisposable
     private MediaAssetInputDto _assetModel = NewAssetModel();
     private string _assetEditorMode = "UPLOAD";
     private MediaUploadFile? _uploadFile;
+    private string? _uploadPreviewUrl;
     private int _uploadProgress;
     private string? _fileError;
 
@@ -71,6 +72,7 @@ public partial class MediaManagement : IDisposable
     private int _attachmentSortOrder;
     private IReadOnlyList<MediaLinkDto> _attachedMedia = [];
     private MediaUploadFile? _attachmentUploadFile;
+    private string? _attachmentUploadPreviewUrl;
     private string? _detachingMediaKey;
     private string? _attachmentError;
     private MediaFeedDetailDto? _feedDetail;
@@ -219,7 +221,7 @@ public partial class MediaManagement : IDisposable
             case 2:
                 _dialogKind = "ITEM"; _dialogTitle = "Nouveau contenu"; _itemModel = NewItemModel(); _contentSubTab = "GENERAL"; break;
             case 3:
-                _dialogKind = "ASSET"; _dialogTitle = "Ajouter un média"; _assetModel = NewAssetModel(); _assetEditorMode = "UPLOAD"; _uploadFile = null; break;
+                _dialogKind = "ASSET"; _dialogTitle = "Ajouter un média"; _assetModel = NewAssetModel(); _assetEditorMode = "UPLOAD"; _uploadFile = null; _uploadPreviewUrl = null; break;
             default: return;
         }
         _dialogOpen = true;
@@ -367,17 +369,70 @@ public partial class MediaManagement : IDisposable
     private async Task OnUploadSelectedAsync(InputFileChangeEventArgs args)
     {
         _fileError = null;
+        _attachmentError = null;
         var file = args.File;
-        if (file.Size <= 0 || file.Size > MaximumUploadSize) { _fileError = "Le fichier doit avoir une taille comprise entre 1 octet et 100 Mo."; return; }
+        if (_dialogKind == "ATTACHMENT")
+        {
+            _attachmentUploadFile = null;
+            _attachmentUploadPreviewUrl = null;
+        }
+        else
+        {
+            _uploadFile = null;
+            _uploadPreviewUrl = null;
+        }
+        if (file.Size <= 0 || file.Size > MaximumUploadSize)
+        {
+            var message = "Le fichier doit avoir une taille comprise entre 1 octet et 100 Mo.";
+            if (_dialogKind == "ATTACHMENT") _attachmentError = message; else _fileError = message;
+            return;
+        }
         try
         {
             await using var stream = file.OpenReadStream(MaximumUploadSize);
             using var buffer = new MemoryStream((int)file.Size);
             await stream.CopyToAsync(buffer);
-            var upload = new MediaUploadFile(file.Name, string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType, buffer.ToArray());
-            if (_dialogKind == "ATTACHMENT") _attachmentUploadFile = upload; else _uploadFile = upload;
+            var contentType = ResolveUploadContentType(file.Name, file.ContentType);
+            var upload = new MediaUploadFile(file.Name, contentType, buffer.ToArray());
+            var previewUrl = IsPreviewableImage(contentType)
+                ? $"data:{contentType};base64,{Convert.ToBase64String(upload.Content)}"
+                : null;
+            if (_dialogKind == "ATTACHMENT")
+            {
+                _attachmentUploadFile = upload;
+                _attachmentUploadPreviewUrl = previewUrl;
+            }
+            else
+            {
+                _uploadFile = upload;
+                _uploadPreviewUrl = previewUrl;
+            }
         }
-        catch (IOException) { _fileError = "Impossible de lire ce fichier."; }
+        catch (IOException)
+        {
+            if (_dialogKind == "ATTACHMENT") _attachmentError = "Impossible de lire ce fichier."; else _fileError = "Impossible de lire ce fichier.";
+        }
+    }
+
+    private static bool IsPreviewableImage(string contentType) =>
+        contentType is "image/jpeg" or "image/png" or "image/webp";
+
+    private static string ResolveUploadContentType(string fileName, string? contentType)
+    {
+        if (!string.IsNullOrWhiteSpace(contentType) && contentType != "application/octet-stream")
+            return contentType.ToLowerInvariant();
+
+        return Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            ".mp4" => "video/mp4",
+            ".mp3" => "audio/mpeg",
+            ".wav" => "audio/wav",
+            ".pdf" => "application/pdf",
+            _ => "application/octet-stream"
+        };
     }
 
     private async Task OpenAttachmentAsync(string ownerType, Guid ownerId, IReadOnlyList<MediaLinkDto> media)
@@ -389,7 +444,7 @@ public partial class MediaManagement : IDisposable
             if (response is not { Success: true, Data: not null }) { ShowError(response, "Impossible de charger les médias disponibles."); return; }
             _attachmentAssets = response.Data.Items;
             _attachmentOwnerType = ownerType; _attachmentOwnerId = ownerId; _attachedMedia = media;
-            _attachmentAssetId = Guid.Empty; _attachmentRole = "PRIMARY"; _attachmentSortOrder = 0; _attachmentUploadFile = null; _attachmentError = null; _detachingMediaKey = null;
+            _attachmentAssetId = Guid.Empty; _attachmentRole = "PRIMARY"; _attachmentSortOrder = 0; _attachmentUploadFile = null; _attachmentUploadPreviewUrl = null; _attachmentError = null; _detachingMediaKey = null;
             _dialogKind = "ATTACHMENT"; _dialogTitle = "Gérer les médias associés"; _dialogOpen = true;
         }
         finally { _loading = false; }
@@ -515,7 +570,7 @@ public partial class MediaManagement : IDisposable
     private void CloseDialog()
     {
         if (_saving) return;
-        _dialogOpen = false; _dialogKind = string.Empty; _editingId = null; _uploadFile = null; _attachmentUploadFile = null; _uploadProgress = 0; _fileError = null; _attachmentError = null; _detachingMediaKey = null;
+        _dialogOpen = false; _dialogKind = string.Empty; _editingId = null; _uploadFile = null; _uploadPreviewUrl = null; _attachmentUploadFile = null; _attachmentUploadPreviewUrl = null; _uploadProgress = 0; _fileError = null; _attachmentError = null; _detachingMediaKey = null;
     }
 
     private void ShowError<T>(DataResponse<T>? response, string fallback) => Error(ResponseMessage(response, fallback));

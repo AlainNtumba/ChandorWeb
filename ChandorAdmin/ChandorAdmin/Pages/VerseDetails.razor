@@ -1,0 +1,36 @@
+@page "/versets/{Id:guid}"
+@attribute [AllowAnonymous]
+@layout AnonymousLayout
+@using ChandorAdmin.Components.Bible
+@using ChandorAdmin.Interfaces.Api
+@using ChandorProject.Shared.DTOs.Bible
+@inject IBibleVerseApiService BibleService
+
+<PageTitle>Détail du verset | Chandelier d'Or</PageTitle>
+
+<main class="verse-detail-page">
+    <a href="verset-du-jour">← Verset du jour</a>
+    @if (_loading) { <div class="verse-detail-state">Chargement…</div> }
+    else if (_verse is not null) { <BibleVerseCard Verse="_verse" /> }
+    else { <div class="verse-detail-state error">@_errorMessage</div> }
+</main>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private BibleVerseDto? _verse;
+    private bool _loading = true;
+    private string _errorMessage = "Verset introuvable.";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        try
+        {
+            var response = await BibleService.GetByIdAsync(Id);
+            if (response is { Success: true, Data: not null }) _verse = response.Data;
+            else _errorMessage = response?.Message ?? "Verset introuvable.";
+        }
+        catch (Exception) { _errorMessage = "Impossible de joindre l’API."; }
+        finally { _loading = false; }
+    }
+}
