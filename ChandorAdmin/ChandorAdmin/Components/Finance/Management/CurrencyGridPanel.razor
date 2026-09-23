@@ -1,5 +1,4 @@
 @using ChandorAdmin.Components.GlobalNotification
-@using ChandorProject.Shared.DTOs.Account
 @using ChandorProject.Shared.DTOs.Currency
 @implements IDisposable
 
@@ -11,7 +10,7 @@
               IsModal="true"
               ShowCloseIcon="true"
               CloseOnEscape="false"
-              Header="Gestion des comptes">
+              Header="Gestion des devises">
         <DialogEvents Opened="OnDialogOpenedAsync" Closed="OnDialogClosedAsync" />
         <DialogTemplates>
             <Content>
@@ -25,7 +24,7 @@
                 {
                     <div class="finance-mgmt-grid-host">
                         <SfGrid @ref="_gridRef"
-                                TValue="AccountDto"
+                                TValue="CurrencyDto"
                                 DataSource="@_gridData"
                                 Toolbar="@_toolbarItems"
                                 AllowSelection="true"
@@ -33,7 +32,7 @@
                                 AllowSorting="true"
                                 AllowExcelExport="true"
                                 Width="100%">
-                            <GridEvents TValue="AccountDto"
+                            <GridEvents TValue="CurrencyDto"
                                         OnActionBegin="OnActionBeginAsync"
                                         OnToolbarClick="OnToolbarClickAsync" />
                             <GridEditSettings AllowAdding="true"
@@ -46,18 +45,10 @@
                             <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple" />
                             <GridColumns>
                                 <GridColumn Type="ColumnType.CheckBox" Width="40" />
-                                <GridColumn Field="@nameof(AccountDto.Id)" IsPrimaryKey="true" Visible="false" />
-                                <GridColumn Field="@nameof(AccountDto.AccountName)" HeaderText="Nom du compte" ValidationRules="@_requiredRules" />
-                                <GridColumn Field="@nameof(AccountDto.AccountNumber)" HeaderText="Numéro de compte" ValidationRules="@_requiredRules" />
-                                <GridForeignColumn TValue="CurrencyDto"
-                                                  Field="@nameof(AccountDto.CurrencyId)"
-                                                  HeaderText="Devise"
-                                                  ForeignKeyField="@nameof(CurrencyDto.Id)"
-                                                  ForeignKeyValue="@nameof(CurrencyDto.Name)"
-                                                  ForeignDataSource="@_currencies"
-                                                  ValidationRules="@_requiredRules"
-                                                  Width="140" />
-                                <GridColumn Field="@nameof(AccountDto.Description)" HeaderText="Description" />
+                                <GridColumn Field="@nameof(CurrencyDto.Id)" IsPrimaryKey="true" Visible="false" />
+                                <GridColumn Field="@nameof(CurrencyDto.Symbol)" HeaderText="Symbole" Width="110" ValidationRules="@_requiredRules" />
+                                <GridColumn Field="@nameof(CurrencyDto.Name)" HeaderText="Nom" ValidationRules="@_requiredRules" />
+                                <GridColumn Field="@nameof(CurrencyDto.Description)" HeaderText="Description" />
                             </GridColumns>
                         </SfGrid>
                     </div>

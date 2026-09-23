@@ -1,6 +1,5 @@
 using ChandorAdmin.Components.GlobalNotification;
 using ChandorAdmin.Interfaces.Api;
-using ChandorProject.Shared.DTOs.Account;
 using ChandorProject.Shared.DTOs.Currency;
 using Microsoft.AspNetCore.Components;
 using Syncfusion.Blazor.Grids;
@@ -9,23 +8,21 @@ using Syncfusion.Blazor.Popups;
 
 namespace ChandorAdmin.Components.Finance.Management;
 
-public partial class AccountGridPanel : IDisposable
+public partial class CurrencyGridPanel : IDisposable
 {
-    [Inject] IAccountService AccountService { get; set; } = null!;
     [Inject] ICurrencyService CurrencyService { get; set; } = null!;
 
     [Parameter] public EventCallback Changed { get; set; }
 
     SfDialog? _dialog;
-    SfGrid<AccountDto>? _gridRef;
+    SfGrid<CurrencyDto>? _gridRef;
     NotificationDialog? _notificationRef;
 
     bool _dialogShell;
     bool _renderGrid;
     bool _saving;
 
-    List<AccountDto> _gridData = [];
-    List<CurrencyDto> _currencies = [];
+    List<CurrencyDto> _gridData = [];
 
     readonly ValidationRules _requiredRules = new() { Required = true };
 
@@ -46,7 +43,7 @@ public partial class AccountGridPanel : IDisposable
             await _dialog.ShowAsync();
     }
 
-    async Task OnDialogOpenedAsync(Syncfusion.Blazor.Popups.OpenEventArgs _)
+    async Task OnDialogOpenedAsync(OpenEventArgs _)
     {
         if (_renderGrid)
             return;
@@ -55,35 +52,27 @@ public partial class AccountGridPanel : IDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    Task OnDialogClosedAsync(Syncfusion.Blazor.Popups.CloseEventArgs _) => Task.CompletedTask;
+    Task OnDialogClosedAsync(CloseEventArgs _) => Task.CompletedTask;
 
     async Task LoadDataAsync()
     {
         try
         {
-            var currenciesTask = CurrencyService.GetAllAsync();
-            var accountsTask = AccountService.GetAllAccountsAsync();
-            await Task.WhenAll(currenciesTask, accountsTask);
-
-            _currencies = currenciesTask.Result is { Success: true, Data: not null }
-                ? currenciesTask.Result.Data.ToList()
-                : [];
-
-            if (accountsTask.Result is { Success: true, Data: not null })
+            var response = await CurrencyService.GetAllAsync();
+            if (response is { Success: true, Data: not null })
             {
-                _gridData = accountsTask.Result.Data.ToList();
+                _gridData = response.Data.ToList();
             }
             else
             {
                 _gridData = [];
                 await NotifyErrorAsync(
-                    FinanceManagementGridSupport.FormatApiErrorMessage(accountsTask.Result, "Failed to load records."));
+                    FinanceManagementGridSupport.FormatApiErrorMessage(response, "Failed to load records."));
             }
         }
         catch
         {
             _gridData = [];
-            _currencies = [];
             await NotifyErrorAsync("Failed to load records.");
         }
 
@@ -91,27 +80,15 @@ public partial class AccountGridPanel : IDisposable
             await InvokeAsync(StateHasChanged);
     }
 
-    async Task OnActionBeginAsync(ActionEventArgs<AccountDto> args)
+    async Task OnActionBeginAsync(ActionEventArgs<CurrencyDto> args)
     {
-        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add && args.Data is not null)
-        {
-            if (args.Data.CurrencyId == Guid.Empty && _currencies.Count > 0)
-                args.Data.CurrencyId = _currencies[0].Id;
-            return;
-        }
-
         if (args.RequestType != Syncfusion.Blazor.Grids.Action.Save || _saving)
             return;
 
         args.Cancel = true;
 
         var row = args.Data;
-        if (row is null)
-            return;
-
-        if (string.IsNullOrWhiteSpace(row.AccountName)
-            || string.IsNullOrWhiteSpace(row.AccountNumber)
-            || row.CurrencyId == Guid.Empty)
+        if (row is null || string.IsNullOrWhiteSpace(row.Symbol) || string.IsNullOrWhiteSpace(row.Name))
         {
             await NotifyWarningAsync("Please fill all required fields.");
             return;
@@ -122,18 +99,17 @@ public partial class AccountGridPanel : IDisposable
         {
             if (FinanceManagementGridSupport.IsSaveAddAction(args.Action))
             {
-                var request = new NewAccountDto
+                var request = new NewCurrencyDto
                 {
-                    AccountName = row.AccountName.Trim(),
-                    AccountNumber = row.AccountNumber.Trim(),
-                    Description = row.Description?.Trim() ?? string.Empty,
-                    CurrencyId = row.CurrencyId
+                    Symbol = row.Symbol.Trim(),
+                    Name = row.Name.Trim(),
+                    Description = row.Description?.Trim() ?? string.Empty
                 };
 
-                var response = await AccountService.CreateAccountAsync(request);
+                var response = await CurrencyService.CreateAsync(request);
                 if (response is { Success: true })
                 {
-                    await NotifySuccessAsync("Compte créé avec succès.");
+                    await NotifySuccessAsync("Devise créée avec succès.");
                     await LoadDataAsync();
                     await Changed.InvokeAsync();
                     if (_gridRef is not null)
@@ -147,10 +123,13 @@ public partial class AccountGridPanel : IDisposable
             }
             else if (FinanceManagementGridSupport.IsSaveEditAction(args.Action))
             {
-                var response = await AccountService.UpdateAccountAsync(row);
+                row.Symbol = row.Symbol.Trim();
+                row.Name = row.Name.Trim();
+                row.Description = row.Description?.Trim() ?? string.Empty;
+                var response = await CurrencyService.UpdateAsync(row);
                 if (response is { Success: true })
                 {
-                    await NotifySuccessAsync("Compte mis à jour avec succès.");
+                    await NotifySuccessAsync("Devise mise à jour avec succès.");
                     await LoadDataAsync();
                     await Changed.InvokeAsync();
                     if (_gridRef is not null)
@@ -219,7 +198,7 @@ public partial class AccountGridPanel : IDisposable
         {
             try
             {
-                var response = await AccountService.DeleteAccountAsync(record.Id);
+                var response = await CurrencyService.DeleteAsync(record.Id);
                 if (response is not { Success: true })
                 {
                     allSucceeded = false;
@@ -237,7 +216,7 @@ public partial class AccountGridPanel : IDisposable
         await Changed.InvokeAsync();
 
         if (allSucceeded)
-            await NotifySuccessAsync("Compte supprimé avec succès.");
+            await NotifySuccessAsync("Devise supprimée avec succès.");
         else
             await NotifyErrorAsync(lastError ?? "Failed to delete record.");
     }

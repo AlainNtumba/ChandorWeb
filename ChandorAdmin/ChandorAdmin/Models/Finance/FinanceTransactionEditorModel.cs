@@ -4,15 +4,16 @@ using ChandorProject.Shared.Validation;
 namespace ChandorAdmin.Models.Finance;
 
 /// <summary>
-/// Edit model for the finance transaction dialog; maps to <see cref="ChandorProject.Shared.DTOs.Finance.NewChurchTransactionDto"/> on insert
-/// and <see cref="ChandorProject.Shared.DTOs.Finance.TransactionViewDto"/> on edit.
+/// Edit model for the finance transaction dialog; maps to
+/// <see cref="ChandorProject.Shared.DTOs.Transaction.NewTransactionDto"/> on insert
+/// and <see cref="ChandorProject.Shared.DTOs.Transaction.TransactionDto"/> on edit.
 /// </summary>
 public sealed class FinanceTransactionEditorModel
 {
     public Guid Id { get; set; }
 
-    [Required(ErrorMessage = "Choose Income or Expense.")]
-    public string TransactionType { get; set; } = "Expense";
+    [Required(ErrorMessage = "Choose a transaction type.")]
+    public Guid? TransactionTypeId { get; set; }
 
     [Required(ErrorMessage = "Date is required.")]
     public DateTime? DateValue { get; set; }
@@ -26,6 +27,9 @@ public sealed class FinanceTransactionEditorModel
     [Required(ErrorMessage = "Amount is required.")]
     [DecimalRange(ErrorMessage = "Amount must be at least 0.01.")]
     public decimal? Amount { get; set; }
+
+    [Required(ErrorMessage = "Currency is required.")]
+    public Guid? CurrencyId { get; set; }
 
     [StringLength(1000, ErrorMessage = "Note cannot exceed 1000 characters.")]
     public string TransactionNote { get; set; } = "";

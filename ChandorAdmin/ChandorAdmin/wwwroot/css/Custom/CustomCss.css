@@ -269,6 +269,10 @@ button.e-btn.dlgbtn {
     flex-shrink: 0;
 }
 
+.finance-currency-filter {
+    min-width: 180px;
+}
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
