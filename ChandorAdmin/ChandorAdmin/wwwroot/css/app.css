@@ -129,22 +129,22 @@ code {
     --bs-border-radius-pill: 0;
 }
 
-html body #app *,
-html body #app *::before,
-html body #app *::after,
-html body [id][class],
-html body [id][class]::before,
-html body [id][class]::after,
-html body [class][class],
-html body [class][class]::before,
-html body [class][class]::after {
+html body #app *:not(.modern-login):not(.modern-login *),
+html body #app *:not(.modern-login):not(.modern-login *)::before,
+html body #app *:not(.modern-login):not(.modern-login *)::after,
+html body [id][class]:not(.modern-login):not(.modern-login *),
+html body [id][class]:not(.modern-login):not(.modern-login *)::before,
+html body [id][class]:not(.modern-login):not(.modern-login *)::after,
+html body [class][class]:not(.modern-login):not(.modern-login *),
+html body [class][class]:not(.modern-login):not(.modern-login *)::before,
+html body [class][class]:not(.modern-login):not(.modern-login *)::after {
     border-radius: 0 !important;
 }
 
 /* High-specificity override for controls rendered in portals (dialogs/popups). */
-html:root:root:root body *,
-html:root:root:root body *::before,
-html:root:root:root body *::after {
+html:root:root:root body *:not(.modern-login):not(.modern-login *),
+html:root:root:root body *:not(.modern-login):not(.modern-login *)::before,
+html:root:root:root body *:not(.modern-login):not(.modern-login *)::after {
     border-radius: 0 !important;
 }
 
