@@ -61,7 +61,7 @@
                 </div>
 
                 <div class="modern-login__field">
-                    <label class="modern-login__label" for="@PasswordInputId">Password</label>
+                    <label class="modern-login__label" for="@PasswordInputId">Mot de passe</label>
                     <div class="modern-login__control">
                         <span class="modern-login__icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" focusable="false">
@@ -72,7 +72,7 @@
                                class="modern-login__input modern-login__input--password"
                                type="@PasswordType"
                                autocomplete="current-password"
-                               placeholder="Password"
+                               placeholder="Mot de passe"
                                @bind="Model.Password" />
                         <button type="button"
                                 class="modern-login__toggle"
@@ -101,7 +101,7 @@
                 </div>
 
                 <div class="modern-login__row">
-                    <a class="modern-login__link" href="@ForgotPasswordHref">Forgot password?</a>
+                    <a class="modern-login__link" href="@ForgotPasswordHref">Mot de passe oublié ?</a>
                 </div>
 
                 <button type="submit" class="modern-login__button" disabled="@IsBusy">
@@ -130,7 +130,7 @@
 
     [Parameter] public string FormName { get; set; } = "login-form";
     [Parameter] public string Subtitle { get; set; } = "Nouvelle Cité de David, Chandelier d'or";
-    [Parameter] public string ButtonText { get; set; } = "Login";
+    [Parameter] public string ButtonText { get; set; } = "Se connecter";
     [Parameter] public string ForgotPasswordHref { get; set; } = "forgot-password";
     [Parameter] public string? ErrorMessage { get; set; }
     [Parameter] public bool IsBusy { get; set; }
