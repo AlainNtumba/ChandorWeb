@@ -28,7 +28,7 @@ ChandorWeb.sln
     └── DTO, modèles de réponse et validations partagés
 ```
 
-Le backend, les contrôleurs API, Entity Framework et la base de données ne sont pas présents dans ce dépôt. Les interfaces communiquent avec une API distante dont l'adresse principale est configurée dans le fichier `.env` à la racine du dépôt. `appsettings.json` fournit une valeur de secours.
+Le backend, les contrôleurs API, Entity Framework et la base de données ne sont pas présents dans ce dépôt. Les interfaces communiquent avec une API distante dont l'adresse est configurée dans `appsettings.json`.
 
 ## 2. Architecture globale
 
@@ -368,23 +368,21 @@ Cette approche fonctionne, mais crée un couplage important entre la grille, le 
 
 ### 7.1 Configuration de l'adresse
 
-La configuration principale de l'API se trouve dans [`.env`](../.env) à la racine du dépôt :
+La configuration de l'API se trouve dans [`appsettings.json`](../ChandorAdmin/ChandorAdmin/appsettings.json), section `ChandorApi` :
 
-```dotenv
-CHANDOR_API_BASE_URL=http://192.168.11.104:5227/api/
-CHANDOR_API_VERSION_PATH_SEGMENT=1.0
+```json
+"BaseUrl": "https://chandor.somee.com/api/",
+"VersionPathSegment": "1.0"
 ```
 
-Le fichier est intégré à `ChandorAdmin` pendant la compilation, puis chargé par `EmbeddedEnvConfiguration` avant la création des clients HTTP. Ses valeurs remplacent celles de [`appsettings.json`](../ChandorAdmin/ChandorAdmin/appsettings.json), qui sert de configuration de secours.
-
-Après une modification du `.env`, il faut reconstruire ou relancer l'application. Une application Blazor WebAssembly étant téléchargée dans le navigateur, aucune donnée secrète ne doit être placée dans ce fichier.
+`Program.cs` charge ce fichier, puis `ChandorApiOptions` fournit les mêmes valeurs par défaut si la section est absente. Une application Blazor WebAssembly étant téléchargée dans le navigateur, aucune donnée secrète ne doit être placée dans cette configuration.
 
 `ChandorApiOptions` construit la racine versionnée :
 
 ```text
-http://192.168.11.104:5227/api/ + v1.0/
+https://chandor.somee.com/api/ + v1.0/
 =
-http://192.168.11.104:5227/api/v1.0/
+https://chandor.somee.com/api/v1.0/
 ```
 
 Les endpoints d'authentification utilisent toutefois directement `/api/Auth/...` sans segment `v1.0`.
@@ -981,7 +979,7 @@ Certaines fautes sont probablement utilisées dans les routes du backend. Leur c
 | Ajouter une entrée du menu | `Layout/NavMenu.razor` |
 | Ajouter un endpoint | `Interfaces/Api`, puis `Services/Api` |
 | Ajouter un contrat de données | `ChandorProject.Shared/DTOs` |
-| Modifier l'URL de l'API | `.env` à la racine, puis reconstruire l'application |
+| Modifier l'URL de l'API | `ChandorApi:BaseUrl` dans `appsettings.json` |
 | Modifier le timeout | section `Auth` de `appsettings.json` |
 | Modifier la connexion | `Services/Auth/AuthService.cs` |
 | Modifier le stockage du token | `Services/Auth/AuthState.cs` |
