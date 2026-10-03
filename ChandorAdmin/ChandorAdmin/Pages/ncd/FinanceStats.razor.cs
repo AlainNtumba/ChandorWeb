@@ -1,14 +1,19 @@
 using ChandorAdmin.Components.Dashboard;
+using ChandorAdmin.Helpers;
 using ChandorAdmin.Interfaces.Api;
+using ChandorProject.Shared.DTOs.Currency;
 using ChandorProject.Shared.DTOs.Finance;
 using Microsoft.AspNetCore.Components;
 using Syncfusion.Blazor.Calendars;
+using Syncfusion.Blazor.DropDowns;
 
 namespace ChandorAdmin.Pages.ncd;
 
 public partial class FinanceStats
 {
-    [Inject] public IFinanceService FinanceService { get; set; } = null!;
+    [Inject] public ITransactionService TransactionService { get; set; } = null!;
+    [Inject] public ICurrencyService CurrencyService { get; set; } = null!;
+    [Inject] public IDepartmentService DepartmentService { get; set; } = null!;
 
     static readonly DateTime PickerMinDate = new(2015, 1, 1);
 
@@ -35,11 +40,17 @@ public partial class FinanceStats
     IReadOnlyList<ExpenseCategoryDto> _expenseByCategory = Array.Empty<ExpenseCategoryDto>();
     IReadOnlyList<IncomeCategoryDto> _incomeByCategory = Array.Empty<IncomeCategoryDto>();
     IReadOnlyList<FinanceActivityItemDto> _recentActivity = Array.Empty<FinanceActivityItemDto>();
+    IReadOnlyList<CurrencyDto> _currencies = Array.Empty<CurrencyDto>();
+    Guid _selectedCurrencyId;
+    Guid? _departmentId;
     bool _renderRangePicker;
 
     DateTime PickerMaxDate => new(DateTime.Today.Year + 5, 12, 31);
 
-    string ChartRefreshKey => $"{_periodEnd:yyyyMM}-{_periodStart:yyyyMMdd}-{_periodEnd:yyyyMMdd}";
+    string ChartRefreshKey => $"{_selectedCurrencyId:N}-{_periodEnd:yyyyMM}-{_periodStart:yyyyMMdd}-{_periodEnd:yyyyMMdd}";
+
+    string? SelectedCurrencySymbol =>
+        _currencies.FirstOrDefault(c => c.Id == _selectedCurrencyId)?.Symbol;
 
     List<Presets> DateRangePresets => DashboardDateRangePresets.StandardThreePresets();
 
@@ -51,6 +62,7 @@ public partial class FinanceStats
         var (start, end) = GetCurrentMonthRange();
         _pickerStart = start;
         _pickerEnd = end;
+        await LoadLookupsAsync();
         await LoadDashboardForRangeAsync(start, end);
     }
 
@@ -62,6 +74,29 @@ public partial class FinanceStats
             _renderRangePicker = true;
             StateHasChanged();
         }
+    }
+
+    async Task LoadLookupsAsync()
+    {
+        try
+        {
+            var currenciesTask = CurrencyService.GetAllAsync();
+            var keysTask = DepartmentService.GetChurchDepartmentKeysAsync();
+            await Task.WhenAll(currenciesTask, keysTask);
+
+            _currencies = currenciesTask.Result?.Data?.ToList() ?? [];
+            var keys = keysTask.Result;
+            if (keys is { Success: true, Data: not null } && keys.Data.DepartmentId != Guid.Empty)
+                _departmentId = keys.Data.DepartmentId;
+        }
+        catch
+        {
+            _currencies = [];
+            _departmentId = null;
+        }
+
+        var selected = FinanceDisplaySupport.SelectDefaultCurrency(_currencies);
+        _selectedCurrencyId = selected?.Id ?? Guid.Empty;
     }
 
     async Task OnDateRangeChangeAsync(RangePickerEventArgs<DateTime> args)
@@ -77,6 +112,15 @@ public partial class FinanceStats
         await LoadDashboardForRangeAsync(start, end);
     }
 
+    async Task OnCurrencyChanged(ChangeEventArgs<Guid, CurrencyDto> args)
+    {
+        if (args.Value == Guid.Empty)
+            return;
+
+        _selectedCurrencyId = args.Value;
+        await LoadDashboardForRangeAsync(_pickerStart, _pickerEnd);
+    }
+
     async Task LoadDashboardForRangeAsync(DateTime start, DateTime end)
     {
         var requestedStart = start.Date;
@@ -84,14 +128,15 @@ public partial class FinanceStats
         if (requestedStart > requestedEnd)
             (requestedStart, requestedEnd) = (requestedEnd, requestedStart);
         var cashFlowEndDate = requestedEnd.AddDays(1);
+        Guid? currencyId = _selectedCurrencyId == Guid.Empty ? null : _selectedCurrencyId;
 
         try
         {
-            var summariesTask = FinanceService.GetFinanceSummariesAsync(requestedStart, requestedEnd, departmentId: null);
-            var cashflowTask = FinanceService.GetCashflowSeriesAsync(requestedStart, cashFlowEndDate, departmentId: null);
-            var activitiesTask = FinanceService.GetFinanceActivitiesAsync(requestedStart, requestedEnd, departmentId: null);
-            var incomeTask = FinanceService.GetIncomeByCategoriesAsync(requestedStart, requestedEnd, departmentId: null);
-            var expensesTask = FinanceService.GetExpensesByCategoriesAsync(requestedStart, requestedEnd, departmentId: null);
+            var summariesTask = TransactionService.GetFinanceSummariesAsync(requestedStart, requestedEnd, currencyId, _departmentId);
+            var cashflowTask = TransactionService.GetCashflowSeriesAsync(requestedStart, cashFlowEndDate, currencyId, _departmentId);
+            var activitiesTask = TransactionService.GetFinanceActivitiesAsync(requestedStart, requestedEnd, _departmentId);
+            var incomeTask = TransactionService.GetIncomeByCategoriesAsync(requestedStart, requestedEnd, currencyId, _departmentId);
+            var expensesTask = TransactionService.GetExpensesByCategoriesAsync(requestedStart, requestedEnd, currencyId, _departmentId);
 
             await Task.WhenAll(summariesTask, cashflowTask, activitiesTask, incomeTask, expensesTask);
 
@@ -99,7 +144,22 @@ public partial class FinanceStats
             _cashflow = cashflowTask.Result?.Data?.ToList() ?? [];
             _recentActivity = activitiesTask.Result?.Data?.ToList() ?? [];
             _incomeByCategory = incomeTask.Result?.Data?.ToList() ?? [];
-            _expenseByCategory = NormalizeExpenseCategories(expensesTask.Result?.Data);
+            _expenseByCategory = NormalizeExpenseCategories(
+                expensesTask.Result?.Data?.Select(item => new ExpenseCategoryDto
+                {
+                    Category = item.Category,
+                    Amount = item.Amount
+                }));
+
+            if (currencyId is null)
+            {
+                _summary.TotalIncome = 0;
+                _summary.TotalExpenses = 0;
+                _summary.Balance = 0;
+                _cashflow = [];
+                _incomeByCategory = [];
+                _expenseByCategory = [];
+            }
 
             _periodStart = requestedStart;
             _periodEnd = requestedEnd;
@@ -144,7 +204,10 @@ public partial class FinanceStats
         return $"{startDisplay:MMM yyyy} – {endDisplay:MMM yyyy}";
     }
 
-    static string FormatMoney(decimal value) => value.ToString("C0");
+    string FormatMoney(decimal value) =>
+        _selectedCurrencyId == Guid.Empty
+            ? "—"
+            : FinanceDisplaySupport.FormatAmount(value, SelectedCurrencySymbol);
 
     static List<ExpenseCategoryDto> NormalizeExpenseCategories(IEnumerable<ExpenseCategoryDto>? items)
     {

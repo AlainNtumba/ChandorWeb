@@ -17,6 +17,9 @@ public class AccountDto
 
     [StringLength(500, ErrorMessage = "The field exceeds the maximum allowed length.")]
     public string Description { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "This field is required.")]
+    public Guid CurrencyId { get; set; }
 }
 
 public class NewAccountDto
@@ -31,4 +34,7 @@ public class NewAccountDto
 
     [StringLength(500, ErrorMessage = "The field exceeds the maximum allowed length.")]
     public string Description { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "This field is required.")]
+    public Guid CurrencyId { get; set; }
 }

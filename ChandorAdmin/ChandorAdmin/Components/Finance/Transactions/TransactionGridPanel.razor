@@ -1,13 +1,13 @@
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Navigations
-@using ChandorProject.Shared.DTOs.Finance
+@using ChandorProject.Shared.DTOs.Transaction
 @implements IDisposable
 
 <div id="expense-grid-wrapper">
     @if (_renderGrid)
     {
         <SfGrid @ref="TransactGridRef"
-                TValue="TransactionViewDto"
+                TValue="TransactionView"
                 Width="100%"
                 Height="100%"
                 AllowSelection="true"
@@ -16,7 +16,7 @@
                 AllowExcelExport="true"
                 Toolbar="@Toolbaritems"
                 DataSource="@GridData">
-            <GridEvents TValue="TransactionViewDto"
+            <GridEvents TValue="TransactionView"
                         RowSelected="OnRowSelectChanged"
                         RowDeselected="OnRowDeselectChanged"
                         OnToolbarClick="ToolbarClickHandler">
@@ -26,10 +26,10 @@
             <GridSelectionSettings Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
             <GridColumns>
                 <GridColumn Type="ColumnType.CheckBox" Width="40"></GridColumn>
-                <GridColumn Field="@nameof(TransactionViewDto.TransactionCategory)" HeaderText="Catégorie" Width="178" ClipMode="ClipMode.EllipsisWithTooltip" ValidationRules="@_rules">
+                <GridColumn Field="@nameof(TransactionView.TransactionCategory)" HeaderText="Catégorie" Width="178" ClipMode="ClipMode.EllipsisWithTooltip" ValidationRules="@_rules">
                     <Template>
                         @{
-                            var row = (TransactionViewDto)context;
+                            var row = (TransactionView)context;
                             <div class="normalRes">
                                 <div class="category-text">@row.TransactionCategory</div>
                             </div>
@@ -43,34 +43,35 @@
                                 <div class="sm-category category-content">
                                     <div>@row.TransactionCategory</div>
                                     <div class="description-section">@row.TransactionNote</div>
-                                    <div>@row.AccountName</div>
+                                    <div>@row.Account</div>
                                 </div>
                             </div>
                         }
                     </Template>
                 </GridColumn>
-                <GridColumn Field="@nameof(TransactionViewDto.TransactionDate)" HeaderText="Date" Format="d" Width="112" ValidationRules="@_rules"></GridColumn>
-                <GridColumn Field="@nameof(TransactionViewDto.AccountName)" HeaderText="Compte" Width="140" ValidationRules="@_rules"></GridColumn>
-                <GridColumn Field="@nameof(TransactionViewDto.TransactionNote)" HeaderText="Note" ClipMode="ClipMode.Ellipsis"></GridColumn>
-                <GridColumn Field="@nameof(TransactionViewDto.Id)" HeaderText="Id" IsPrimaryKey="true" Visible="false"></GridColumn>
-                <GridColumn Field="@nameof(TransactionViewDto.Amount)" HeaderText="Montant" Width="120" Format="C0" TextAlign="TextAlign.Right" ValidationRules="@_rules">
+                <GridColumn Field="@nameof(TransactionView.TransactionDate)" HeaderText="Date" Format="d" Width="112" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(TransactionView.Account)" HeaderText="Compte" Width="170" ValidationRules="@_rules"></GridColumn>
+                <GridColumn Field="@nameof(TransactionView.Currency)" HeaderText="Devise" Width="140"></GridColumn>
+                <GridColumn Field="@nameof(TransactionView.TransactionNote)" HeaderText="Note" ClipMode="ClipMode.Ellipsis"></GridColumn>
+                <GridColumn Field="@nameof(TransactionView.Id)" HeaderText="Id" IsPrimaryKey="true" Visible="false"></GridColumn>
+                <GridColumn Field="@nameof(TransactionView.Amount)" HeaderText="Montant" Width="120" TextAlign="TextAlign.Right" ValidationRules="@_rules">
                     <Template>
                         @{
-                            var row = (TransactionViewDto)context;
+                            var row = (TransactionView)context;
                             <div class="normalRes">
-                                <div class="amt-payment @row.TransactionType">
-                                    <span>@row.Amount.ToString("C0")</span>
+                                <div class="amt-payment @CashflowCss(row)">
+                                    <span>@FormatRowAmount(row)</span>
                                 </div>
                             </div>
                             <div class="mediumRes">
-                                <div class="amt-payment @row.TransactionType">
-                                    <span>@row.Amount.ToString("C0")</span>
+                                <div class="amt-payment @CashflowCss(row)">
+                                    <span>@FormatRowAmount(row)</span>
                                 </div>
                                 <div>@row.TransactionDate.ToString("dd/MM/yyyy")</div>
                             </div>
                             <div class="smallRes">
-                                <div class="amt-payment @row.TransactionType">
-                                    <span>@row.Amount.ToString("C0")</span>
+                                <div class="amt-payment @CashflowCss(row)">
+                                    <span>@FormatRowAmount(row)</span>
                                 </div>
                                 <div>@row.TransactionDate.ToString("dd/MM/yyyy")</div>
                             </div>
@@ -81,4 +82,3 @@
         </SfGrid>
     }
 </div>
-

@@ -1,10 +1,12 @@
 @page "/finance-stats"
 @using ChandorAdmin.Components.Dashboard
 @using ChandorAdmin.Components.Finance
+@using ChandorProject.Shared.DTOs.Currency
 @using ChandorProject.Shared.DTOs.Finance
 @using Syncfusion.Blazor
 @using Syncfusion.Blazor.Calendars
 @using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor.DropDowns
 
 <PageTitle>Finance</PageTitle>
 
@@ -13,6 +15,19 @@
                      Subtitle="Statistiques et analyse des revenus et des dépenses"
                      Eyebrow="Aperçu des finances">
         <HeaderActions>
+            <div class="finance-currency-filter" title="Devise">
+                <SfDropDownList TValue="Guid"
+                                TItem="CurrencyDto"
+                                DataSource="@_currencies"
+                                Placeholder="Devise"
+                                PopupWidth="220px"
+                                Width="200px"
+                                AllowFiltering="true"
+                                Value="@_selectedCurrencyId">
+                    <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                    <DropDownListEvents TValue="Guid" TItem="CurrencyDto" ValueChange="OnCurrencyChanged"></DropDownListEvents>
+                </SfDropDownList>
+            </div>
             <div title="@_periodLabel">
                 @if (_renderRangePicker)
                 {
@@ -81,7 +96,7 @@
                             <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
                             <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
                         </ChartPrimaryXAxis>
-                        <ChartPrimaryYAxis LabelFormat="C0">
+                        <ChartPrimaryYAxis LabelFormat="N0">
                             <ChartAxisMajorGridLines Width="1" DashArray="4"></ChartAxisMajorGridLines>
                             <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
                             <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>

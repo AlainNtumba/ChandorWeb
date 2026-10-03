@@ -1,6 +1,8 @@
 using System.Globalization;
+using ChandorAdmin.Helpers;
 using ChandorAdmin.Interfaces.Api;
-using ChandorProject.Shared.DTOs.Finance;
+using ChandorProject.Shared.DTOs.Currency;
+using ChandorProject.Shared.DTOs.Transaction;
 using Microsoft.AspNetCore.Components;
 using Syncfusion.Blazor.Grids;
 using Syncfusion.Blazor.Navigations;
@@ -9,17 +11,24 @@ namespace ChandorAdmin.Components.Finance.Transactions;
 
 public partial class TransactionGridPanel
 {
-    [Inject] public IFinanceService FinanceService { get; set; } = null!;
+    [Inject] public ITransactionService TransactionService { get; set; } = null!;
+    [Inject] public ICurrencyService CurrencyService { get; set; } = null!;
+    [Inject] public IDepartmentService DepartmentService { get; set; } = null!;
 
-    public SfGrid<TransactionViewDto>? TransactGridRef { get; set; }
+    public SfGrid<TransactionView>? TransactGridRef { get; set; }
     public TransactionEditorDialog? DialogRef { get; set; }
     public TransactionFilterSidebar? FilterRef { get; set; }
 
     readonly ValidationRules _rules = new() { Required = true };
-    public IEnumerable<TransactionViewDto> GridData { get; private set; } = Array.Empty<TransactionViewDto>();
-    public IReadOnlyList<TransactionViewDto> AllTransactions { get; private set; } = Array.Empty<TransactionViewDto>();
+    public IEnumerable<TransactionView> GridData { get; private set; } = Array.Empty<TransactionView>();
+    public IReadOnlyList<TransactionView> AllTransactions { get; private set; } = Array.Empty<TransactionView>();
     public DateTime StartDate { get; private set; }
     public DateTime EndDate { get; private set; }
+    public Guid? CurrencyId { get; private set; }
+
+    IReadOnlyList<CurrencyDto> _currencies = Array.Empty<CurrencyDto>();
+    Guid? _departmentId;
+    bool _departmentKeysLoaded;
 
     public List<ItemModel> Toolbaritems { get; } =
     [
@@ -51,14 +60,17 @@ public partial class TransactionGridPanel
         }
     }
 
-    public async Task LoadTransactionsAsync(DateTime start, DateTime end)
+    public async Task LoadTransactionsAsync(DateTime start, DateTime end, Guid? currencyId = null)
     {
         StartDate = start;
         EndDate = end;
+        CurrencyId = currencyId;
+
+        await EnsureLookupsLoadedAsync();
 
         try
         {
-            var response = await FinanceService.GetChurchTransactionsAsync(start, end);
+            var response = await TransactionService.GetTransactionsAsync(start, end, currencyId, _departmentId);
             AllTransactions = response?.Data?.ToList() ?? [];
         }
         catch
@@ -69,9 +81,59 @@ public partial class TransactionGridPanel
         GridRefresh(FilterRef?.RefreshData() ?? AllTransactions.OrderByDescending(t => t.TransactionDate).ToList());
     }
 
-    Task OnRowSelectChanged(RowSelectEventArgs<TransactionViewDto> _) => RefreshToolbarFromSelectionAsync();
+    async Task EnsureLookupsLoadedAsync()
+    {
+        if (_currencies.Count == 0)
+        {
+            try
+            {
+                var response = await CurrencyService.GetAllAsync();
+                _currencies = response?.Data?.ToList() ?? [];
+            }
+            catch
+            {
+                _currencies = [];
+            }
+        }
 
-    Task OnRowDeselectChanged(RowDeselectEventArgs<TransactionViewDto> _) => RefreshToolbarFromSelectionAsync();
+        if (_departmentKeysLoaded)
+            return;
+
+        try
+        {
+            var keys = await DepartmentService.GetChurchDepartmentKeysAsync();
+            if (keys is { Success: true, Data: not null } && keys.Data.DepartmentId != Guid.Empty)
+                _departmentId = keys.Data.DepartmentId;
+        }
+        catch
+        {
+            _departmentId = null;
+        }
+        finally
+        {
+            _departmentKeysLoaded = true;
+        }
+    }
+
+    public async Task RefreshCurrenciesAsync()
+    {
+        _currencies = [];
+        await EnsureLookupsLoadedAsync();
+        StateHasChanged();
+    }
+
+    public string FormatRowAmount(TransactionView row) =>
+        FinanceDisplaySupport.FormatAmount(row.Amount, ResolveSymbol(row.CurrencyId));
+
+    public string CashflowCss(TransactionView row) =>
+        FinanceDisplaySupport.CssClass(row.TransactionType);
+
+    string? ResolveSymbol(Guid currencyId) =>
+        _currencies.FirstOrDefault(c => c.Id == currencyId)?.Symbol;
+
+    Task OnRowSelectChanged(RowSelectEventArgs<TransactionView> _) => RefreshToolbarFromSelectionAsync();
+
+    Task OnRowDeselectChanged(RowDeselectEventArgs<TransactionView> _) => RefreshToolbarFromSelectionAsync();
 
     public async Task RefreshToolbarFromSelectionAsync()
     {
@@ -131,13 +193,13 @@ public partial class TransactionGridPanel
             (StartDate, EndDate) = GetCalendarMonthBounds(DateTime.Today);
         }
 
-        await LoadTransactionsAsync(StartDate, EndDate);
+        await LoadTransactionsAsync(StartDate, EndDate, CurrencyId);
         FilterRef?.RebuildCategoryList();
         FilterRef?.UpdateGrid();
         UpdateTotalBalance();
     }
 
-    public void GridRefresh(IEnumerable<TransactionViewDto> rows)
+    public void GridRefresh(IEnumerable<TransactionView> rows)
     {
         GridData = rows;
         StateHasChanged();
@@ -146,17 +208,27 @@ public partial class TransactionGridPanel
     public void UpdateTotalBalance()
     {
         var commonData = GridData.ToList();
-        var incomeSum = commonData.Where(s => s.TransactionType == "Income").Sum(s => s.Amount);
-        var expenseSum = commonData.Where(s => s.TransactionType == "Expense").Sum(s => s.Amount);
-        _ = FormatBalance(incomeSum, expenseSum);
+        if (commonData.Count == 0)
+            return;
+
+        var currencyIds = commonData.Select(s => s.CurrencyId).Distinct().ToList();
+        if (currencyIds.Count != 1)
+            return;
+
+        var incomeSum = commonData.Where(s => FinanceDisplaySupport.IsIncome(s.TransactionType)).Sum(s => s.Amount);
+        var expenseSum = commonData.Where(s => FinanceDisplaySupport.IsExpense(s.TransactionType)).Sum(s => s.Amount);
+        _ = FormatBalance(incomeSum, expenseSum, ResolveSymbol(currencyIds[0]));
     }
 
-    public static string FormatBalance(decimal incomeSum, decimal expenseSum)
+    public static string FormatBalance(decimal incomeSum, decimal expenseSum, string? symbol = null)
     {
         var n = incomeSum - expenseSum;
         var sign = n < 0 ? "-" : "";
         n = Math.Abs(n);
-        return sign + "$" + n.ToString("N0", CultureInfo.InvariantCulture);
+        var body = n.ToString("N0", CultureInfo.InvariantCulture);
+        return string.IsNullOrWhiteSpace(symbol)
+            ? sign + "$" + body
+            : sign + symbol + body;
     }
 
     public void Dispose() => TransactGridRef = null;
