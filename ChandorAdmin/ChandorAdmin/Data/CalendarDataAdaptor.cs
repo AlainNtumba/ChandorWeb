@@ -1,5 +1,4 @@
 using ChandorAdmin.Interfaces.Api;
-using ChandorAdmin.Services;
 using ChandorProject.Shared.DTOs.ChurchProgram;
 using ChandorProject.Shared.Models;
 using Syncfusion.Blazor;
@@ -11,7 +10,8 @@ namespace ChandorAdmin.Data;
 
 public sealed class CalendarDataAdaptor(
     IChurchProgramService churchPrograms,
-    ChurchProgramPosterEditorState posterEditor,
+    IDepartmentService _departmentService,
+    IProgramTypeService programTypeService,
     ILogger<CalendarDataAdaptor> logger) : DataAdaptor
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -49,14 +49,9 @@ public sealed class CalendarDataAdaptor(
     {
         await Task.Delay(100);
 
-        var item = (ChurchProgramDto)data; 
+        var item = (ChurchProgramDto)data;
 
-        ValidateRequiredRelations(item);
-
-        var poster = posterEditor.SelectedPoster
-            ?? throw new InvalidOperationException("Le poster est obligatoire pour créer un programme.");
-
-        var dto = new CongregationProgramDto
+        var dto = new NewChurchProgramDto
         {
             StartTime = item.StartTime,
             EndTime = item.EndTime,
@@ -66,14 +61,12 @@ public sealed class CalendarDataAdaptor(
             RecurrenceRule = item.RecurrenceRule,
             RecurrenceException = item.RecurrenceException,
             PosterLink = item.PosterLink,
-            VideoLink = item.VideoLink,
-            IsApproved = item.IsApproved,
-            ProgramTypeId = item.ProgramTypeId,
-            DepartmentId = item.DepartmentId,
-            DepartmentTeamId = item.DepartmentTeamId
+            IsApproved = item.IsApproved
         };
+        await ApplyChurchDepartmentKeysAsync(dto).ConfigureAwait(false);
+        await ApplyCongregationProgramTypeAsync(dto).ConfigureAwait(false);
 
-        var response = await churchPrograms.AddCongregationProgramAsync(dto, poster).ConfigureAwait(false);
+        var response = await churchPrograms.AddCongregationProgramAsync(dto).ConfigureAwait(false);
         ThrowIfApiFailed(response);
         if (response?.Data is null)
         {
@@ -81,7 +74,6 @@ public sealed class CalendarDataAdaptor(
             throw new InvalidOperationException("Le serveur n'a pas renvoyé l'événement créé.");
         }
 
-        posterEditor.Reset();
         return response.Data;
     }
 
@@ -100,8 +92,6 @@ public sealed class CalendarDataAdaptor(
             throw new InvalidOperationException("Identifiant d'événement manquant; impossible d'enregistrer les changements.");
         }
 
-        ValidateRequiredRelations(item);
-
         item.RecurrenceRule = item.RecurrenceRule ?? "";
 
         item.RecurrenceException = item.RecurrenceException ?? "";
@@ -116,11 +106,7 @@ public sealed class CalendarDataAdaptor(
             throw new InvalidOperationException("Le serveur n'a pas renvoyé l'événement mis à jour.");
         }
 
-        var posterResult = await ApplyPendingPosterChangeAsync(item.Id).ConfigureAwait(false);
-        if (posterResult is not null)
-            item.PosterLink = posterResult.PosterLink;
-
-        return item;
+        return data;
     }
 
     public override async Task<object> BatchUpdateAsync(DataManager dataManager, object changedRecords, object addedRecords, object deletedRecords, string primaryColumnName, string key, int? dropIndex)
@@ -141,10 +127,7 @@ public sealed class CalendarDataAdaptor(
         {
             foreach (var item in addedItems)
             {
-                ValidateRequiredRelations(item);
-                var poster = posterEditor.SelectedPoster
-                    ?? throw new InvalidOperationException("Le poster est obligatoire pour créer un programme.");
-                var dto = new CongregationProgramDto
+                var dto = new NewChurchProgramDto
                 {
                     StartTime = item.StartTime,
                     EndTime = item.EndTime,
@@ -154,18 +137,14 @@ public sealed class CalendarDataAdaptor(
                     RecurrenceRule = item.RecurrenceRule,
                     RecurrenceException = item.RecurrenceException,
                     PosterLink = item.PosterLink,
-                    VideoLink = item.VideoLink,
-                    IsApproved = item.IsApproved,
-                    ProgramTypeId = item.ProgramTypeId,
-                    DepartmentId = item.DepartmentId,
-                    DepartmentTeamId = item.DepartmentTeamId
+                    IsApproved = item.IsApproved
                 };
+                await ApplyChurchDepartmentKeysAsync(dto).ConfigureAwait(false);
+                await ApplyCongregationProgramTypeAsync(dto).ConfigureAwait(false);
 
-                var response = await churchPrograms.AddCongregationProgramAsync(dto, poster).ConfigureAwait(false);
-                ThrowIfApiFailed(response);
+                await churchPrograms.AddCongregationProgramAsync(dto).ConfigureAwait(false);
             }
 
-            posterEditor.Reset();
             return addedItems;
         }
 
@@ -177,52 +156,13 @@ public sealed class CalendarDataAdaptor(
                 data.RecurrenceException = data.RecurrenceException ?? "";
                 data.RecurrenceRule = data.RecurrenceRule ?? "";
                 var item = CoerceTo<ChurchProgramDto>(data);
-                ValidateRequiredRelations(item);
-                var response = await churchPrograms.UpdateProgramAsync((ChurchProgramDto)item).ConfigureAwait(false);
-                ThrowIfApiFailed(response);
-                var posterResult = await ApplyPendingPosterChangeAsync(item.Id).ConfigureAwait(false);
-                if (posterResult is not null)
-                    item.PosterLink = posterResult.PosterLink;
+                await churchPrograms.UpdateProgramAsync((ChurchProgramDto)item).ConfigureAwait(false);
             }
 
             return updatedItems;
         }
 
         return null!;
-    }
-
-    private static void ValidateRequiredRelations(ChurchProgramDto item)
-    {
-        if (item.ProgramTypeId == Guid.Empty)
-            throw new InvalidOperationException("Sélectionnez un type de programme.");
-        if (item.DepartmentId == Guid.Empty)
-            throw new InvalidOperationException("Sélectionnez un département.");
-        if (item.DepartmentTeamId == Guid.Empty)
-            throw new InvalidOperationException("Sélectionnez une équipe.");
-    }
-
-    private async Task<ChurchProgramDto?> ApplyPendingPosterChangeAsync(Guid programId)
-    {
-        ChurchProgramDto? updatedProgram = null;
-        if (posterEditor.SelectedPoster is { } selectedPoster)
-        {
-            var posterResponse = await churchPrograms
-                .AddOrReplacePosterAsync(programId, selectedPoster)
-                .ConfigureAwait(false);
-            ThrowIfApiFailed(posterResponse);
-            updatedProgram = posterResponse?.Data;
-        }
-        else if (posterEditor.DeleteExistingPoster)
-        {
-            var deleteResponse = await churchPrograms
-                .DeletePosterAsync(programId)
-                .ConfigureAwait(false);
-            ThrowIfApiFailed(deleteResponse);
-            updatedProgram = new ChurchProgramDto { Id = programId, PosterLink = string.Empty };
-        }
-
-        posterEditor.Reset();
-        return updatedProgram;
     }
 
     public override async Task<object> RemoveAsync(DataManager dm, object data, string keyField, string key)
@@ -239,6 +179,36 @@ public sealed class CalendarDataAdaptor(
         var response = await churchPrograms.DeleteProgramAsync((Guid)id).ConfigureAwait(false);
         ThrowIfApiFailed(response);
         return true;
+    }
+
+    private async Task ApplyChurchDepartmentKeysAsync(NewChurchProgramDto dto)
+    {
+        var keys = await _departmentService.GetChurchDepartmentKeysAsync().ConfigureAwait(false);
+        ThrowIfApiFailed(keys);
+        if (keys?.Data is null)
+        {
+            logger.LogError("Church department keys returned success but null data.");
+            throw new InvalidOperationException("Le serveur n'a pas renvoyé le département de l'église.");
+        }
+
+        dto.DepartmentId = keys.Data.DepartmentId;
+        dto.DepartmentTeamId = keys.Data.DepartmentTeamId;
+    }
+
+    private async Task ApplyCongregationProgramTypeAsync(NewChurchProgramDto dto)
+    {
+        var types = await programTypeService.GetAllProgramTypesAsync().ConfigureAwait(false);
+        ThrowIfApiFailed(types);
+
+        var congregation = types?.Data?.FirstOrDefault(type =>
+            string.Equals(type.Name, "Congrégation", StringComparison.OrdinalIgnoreCase));
+        if (congregation is null || congregation.Id == Guid.Empty)
+        {
+            logger.LogError("Program type 'Congrégation' was not found.");
+            throw new InvalidOperationException("Le type de programme Congrégation est introuvable.");
+        }
+
+        dto.ProgramTypeId = congregation.Id;
     }
 
     private static void ThrowIfApiFailed<T>(DataResponse<T>? response)
