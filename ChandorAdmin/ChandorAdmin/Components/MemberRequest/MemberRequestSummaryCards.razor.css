@@ -16,7 +16,7 @@
     overflow: hidden;
     padding: 18px 18px 16px 22px;
     border: 1px solid #e1e6ef;
-    border-radius: 0 !important;
+    border-radius: 12px;
     background: #fff;
 }
 

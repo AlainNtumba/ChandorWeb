@@ -3,18 +3,6 @@
     overflow: hidden;
     background: #fff;
     border: 0;
-    border-radius: 0 !important;
-}
-
-.chandor-tabs-host ::deep .chandor-tabs,
-.chandor-tabs-host ::deep .chandor-tabs.e-tab,
-.chandor-tabs-host ::deep .chandor-tabs .e-tab-header,
-.chandor-tabs-host ::deep .chandor-tabs .e-toolbar-items,
-.chandor-tabs-host ::deep .chandor-tabs .e-toolbar-item,
-.chandor-tabs-host ::deep .chandor-tabs .e-tab-wrap,
-.chandor-tabs-host ::deep .chandor-tabs .e-text-wrap,
-.chandor-tabs-host ::deep .chandor-tabs .e-content {
-    border-radius: 0 !important;
 }
 
 .chandor-tabs-host ::deep .chandor-tabs.e-tab {
@@ -73,7 +61,6 @@
 .chandor-tabs-host ::deep .chandor-tabs .e-indicator {
     bottom: 0 !important;
     height: 3px !important;
-    border-radius: 0 !important;
     background: #344054 !important;
 }
 

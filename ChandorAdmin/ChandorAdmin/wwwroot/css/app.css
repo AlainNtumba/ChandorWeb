@@ -119,49 +119,6 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
-/* Global square design system: every application and third-party UI element. */
-:root {
-    --bs-border-radius: 0;
-    --bs-border-radius-sm: 0;
-    --bs-border-radius-lg: 0;
-    --bs-border-radius-xl: 0;
-    --bs-border-radius-xxl: 0;
-    --bs-border-radius-pill: 0;
-}
-
-html body #app *:not(.modern-login):not(.modern-login *),
-html body #app *:not(.modern-login):not(.modern-login *)::before,
-html body #app *:not(.modern-login):not(.modern-login *)::after,
-html body [id][class]:not(.modern-login):not(.modern-login *),
-html body [id][class]:not(.modern-login):not(.modern-login *)::before,
-html body [id][class]:not(.modern-login):not(.modern-login *)::after,
-html body [class][class]:not(.modern-login):not(.modern-login *),
-html body [class][class]:not(.modern-login):not(.modern-login *)::before,
-html body [class][class]:not(.modern-login):not(.modern-login *)::after {
-    border-radius: 0 !important;
-}
-
-/* High-specificity override for controls rendered in portals (dialogs/popups). */
-html:root:root:root body *:not(.modern-login):not(.modern-login *),
-html:root:root:root body *:not(.modern-login):not(.modern-login *)::before,
-html:root:root:root body *:not(.modern-login):not(.modern-login *)::after {
-    border-radius: 0 !important;
-}
-
-/* Loading indicators remain circular. */
-html body #app .spinner-border,
-html body #app .spinner-grow,
-html body #app .modern-login__spinner,
-html body #app .directory-loading > span,
-html body #app .media-loading > span,
-html body #app .request-loading > span,
-html body #app .notification-loading > span,
-html:root:root:root body .spinner-border,
-html:root:root:root body .spinner-grow,
-html:root:root:root body .e-spinner-inner,
-html:root:root:root body .e-spinner-inner svg {
-    border-radius: 50% !important;
-}
 
 /* Reusable searchable select ------------------------------------------------ */
 .searchable-select-bootstrap {
