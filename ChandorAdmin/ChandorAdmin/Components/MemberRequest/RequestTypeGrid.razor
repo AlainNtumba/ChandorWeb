@@ -1,8 +1,45 @@
 @using ChandorProject.Shared.DTOs.RequestType
 
-<div class="request-table-wrap"><table class="request-table"><thead><tr><th>Code</th><th>Libellé</th><th>Description</th><th>Actif</th><th>Demandes</th><th>Actions</th></tr></thead><tbody>
-@if (Items.Count == 0) { <tr><td colspan="6" class="request-empty">Aucun type de demande.</td></tr> }
-@foreach (var item in Items) { <tr><td><code>@item.Code</code></td><td class="request-strong">@item.OptionsName</td><td>@(item.Description ?? "—")</td><td><span class="request-status @(item.IsActive ? "status-processed" : "status-cancelled")">@(item.IsActive ? "Actif" : "Inactif")</span></td><td>@item.RequestCount</td><td class="request-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td></tr> }
-</tbody></table></div>
+<SfGrid TValue="RequestTypeDto" DataSource="@Items" AllowPaging="false" Width="100%">
+    <GridTemplates>
+        <EmptyRecordTemplate><div class="request-empty">Aucun type de demande.</div></EmptyRecordTemplate>
+    </GridTemplates>
+    <GridColumns>
+        <GridColumn Field="@nameof(RequestTypeDto.Code)" HeaderText="Code" Width="140" />
+        <GridColumn Field="@nameof(RequestTypeDto.OptionsName)" HeaderText="Libellé" />
+        <GridColumn HeaderText="Description">
+            <Template>
+                @{ var item = context as RequestTypeDto; }
+                @(item is null ? null : item.Description ?? "—")
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Actif" Width="120">
+            <Template>
+                @{ var item = context as RequestTypeDto; }
+                @if (item is not null)
+                {
+                    <span class="request-status @(item.IsActive ? "status-processed" : "status-cancelled")">@(item.IsActive ? "Actif" : "Inactif")</span>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@nameof(RequestTypeDto.RequestCount)" HeaderText="Demandes" Width="120" />
+        <GridColumn HeaderText="Actions" Width="220">
+            <Template>
+                @{ var item = context as RequestTypeDto; }
+                @if (item is not null)
+                {
+                    <div class="request-actions">
+                        <SfButton OnClick="@(() => Edit.InvokeAsync(item))">Modifier</SfButton>
+                        <SfButton CssClass="danger" OnClick="@(() => Delete.InvokeAsync(item))">Supprimer</SfButton>
+                    </div>
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
 
-@code { [Parameter] public IReadOnlyList<RequestTypeDto> Items { get; set; } = []; [Parameter] public EventCallback<RequestTypeDto> Edit { get; set; } [Parameter] public EventCallback<RequestTypeDto> Delete { get; set; } }
+@code {
+    [Parameter] public IReadOnlyList<RequestTypeDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<RequestTypeDto> Edit { get; set; }
+    [Parameter] public EventCallback<RequestTypeDto> Delete { get; set; }
+}

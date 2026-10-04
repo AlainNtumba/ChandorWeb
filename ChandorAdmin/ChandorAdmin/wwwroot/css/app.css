@@ -290,3 +290,72 @@ select.searchable-select__native {
     color: #667085;
     text-align: center;
 }
+
+.admin-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-bottom: 16px;
+}
+
+.admin-filters__search,
+.admin-filters__search .e-input-group,
+.admin-filters__search .e-control-wrapper {
+    width: 100%;
+}
+
+.admin-filters__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.admin-filters__dropdowns {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+.admin-filters__row > .admin-filters__dropdowns {
+    flex: 1 1 auto;
+    width: auto;
+}
+
+.admin-filters__dropdowns > .e-input-group,
+.admin-filters__dropdowns > .e-control-wrapper {
+    flex: 1 1 0;
+    width: auto !important;
+    min-width: 0;
+    max-width: none;
+}
+
+.admin-filters__dates {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.e-input-group.filter-date.e-date-wrapper,
+.e-popup-wrapper.filter-date.e-datepicker {
+    width: 244px !important;
+}
+
+.e-input-group.filter-date.e-date-wrapper {
+    flex: 0 0 244px;
+}
+
+@media (max-width: 900px) {
+    .admin-filters__dropdowns,
+    .admin-filters__dates {
+        flex-wrap: wrap;
+    }
+}

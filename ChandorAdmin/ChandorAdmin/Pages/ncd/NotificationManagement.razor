@@ -6,20 +6,51 @@
 
 <PageTitle>Notifications administratives</PageTitle>
 
-<div class="notification-page">
-    <header class="notification-header"><div><div class="notification-eyebrow">Administration</div><h1>Notifications</h1><p>Créez, planifiez et suivez les communications envoyées aux membres.</p></div><div class="notification-header-actions"><SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>@if (_selectedTab == 1) { <SfButton IsPrimary="true" OnClick="OpenCreate" Disabled="@_loading">Nouvelle notification</SfButton> }</div></header>
+<div class="dashboard-page notification-page">
+    <DashboardHeader Title="Notifications"
+                     Subtitle="Gestion des communications envoyées aux membres"
+                     Eyebrow="Gestion">
+        <HeaderActions>
+            <SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>
+            @if (_selectedTab == 1)
+            {
+                <SfButton IsPrimary="true" OnClick="OpenCreate" Disabled="@_loading">Nouvelle notification</SfButton>
+            }
+        </HeaderActions>
+    </DashboardHeader>
     @if (!string.IsNullOrWhiteSpace(_notice)) { <div class="notification-notice @(_noticeIsError ? "error" : "success")" role="alert"><span>@_notice</span><button type="button" @onclick="() => _notice = null">×</button></div> }
     @if (_loading) { <div class="notification-loading"><span></span> Chargement…</div> }
 
     <section class="notification-surface">
         <ChandorTabs CssClass="notification-tabs" @bind-SelectedItem="_selectedTab"><TabItems>
-            <TabItem><HeaderTemplate><ChandorTabHeader Text="Tableau de bord" IconCss="e-icons e-chart" /></HeaderTemplate><ContentTemplate><div class="notification-tab-content notification-dashboard">
-                <div class="notification-dashboard-toolbar"><div><label>Du</label><input type="date" @bind="_summaryFrom" /></div><div><label>Au</label><input type="date" @bind="_summaryTo" /></div><SfButton OnClick="ApplySummaryPeriodAsync">Appliquer</SfButton></div>
+            <TabItem><HeaderTemplate><ChandorTabHeader Text="Tableau de bord" IconCss="e-icons e-chart" /></HeaderTemplate>
+                <ContentTemplate><div class="notification-tab-content notification-dashboard">
+                <div class="notification-dashboard-toolbar">
+                    <div class="admin-filters__dates">
+                        <SfDatePicker TValue="DateTime?" CssClass="filter-date" Width="244px" @bind-Value="_summaryFrom" Placeholder="Du" />
+                        <SfDatePicker TValue="DateTime?" CssClass="filter-date" Width="244px" @bind-Value="_summaryTo" Placeholder="Au" />
+                        <SfButton OnClick="ApplySummaryPeriodAsync">Appliquer</SfButton>
+                    </div>
+                </div>
                 <NotificationSummaryCards Summary="_summary" />
                 <div class="notification-metrics"><article><span>Destinataires enregistrés</span><strong>@_summary.TotalRecipients</strong></article><article><span>Notifications lues</span><strong>@_summary.TotalRead</strong></article><article><span>Taux de lecture</span><strong>@RecipientRate(_summary)</strong></article><article><span>Archivées</span><strong>@_summary.ArchivedCount</strong></article></div>
             </div></ContentTemplate></TabItem>
             <TabItem><HeaderTemplate><ChandorTabHeader Text="Notifications" IconCss="e-icons e-send" BadgeCount="_notificationPage.TotalCount" /></HeaderTemplate><ContentTemplate><div class="notification-tab-content">
-                <div class="notification-filter-bar"><input class="notification-search" type="search" value="@_filter.Keyword" @oninput="OnKeywordAsync" placeholder="Rechercher un titre ou un message…" /><select @bind="_filter.Status" @bind:after="ApplyFiltersAsync"><option value="">Tous les statuts</option>@foreach (var status in Statuses) { <option value="@status">@StatusLabel(status)</option> }</select><select @bind="_filter.AudienceType" @bind:after="ApplyFiltersAsync"><option value="">Toutes les audiences</option>@foreach (var audience in Audiences) { <option value="@audience">@AudienceLabel(audience)</option> }</select><select @bind="_filter.IsActive" @bind:after="ApplyFiltersAsync"><option value="">Tous</option><option value="true">Actives</option><option value="false">Inactives</option></select><input type="date" @bind="_filter.FromDate" @bind:after="ApplyFiltersAsync" /><input type="date" @bind="_filter.ToDate" @bind:after="ApplyFiltersAsync" /><button type="button" @onclick="ResetFiltersAsync">Réinitialiser</button></div>
+                <div class="admin-filters">
+                    <div class="admin-filters__search">
+                        <SfTextBox CssClass="notification-search" Type="InputType.Search" ShowClearButton="true" Placeholder="Rechercher un titre ou un message…" Value="@_filter.Keyword" Input="OnKeywordAsync" />
+                    </div>
+                    <div class="admin-filters__dropdowns">
+                        <SfDropDownList TValue="string" TItem="FilterChoice" DataSource="@StatusChoices" Value="@_filter.Status" ValueChanged="OnStatusChanged" Placeholder="Tous les statuts" AllowFiltering="true" ShowClearButton="true"><DropDownListFieldSettings Text="Text" Value="Value" /></SfDropDownList>
+                        <SfDropDownList TValue="string" TItem="FilterChoice" DataSource="@AudienceChoices" Value="@_filter.AudienceType" ValueChanged="OnAudienceChangedFilter" Placeholder="Toutes les audiences" AllowFiltering="true" ShowClearButton="true"><DropDownListFieldSettings Text="Text" Value="Value" /></SfDropDownList>
+                        <SfDropDownList TValue="bool?" TItem="ActiveChoice" DataSource="@ActiveChoices" Value="@_filter.IsActive" ValueChanged="OnActiveChanged" Placeholder="Tous"><DropDownListFieldSettings Text="Text" Value="Value" /></SfDropDownList>
+                    </div>
+                    <div class="admin-filters__dates">
+                        <SfDatePicker TValue="DateTime?" CssClass="filter-date" Width="244px" Value="@_filter.FromDate" ValueChanged="OnFromChanged" Placeholder="Du" />
+                        <SfDatePicker TValue="DateTime?" CssClass="filter-date" Width="244px" Value="@_filter.ToDate" ValueChanged="OnToChanged" Placeholder="Au" />
+                        <SfButton OnClick="ResetFiltersAsync">Réinitialiser</SfButton>
+                    </div>
+                </div>
                 <NotificationAdminGrid Items="_notificationPage.Items" View="OpenViewAsync" Edit="OpenEditAsync" Recipients="OpenRecipientsAsync" Publish="PublishAsync" Draft="MoveToDraftAsync" Archive="ArchiveAsync" Delete="DeleteAsync" />
                 @Pagination(_notificationPage.Page, _notificationPage.TotalPages, _notificationPage.TotalCount)
             </div></ContentTemplate></TabItem>
@@ -56,7 +87,7 @@
         else if (_dialogKind == "DETAIL" && _selectedNotification is not null)
         { <article class="notification-detail"><div><span class="notification-audience">@AudienceLabel(_selectedNotification.AudienceType)</span><span class="notification-status @StatusCss(_selectedNotification.Status)">@StatusLabel(_selectedNotification.Status)</span></div><p>@_selectedNotification.Message</p><dl><dt>Publication</dt><dd>@DateText(_selectedNotification.PublishedAt)</dd><dt>Expiration</dt><dd>@DateText(_selectedNotification.ExpiresAt)</dd><dt>Destinataires</dt><dd>@_selectedNotification.RecipientCount</dd><dt>Livrées</dt><dd>@_selectedNotification.DeliveredCount</dd><dt>Lues</dt><dd>@_selectedNotification.ReadCount</dd><dt>Rejetées</dt><dd>@_selectedNotification.DismissedCount</dd><dt>Active</dt><dd>@(_selectedNotification.IsActive ? "Oui" : "Non")</dd></dl></article> }
         else if (_dialogKind == "RECIPIENTS")
-        { <div class="notification-recipient-filters"><input type="search" value="@_recipientFilter.Keyword" @oninput="OnRecipientKeywordAsync" placeholder="Rechercher un destinataire…" /><select @bind="_recipientFilter.State" @bind:after="OnRecipientStateChangedAsync"><option value="">Tous les états</option>@foreach (var state in RecipientStates) { <option value="@state">@RecipientStateLabel(state)</option> }</select></div><NotificationRecipientGrid Items="_recipientPage.Items" />@RecipientPagination(_recipientPage.Page, _recipientPage.TotalPages, _recipientPage.TotalCount) }
+        { <div class="admin-filters"><div class="admin-filters__search"><SfTextBox Type="InputType.Search" ShowClearButton="true" Placeholder="Rechercher un destinataire…" Value="@_recipientFilter.Keyword" Input="OnRecipientKeywordAsync" /></div><div class="admin-filters__dropdowns"><SfDropDownList TValue="string" TItem="FilterChoice" DataSource="@RecipientStateChoices" Value="@_recipientFilter.State" ValueChanged="OnRecipientStateChanged" Placeholder="Tous les états" ShowClearButton="true"><DropDownListFieldSettings Text="Text" Value="Value" /></SfDropDownList></div></div><NotificationRecipientGrid Items="_recipientPage.Items" />@RecipientPagination(_recipientPage.Page, _recipientPage.TotalPages, _recipientPage.TotalCount) }
     </Content></DialogTemplates><DialogButtons>@if (_dialogKind == "EDITOR") { <DialogButton Content="@(_saving ? "Chargement..." : "Enregistrer")" IsPrimary="true" Disabled="@_saving" OnClick="SaveAsync" /> }<DialogButton Content="Fermer" Disabled="@_saving" OnClick="CloseDialog" /></DialogButtons></SfDialog>
 }
 

@@ -78,7 +78,7 @@
     cursor: pointer;
 }
 
-.directory-file-button { color: #fff; background: #313c75; }
+.directory-file-button { color: #fff; background: var(--brand-primary); }
 .directory-file-button:hover { background: #252f63; }
 .directory-file-button ::deep input[type="file"] {
     position: absolute !important;

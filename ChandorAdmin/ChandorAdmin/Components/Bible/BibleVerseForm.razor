@@ -12,8 +12,8 @@
         <label class="span-2"><span>Pensée du jour *</span><InputTextArea @bind-Value="Model.DailyThought" rows="5" disabled="@IsSubmitting" /><ValidationMessage For="@(() => Model.DailyThought)" /></label>
     </div>
     <div class="bible-form-actions">
-        <button type="button" class="secondary" disabled="@IsSubmitting" @onclick="Cancel">Annuler</button>
-        <button type="submit" class="primary" disabled="@IsSubmitting">
+        <SfButton CssClass="secondary" Disabled="@IsSubmitting" OnClick="Cancel">Annuler</SfButton>
+        <button type="submit" class="e-btn e-primary" disabled="@IsSubmitting">
             @if (IsSubmitting) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Chargement...</span> }
             else { <span>Enregistrer</span> }
         </button>

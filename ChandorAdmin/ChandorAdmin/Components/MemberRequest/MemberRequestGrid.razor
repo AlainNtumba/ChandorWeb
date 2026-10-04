@@ -1,12 +1,91 @@
 @using ChandorProject.Shared.DTOs.MemberRequest
 
-<div class="request-table-wrap"><table class="request-table"><thead><tr><th>Date</th><th>Type</th><th>Nom complet</th><th>Téléphone</th><th>Sujet</th><th>Profil</th><th>Statut</th><th>Modification</th><th>Actions</th></tr></thead><tbody>
-@if (Items.Count == 0) { <tr><td colspan="9" class="request-empty">Aucune demande.</td></tr> }
-@foreach (var item in Items)
-{
-    <tr><td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td><span class="request-type-code">@item.RequestTypeCode</span><div>@item.RequestTypeOptionsName</div></td><td class="request-strong">@FullName(item)</td><td><a href="tel:@item.Phone">@item.Phone</a></td><td><strong>@item.Subject</strong><div class="request-message-preview">@Preview(item.Message)</div></td><td>@(item.MemberId.HasValue ? "Membre" : "Visiteur")</td><td><span class="request-status @StatusClass(item.Status)">@StatusLabel(item.Status)</span></td><td>@(item.UpdatedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td class="request-actions"><button type="button" @onclick="() => View.InvokeAsync(item)">Voir</button><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" @onclick="() => ChangeStatus.InvokeAsync(item)">Statut</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td></tr>
-}
-</tbody></table></div>
+<SfGrid TValue="MemberRequestDto" DataSource="@Items" AllowPaging="false" Width="100%">
+    <GridTemplates>
+        <EmptyRecordTemplate><div class="request-empty">Aucune demande.</div></EmptyRecordTemplate>
+    </GridTemplates>
+    <GridColumns>
+        <GridColumn HeaderText="Date" Width="160">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @(item?.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm"))
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Type" Width="160">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @if (item is not null)
+                {
+                    <span class="request-type-code">@item.RequestTypeCode</span>
+                    <div>@item.RequestTypeOptionsName</div>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Nom complet">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @if (item is not null)
+                {
+                    <span class="request-strong">@FullName(item)</span>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Téléphone" Width="140">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @if (item is not null)
+                {
+                    <a href="tel:@item.Phone">@item.Phone</a>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Sujet">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @if (item is not null)
+                {
+                    <strong>@item.Subject</strong>
+                    <div class="request-message-preview">@Preview(item.Message)</div>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Profil" Width="110">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @(item is null ? null : item.MemberId.HasValue ? "Membre" : "Visiteur")
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Statut" Width="140">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @if (item is not null)
+                {
+                    <span class="request-status @StatusClass(item.Status)">@StatusLabel(item.Status)</span>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Modification" Width="160">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @(item is null ? null : item.UpdatedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Actions" Width="340">
+            <Template>
+                @{ var item = context as MemberRequestDto; }
+                @if (item is not null)
+                {
+                    <div class="request-actions">
+                        <SfButton OnClick="@(() => View.InvokeAsync(item))">Voir</SfButton>
+                        <SfButton OnClick="@(() => Edit.InvokeAsync(item))">Modifier</SfButton>
+                        <SfButton OnClick="@(() => ChangeStatus.InvokeAsync(item))">Statut</SfButton>
+                        <SfButton CssClass="danger" OnClick="@(() => Delete.InvokeAsync(item))">Supprimer</SfButton>
+                    </div>
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
 
 @code {
     [Parameter] public IReadOnlyList<MemberRequestDto> Items { get; set; } = [];

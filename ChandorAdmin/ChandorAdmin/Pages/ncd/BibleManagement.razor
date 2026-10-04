@@ -8,11 +8,15 @@
 
 <PageTitle>Versets bibliques</PageTitle>
 
-<div class="bible-admin-page">
-    <header class="bible-admin-header">
-        <div><div class="bible-admin-eyebrow">Administration</div><h1>Versets bibliques</h1><p>Programmez le verset et la pensée publiés chaque jour.</p></div>
-        <div class="bible-admin-header-actions"><button type="button" class="secondary" disabled="@(_loading || _saving)" @onclick="LoadPageAsync">Actualiser</button><button type="button" class="primary" disabled="@(_loading || _saving)" @onclick="OpenCreate">Nouveau verset</button></div>
-    </header>
+<div class="dashboard-page bible-admin-page">
+    <DashboardHeader Title="Versets bibliques"
+                     Subtitle="Programmez le verset et la pensée publiés chaque jour."
+                     Eyebrow="Gestion">
+        <HeaderActions>
+            <SfButton Disabled="@(_loading || _saving)" OnClick="LoadPageAsync">Actualiser</SfButton>
+            <SfButton IsPrimary="true" Disabled="@(_loading || _saving)" OnClick="OpenCreate">Nouveau verset</SfButton>
+        </HeaderActions>
+    </DashboardHeader>
 
     @if (!string.IsNullOrWhiteSpace(_notice))
     {
@@ -24,9 +28,9 @@
     }
 
     <section class="bible-admin-surface">
-        <div class="bible-admin-summary"><div><span>Total</span><strong>@_page.TotalCount</strong></div><div><span>Page actuelle</span><strong>@DisplayPage / @Math.Max(1, _page.TotalPages)</strong></div><div><span>Éléments par page</span><select @bind="_pageSize" @bind:after="ChangePageSizeAsync" disabled="@_loading"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div></div>
+        <div class="bible-admin-summary"><div><span>Total</span><strong>@_page.TotalCount</strong></div><div><span>Page actuelle</span><strong>@DisplayPage / @Math.Max(1, _page.TotalPages)</strong></div><div><span>Éléments par page</span><SfDropDownList TValue="int" TItem="int" DataSource="@_pageSizes" Value="@_pageSize" ValueChanged="OnPageSizeChanged" Enabled="@(!_loading)" Width="110px" /></div></div>
         <BibleVerseGrid Items="_page.Items" Disabled="@(_loading || _saving)" View="OpenDetailAsync" Edit="OpenEditAsync" Delete="DeleteAsync" />
-        <div class="bible-admin-pagination"><span>@_page.TotalCount verset(s)</span><div><button type="button" disabled="@(!_page.HasPreviousPage || _loading)" @onclick="() => ChangePageAsync(_page.Page - 1)">Précédent</button><span>Page @DisplayPage sur @Math.Max(1, _page.TotalPages)</span><button type="button" disabled="@(!_page.HasNextPage || _loading)" @onclick="() => ChangePageAsync(_page.Page + 1)">Suivant</button></div></div>
+        <div class="bible-admin-pagination"><span>@_page.TotalCount verset(s)</span><div><SfButton Disabled="@(!_page.HasPreviousPage || _loading)" OnClick="@(() => ChangePageAsync(_page.Page - 1))">Précédent</SfButton><span>Page @DisplayPage sur @Math.Max(1, _page.TotalPages)</span><SfButton Disabled="@(!_page.HasNextPage || _loading)" OnClick="@(() => ChangePageAsync(_page.Page + 1))">Suivant</SfButton></div></div>
     </section>
 </div>
 
@@ -38,7 +42,7 @@
             {
                 <BibleVerseCard Verse="_selectedVerse" />
                 <dl class="bible-admin-detail-meta"><dt>Créé le</dt><dd>@LocalDate(_selectedVerse.Created)</dd><dt>Modifié le</dt><dd>@LocalDate(_selectedVerse.Updated)</dd></dl>
-                <div class="bible-detail-actions"><button type="button" @onclick="CloseDialog">Fermer</button><button type="button" class="primary" @onclick="() => BeginEdit(_selectedVerse)">Modifier</button></div>
+                <div class="bible-detail-actions"><SfButton OnClick="CloseDialog">Fermer</SfButton><SfButton IsPrimary="true" OnClick="@(() => BeginEdit(_selectedVerse))">Modifier</SfButton></div>
             }
             else
             {

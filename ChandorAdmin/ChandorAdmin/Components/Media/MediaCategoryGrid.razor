@@ -1,25 +1,39 @@
 @using ChandorProject.Shared.DTOs.Media
 
-<div class="media-table-wrap">
-    <table class="media-table">
-        <thead><tr><th>Nom</th><th>Code</th><th>Module</th><th>Collections</th><th>Contenus</th><th>Ordre</th><th>Actif</th><th>Actions</th></tr></thead>
-        <tbody>
-        @if (Items.Count == 0)
-        {
-            <tr><td colspan="8" class="media-empty">Aucune catégorie.</td></tr>
-        }
-        @foreach (var item in Items)
-        {
-            <tr>
-                <td class="media-strong">@item.Name</td><td><code>@item.Code</code></td><td>@item.ModuleType</td>
-                <td>@item.CollectionCount</td><td>@item.ItemCount</td><td>@item.SortOrder</td>
-                <td><span class="media-status @(item.IsActive ? "media-status--published" : "media-status--draft")">@(item.IsActive ? "Oui" : "Non")</span></td>
-                <td class="media-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td>
-            </tr>
-        }
-        </tbody>
-    </table>
-</div>
+<SfGrid TValue="MediaCategoryDto" DataSource="@Items" AllowPaging="false" Width="100%">
+    <GridTemplates>
+        <EmptyRecordTemplate><div class="media-empty">Aucune catégorie.</div></EmptyRecordTemplate>
+    </GridTemplates>
+    <GridColumns>
+        <GridColumn Field="@nameof(MediaCategoryDto.Name)" HeaderText="Nom" />
+        <GridColumn Field="@nameof(MediaCategoryDto.Code)" HeaderText="Code" Width="140" />
+        <GridColumn Field="@nameof(MediaCategoryDto.ModuleType)" HeaderText="Module" Width="140" />
+        <GridColumn Field="@nameof(MediaCategoryDto.CollectionCount)" HeaderText="Collections" Width="130" />
+        <GridColumn Field="@nameof(MediaCategoryDto.ItemCount)" HeaderText="Contenus" Width="120" />
+        <GridColumn Field="@nameof(MediaCategoryDto.SortOrder)" HeaderText="Ordre" Width="90" />
+        <GridColumn HeaderText="Actif" Width="110">
+            <Template>
+                @{ var item = context as MediaCategoryDto; }
+                @if (item is not null)
+                {
+                    <span class="media-status @(item.IsActive ? "media-status--published" : "media-status--draft")">@(item.IsActive ? "Oui" : "Non")</span>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Actions" Width="220">
+            <Template>
+                @{ var item = context as MediaCategoryDto; }
+                @if (item is not null)
+                {
+                    <div class="media-actions">
+                        <SfButton OnClick="@(() => Edit.InvokeAsync(item))">Modifier</SfButton>
+                        <SfButton CssClass="danger" OnClick="@(() => Delete.InvokeAsync(item))">Supprimer</SfButton>
+                    </div>
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
 
 @code {
     [Parameter] public IReadOnlyList<MediaCategoryDto> Items { get; set; } = [];

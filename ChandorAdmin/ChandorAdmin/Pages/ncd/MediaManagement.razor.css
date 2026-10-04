@@ -2,7 +2,7 @@
 .media-page-header { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 20px; }
 .media-page-header h1 { margin: 2px 0 6px; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 750; }
 .media-page-header p { margin: 0; color: #64748b; }
-.media-eyebrow { color: #4055a8; text-transform: uppercase; font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
+.media-eyebrow { color: var(--brand-primary); text-transform: uppercase; font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
 .media-header-actions { display: flex; gap: 10px; flex-shrink: 0; }
 .media-surface { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(15, 23, 42, .08); overflow: hidden; }
 .media-tab-content { padding: 18px; min-height: 360px; }
@@ -10,8 +10,8 @@
 .media-toolbar select, .media-toolbar input { min-height: 40px; border: 1px solid #d8deea; border-radius: 7px; background: #fff; padding: 8px 11px; color: #263248; }
 .media-toolbar input { flex: 1 1 230px; }
 .media-toolbar select { min-width: 160px; }
-.media-loading { display: flex; align-items: center; gap: 8px; color: #4055a8; font-weight: 650; margin-bottom: 12px; }
-.media-loading span { width: 16px; height: 16px; border: 2px solid #bac4e7; border-top-color: #4055a8; border-radius: 50%; animation: media-spin .8s linear infinite; }
+.media-loading { display: flex; align-items: center; gap: 8px; color: var(--brand-primary); font-weight: 650; margin-bottom: 12px; }
+.media-loading span { width: 16px; height: 16px; border: 2px solid rgba(var(--brand-primary-rgb), 0.28); border-top-color: var(--brand-primary); border-radius: 50%; animation: media-spin .8s linear infinite; }
 .media-notice { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; margin-bottom: 14px; border-radius: 8px; }
 .media-notice--success { color: #166534; background: #dcfce7; border: 1px solid #86efac; }
 .media-notice--error { color: #991b1b; background: #fee2e2; border: 1px solid #fca5a5; }
@@ -32,9 +32,9 @@
 ::deep .media-actions button.danger { color: #b42318; background: #fff0ee; }
 ::deep .media-empty { padding: 32px !important; text-align: center; color: #7b879c; }
 ::deep .media-thumb { width: 58px; height: 44px; object-fit: cover; border-radius: 7px; background: #e5e7eb; }
-::deep .media-file-icon { display: inline-grid; place-items: center; width: 58px; height: 44px; border-radius: 7px; background: #eef2ff; color: #4055a8; font-weight: 800; }
+::deep .media-file-icon { display: inline-grid; place-items: center; width: 58px; height: 44px; border-radius: 7px; background: #eef2ff; color: var(--brand-primary); font-weight: 800; }
 ::deep .media-url { max-width: 270px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-::deep .media-url a { color: #4055a8; }
+::deep .media-url a { color: var(--brand-primary); }
 .media-pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 16px; color: #64748b; font-size: .84rem; }
 .media-pagination > div { display: flex; align-items: center; gap: 9px; }
 .media-pagination button { padding: 7px 10px; border: 1px solid #d8deea; border-radius: 6px; background: #fff; }
@@ -47,7 +47,7 @@
 ::deep .media-feed-card__body h3 { margin: 8px 0; font-size: 1rem; }
 ::deep .media-feed-card__body p { margin: 0 0 10px; color: #64748b; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 ::deep .media-feed-card__meta { display: flex; gap: 6px; flex-wrap: wrap; }
-::deep .media-feed-card__meta span { padding: 3px 7px; border-radius: 999px; background: #eef2ff; color: #4055a8; font-size: .66rem; font-weight: 750; }
+::deep .media-feed-card__meta span { padding: 3px 7px; border-radius: 999px; background: #eef2ff; color: var(--brand-primary); font-size: .66rem; font-weight: 750; }
 ::deep .media-feed-card__date { font-size: .75rem; color: #8490a4; }
 .media-feed-empty { grid-column: 1 / -1; }
 .media-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; padding: 4px 2px; }
@@ -59,7 +59,7 @@
 .media-form-grid .media-check input { width: auto; }
 .media-subtabs, .media-mode-switch { display: flex; gap: 5px; border-bottom: 1px solid #e1e6ef; margin-bottom: 16px; }
 .media-subtabs button, .media-mode-switch button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 9px 13px; color: #64748b; font-weight: 700; }
-.media-subtabs button.active, .media-mode-switch button.active { color: #4055a8; border-color: #4055a8; }
+.media-subtabs button.active, .media-mode-switch button.active { color: var(--brand-primary); border-color: var(--brand-primary); }
 .media-upload-box { display: flex; flex-direction: column; gap: 7px; align-items: center; justify-content: center; min-height: 150px; margin: 10px 0 18px; border: 2px dashed #c7d0e3; border-radius: 10px; background: #f8faff; text-align: center; color: #64748b; }
 .media-upload-box strong { color: #263248; }
 .media-upload-preview { width: min(100%, 520px); margin: 8px auto; overflow: hidden; border: 1px solid #d5dceb; background: #e9eef7; }
@@ -68,7 +68,7 @@
 .media-upload-preview--attachment span { position: absolute; right: 10px; bottom: 10px; padding: 5px 9px; background: rgb(15 23 42 / 78%); color: #fff; font-size: .72rem; font-weight: 700; }
 .media-inline-error { padding: 9px 12px; margin-top: 10px; border-radius: 6px; background: #fee2e2; color: #991b1b; }
 .media-progress { height: 8px; overflow: hidden; margin-top: 14px; border-radius: 999px; background: #e7ebf3; }
-.media-progress div { height: 100%; min-width: 10%; border-radius: inherit; background: #4055a8; transition: width .25s; animation: media-pulse 1s infinite alternate; }
+.media-progress div { height: 100%; min-width: 10%; border-radius: inherit; background: var(--brand-primary); transition: width .25s; animation: media-pulse 1s infinite alternate; }
 .media-progress-label { margin-top: 6px; color: #64748b; font-size: .78rem; text-align: center; }
 .media-or { display: flex; align-items: center; gap: 10px; margin: 16px 0 4px; color: #8490a4; font-size: .76rem; }
 .media-or::before, .media-or::after { content: ""; height: 1px; flex: 1; background: #e1e6ef; }

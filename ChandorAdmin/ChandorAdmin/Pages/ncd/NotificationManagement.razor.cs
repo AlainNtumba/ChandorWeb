@@ -117,8 +117,21 @@ public partial class NotificationManagement : IDisposable
         finally { _loading = false; }
     }
 
-    private Task OnKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _filter.Keyword = value, args.Value?.ToString(), () => { _filter.Page = 1; return LoadNotificationsCoreAsync(_searchCts!.Token); });
-    private Task OnRecipientKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _recipientFilter.Keyword = value, args.Value?.ToString(), () => { _recipientFilter.Page = 1; return LoadRecipientsCoreAsync(_searchCts!.Token); });
+    private sealed record FilterChoice(string Value, string Text);
+    private sealed record ActiveChoice(bool? Value, string Text);
+    private IEnumerable<FilterChoice> StatusChoices => Statuses.Select(status => new FilterChoice(status, StatusLabel(status)));
+    private IEnumerable<FilterChoice> AudienceChoices => Audiences.Select(audience => new FilterChoice(audience, AudienceLabel(audience)));
+    private IEnumerable<FilterChoice> RecipientStateChoices => RecipientStates.Select(state => new FilterChoice(state, RecipientStateLabel(state)));
+    private static readonly ActiveChoice[] ActiveChoices = [new(null, "Tous"), new(true, "Actives"), new(false, "Inactives")];
+
+    private Task OnKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _filter.Keyword = value, args.Value, () => { _filter.Page = 1; return LoadNotificationsCoreAsync(_searchCts!.Token); });
+    private Task OnRecipientKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _recipientFilter.Keyword = value, args.Value, () => { _recipientFilter.Page = 1; return LoadRecipientsCoreAsync(_searchCts!.Token); });
+    private async Task OnStatusChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _filter.Status) return; _filter.Status = value; await ApplyFiltersAsync(); }
+    private async Task OnAudienceChangedFilter(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _filter.AudienceType) return; _filter.AudienceType = value; await ApplyFiltersAsync(); }
+    private async Task OnActiveChanged(bool? value) { if (value == _filter.IsActive) return; _filter.IsActive = value; await ApplyFiltersAsync(); }
+    private async Task OnFromChanged(DateTime? value) { if (value == _filter.FromDate) return; _filter.FromDate = value; await ApplyFiltersAsync(); }
+    private async Task OnToChanged(DateTime? value) { if (value == _filter.ToDate) return; _filter.ToDate = value; await ApplyFiltersAsync(); }
+    private async Task OnRecipientStateChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _recipientFilter.State) return; _recipientFilter.State = value; await OnRecipientStateChangedAsync(); }
     private async Task DebounceAsync(Action<string> setter, string? value, Func<Task> loader)
     {
         setter(value ?? string.Empty); _searchCts?.Cancel(); _searchCts?.Dispose(); _searchCts = new CancellationTokenSource();

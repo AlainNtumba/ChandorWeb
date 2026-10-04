@@ -96,12 +96,22 @@ public partial class MemberRequestManagement : IDisposable
         finally { _loading = false; }
     }
 
+    private sealed record FilterChoice(string Value, string Text);
+    private sealed record ActiveChoice(bool? Value, string Text);
+    private IEnumerable<FilterChoice> RequestStatusChoices => _statuses.Select(status => new FilterChoice(status, StatusLabel(status)));
+    private static readonly ActiveChoice[] TypeActiveChoices = [new(null, "Tous les statuts"), new(true, "Actifs"), new(false, "Inactifs")];
+
     private async Task ApplySummaryPeriodAsync() => await LoadSummaryCoreAsync();
     private async Task ApplyRequestFiltersAsync() { _requestFilter.Page = 1; await LoadRequestsCoreAsync(); }
     private async Task ApplyTypeFiltersAsync() { _typeFilter.Page = 1; await LoadTypesCoreAsync(); }
 
-    private Task OnRequestKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _requestFilter.Keyword = value, args.Value?.ToString(), () => { _requestFilter.Page = 1; return LoadRequestsCoreAsync(_searchCts!.Token); });
-    private Task OnTypeKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _typeFilter.Keyword = value, args.Value?.ToString(), () => { _typeFilter.Page = 1; return LoadTypesCoreAsync(_searchCts!.Token); });
+    private Task OnRequestKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _requestFilter.Keyword = value, args.Value, () => { _requestFilter.Page = 1; return LoadRequestsCoreAsync(_searchCts!.Token); });
+    private Task OnTypeKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _typeFilter.Keyword = value, args.Value, () => { _typeFilter.Page = 1; return LoadTypesCoreAsync(_searchCts!.Token); });
+    private async Task OnRequestTypeChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _requestFilter.Type) return; _requestFilter.Type = value; await ApplyRequestFiltersAsync(); }
+    private async Task OnRequestStatusChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _requestFilter.Status) return; _requestFilter.Status = value; await ApplyRequestFiltersAsync(); }
+    private async Task OnRequestFromChanged(DateTime? value) { if (value == _requestFilter.FromDate) return; _requestFilter.FromDate = value; await ApplyRequestFiltersAsync(); }
+    private async Task OnRequestToChanged(DateTime? value) { if (value == _requestFilter.ToDate) return; _requestFilter.ToDate = value; await ApplyRequestFiltersAsync(); }
+    private async Task OnTypeActiveChanged(bool? value) { if (value == _typeFilter.IsActive) return; _typeFilter.IsActive = value; await ApplyTypeFiltersAsync(); }
     private async Task DebounceAsync(Action<string> setter, string? value, Func<Task> loader)
     {
         setter(value ?? string.Empty); _searchCts?.Cancel(); _searchCts?.Dispose(); _searchCts = new CancellationTokenSource();

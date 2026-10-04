@@ -165,10 +165,20 @@ public partial class MediaManagement : IDisposable
         else ShowError(response, "Impossible de charger la prévisualisation.");
     }
 
-    private Task OnCollectionKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _collectionFilter.Keyword = value, args.Value?.ToString(), () => { _collectionFilter.Page = 1; return LoadCollectionsCoreAsync(_searchCts!.Token); });
-    private Task OnItemKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _itemFilter.Keyword = value, args.Value?.ToString(), () => { _itemFilter.Page = 1; return LoadItemsCoreAsync(_searchCts!.Token); });
-    private Task OnAssetKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _assetFilter.Keyword = value, args.Value?.ToString(), () => { _assetFilter.Page = 1; return LoadAssetsCoreAsync(_searchCts!.Token); });
-    private Task OnFeedKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _feedKeyword = value, args.Value?.ToString(), () => { _feedPage = 1; return LoadFeedCoreAsync(_searchCts!.Token); });
+    private Task OnCollectionKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _collectionFilter.Keyword = value, args.Value, () => { _collectionFilter.Page = 1; return LoadCollectionsCoreAsync(_searchCts!.Token); });
+    private Task OnItemKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _itemFilter.Keyword = value, args.Value, () => { _itemFilter.Page = 1; return LoadItemsCoreAsync(_searchCts!.Token); });
+    private Task OnAssetKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _assetFilter.Keyword = value, args.Value, () => { _assetFilter.Page = 1; return LoadAssetsCoreAsync(_searchCts!.Token); });
+    private Task OnFeedKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _feedKeyword = value, args.Value, () => { _feedPage = 1; return LoadFeedCoreAsync(_searchCts!.Token); });
+    private async Task OnCollectionCategoryChanged(Guid? value) { if (value == _collectionFilter.CategoryId) return; _collectionFilter.CategoryId = value; await FilterCollectionsAsync(); }
+    private async Task OnCollectionStatusChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _collectionFilter.Status) return; _collectionFilter.Status = value; await FilterCollectionsAsync(); }
+    private async Task OnItemCategoryChanged(Guid? value) { if (value == _itemFilter.CategoryId) return; _itemFilter.CategoryId = value; await FilterItemCategoryAsync(); }
+    private async Task OnItemCollectionChanged(Guid? value) { if (value == _itemFilter.CollectionId) return; _itemFilter.CollectionId = value; await FilterItemsAsync(); }
+    private async Task OnItemStatusChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _itemFilter.Status) return; _itemFilter.Status = value; await FilterItemsAsync(); }
+    private async Task OnItemTypeFilterChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _itemFilter.ItemType) return; _itemFilter.ItemType = value; await FilterItemsAsync(); }
+    private async Task OnAssetTypeChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _assetFilter.AssetType) return; _assetFilter.AssetType = value; await FilterAssetsAsync(); }
+    private async Task OnAssetProviderChanged(string? value) { value = string.IsNullOrWhiteSpace(value) ? null : value; if (value == _assetFilter.Provider) return; _assetFilter.Provider = value; await FilterAssetsAsync(); }
+    private async Task OnFeedCategoryChanged(Guid value) { if (value == _feedCategoryId) return; _feedCategoryId = value; await FilterFeedAsync(); }
+    private async Task OnFeedPeriodChanged(string? value) { if (string.IsNullOrWhiteSpace(value) || value == _feedPeriod) return; _feedPeriod = value; await FilterFeedAsync(); }
 
     private async Task DebounceAsync(Action<string> setter, string? value, Func<Task> load)
     {

@@ -151,8 +151,17 @@ public partial class ChurchDirectoryManagement : IDisposable
         finally { _loading = false; }
     }
 
-    private Task OnTypeKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _typeFilter.Keyword = value, args.Value?.ToString(), () => { _typeFilter.Page = 1; return LoadTypesCoreAsync(_searchCts!.Token); });
-    private Task OnItemKeywordAsync(ChangeEventArgs args) => DebounceAsync(value => _itemFilter.Keyword = value, args.Value?.ToString(), () => { _itemFilter.Page = 1; return LoadItemsCoreAsync(_searchCts!.Token); });
+    private sealed record ActiveChoice(bool? Value, string Text);
+    private static readonly ActiveChoice[] ActiveChoices = [new(null, "Tous les statuts"), new(true, "Actifs"), new(false, "Inactifs")];
+
+    private Task OnTypeKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _typeFilter.Keyword = value, args.Value, () => { _typeFilter.Page = 1; return LoadTypesCoreAsync(_searchCts!.Token); });
+    private Task OnItemKeywordAsync(Syncfusion.Blazor.Inputs.InputEventArgs args) => DebounceAsync(value => _itemFilter.Keyword = value, args.Value, () => { _itemFilter.Page = 1; return LoadItemsCoreAsync(_searchCts!.Token); });
+    private async Task OnTypeActiveChanged(bool? value) { if (value == _typeFilter.IsActive) return; _typeFilter.IsActive = value; await FilterTypesAsync(); }
+    private async Task OnItemTypeChanged(Guid? value) { if (value == _itemFilter.TypeId) return; _itemFilter.TypeId = value; await FilterItemTypeAsync(); }
+    private async Task OnItemActiveChanged(bool? value) { if (value == _itemFilter.IsActive) return; _itemFilter.IsActive = value; await FilterItemsAsync(); }
+    private async Task OnItemParentChanged(Guid? value) { if (value == _itemFilter.ParentId) return; _itemFilter.ParentId = value; await FilterItemsAsync(); }
+    private async Task OnTreeTypeChanged(Guid value) { if (value == _treeTypeId) return; _treeTypeId = value; await LoadTreeAsync(); }
+    private async Task OnPreviewTypeChanged(Guid value) { if (value == _previewTypeId) return; _previewTypeId = value; await LoadPreviewAsync(); }
 
     private async Task DebounceAsync(Action<string> setter, string? value, Func<Task> loader)
     {

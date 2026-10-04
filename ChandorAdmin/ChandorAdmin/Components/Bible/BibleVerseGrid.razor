@@ -1,26 +1,61 @@
 @using ChandorProject.Shared.DTOs.Bible
 
-<div class="bible-table-wrap">
-    <table class="bible-table">
-        <thead><tr><th>Date</th><th>Référence</th><th>Contenu</th><th>Pensée du jour</th><th>Actions</th></tr></thead>
-        <tbody>
-            @if (Items.Count == 0)
-            {
-                <tr><td colspan="5" class="bible-empty">Aucun verset enregistré.</td></tr>
-            }
-            @foreach (var item in Items)
-            {
-                <tr>
-                    <td><time datetime="@item.PublicationDate.ToString("yyyy-MM-dd")">@item.PublicationDate.ToString("dd/MM/yyyy")</time></td>
-                    <td><strong>@Reference(item)</strong></td>
-                    <td><div class="bible-preview">@Preview(item.Content, 95)</div></td>
-                    <td><div class="bible-preview">@Preview(item.DailyThought, 75)</div></td>
-                    <td><div class="bible-actions"><button type="button" disabled="@Disabled" @onclick="() => View.InvokeAsync(item)">Voir</button><button type="button" disabled="@Disabled" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" disabled="@Disabled" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></div></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+<SfGrid TValue="BibleVerseDto" DataSource="@Items" AllowPaging="false" Width="100%">
+    <GridTemplates>
+        <EmptyRecordTemplate><div class="bible-empty">Aucun verset enregistré.</div></EmptyRecordTemplate>
+    </GridTemplates>
+    <GridColumns>
+        <GridColumn HeaderText="Date" Width="130">
+            <Template>
+                @{ var item = context as BibleVerseDto; }
+                @if (item is not null)
+                {
+                    <time datetime="@item.PublicationDate.ToString("yyyy-MM-dd")">@item.PublicationDate.ToString("dd/MM/yyyy")</time>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Référence" Width="160">
+            <Template>
+                @{ var item = context as BibleVerseDto; }
+                @if (item is not null)
+                {
+                    <strong>@Reference(item)</strong>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Contenu">
+            <Template>
+                @{ var item = context as BibleVerseDto; }
+                @if (item is not null)
+                {
+                    <div class="bible-preview">@Preview(item.Content, 95)</div>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Pensée du jour">
+            <Template>
+                @{ var item = context as BibleVerseDto; }
+                @if (item is not null)
+                {
+                    <div class="bible-preview">@Preview(item.DailyThought, 75)</div>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Actions" Width="280" AllowSorting="false">
+            <Template>
+                @{ var item = context as BibleVerseDto; }
+                @if (item is not null)
+                {
+                    <div class="bible-actions">
+                        <SfButton Disabled="@Disabled" OnClick="@(() => View.InvokeAsync(item))">Voir</SfButton>
+                        <SfButton Disabled="@Disabled" OnClick="@(() => Edit.InvokeAsync(item))">Modifier</SfButton>
+                        <SfButton CssClass="danger" Disabled="@Disabled" OnClick="@(() => Delete.InvokeAsync(item))">Supprimer</SfButton>
+                    </div>
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
 
 @code {
     [Parameter] public IReadOnlyList<BibleVerseDto> Items { get; set; } = [];

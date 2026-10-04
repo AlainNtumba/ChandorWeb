@@ -1,22 +1,50 @@
 @using ChandorProject.Shared.DTOs.Media
 
-<div class="media-table-wrap">
-    <table class="media-table">
-        <thead><tr><th>Titre</th><th>Catégorie</th><th>Statut</th><th>Contenus</th><th>Médias</th><th>Publication</th><th>Ordre</th><th>Actions</th></tr></thead>
-        <tbody>
-        @if (Items.Count == 0) { <tr><td colspan="8" class="media-empty">Aucune collection.</td></tr> }
-        @foreach (var item in Items)
-        {
-            <tr>
-                <td class="media-strong">@item.Title</td><td>@item.CategoryCode</td>
-                <td><span class="media-status @StatusClass(item.Status)">@item.Status</span></td>
-                <td>@item.ItemCount</td><td>@item.Media.Count</td><td>@(item.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td>@item.SortOrder</td>
-                <td class="media-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" @onclick="() => Attach.InvokeAsync(item)">Médias</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td>
-            </tr>
-        }
-        </tbody>
-    </table>
-</div>
+<SfGrid TValue="MediaCollectionDto" DataSource="@Items" AllowPaging="false" Width="100%">
+    <GridTemplates>
+        <EmptyRecordTemplate><div class="media-empty">Aucune collection.</div></EmptyRecordTemplate>
+    </GridTemplates>
+    <GridColumns>
+        <GridColumn Field="@nameof(MediaCollectionDto.Title)" HeaderText="Titre" />
+        <GridColumn Field="@nameof(MediaCollectionDto.CategoryCode)" HeaderText="Catégorie" Width="140" />
+        <GridColumn HeaderText="Statut" Width="130">
+            <Template>
+                @{ var item = context as MediaCollectionDto; }
+                @if (item is not null)
+                {
+                    <span class="media-status @StatusClass(item.Status)">@item.Status</span>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@nameof(MediaCollectionDto.ItemCount)" HeaderText="Contenus" Width="110" />
+        <GridColumn HeaderText="Médias" Width="100">
+            <Template>
+                @{ var item = context as MediaCollectionDto; }
+                @(item?.Media.Count)
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Publication" Width="170">
+            <Template>
+                @{ var item = context as MediaCollectionDto; }
+                @(item is null ? null : item.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@nameof(MediaCollectionDto.SortOrder)" HeaderText="Ordre" Width="90" />
+        <GridColumn HeaderText="Actions" Width="280">
+            <Template>
+                @{ var item = context as MediaCollectionDto; }
+                @if (item is not null)
+                {
+                    <div class="media-actions">
+                        <SfButton OnClick="@(() => Edit.InvokeAsync(item))">Modifier</SfButton>
+                        <SfButton OnClick="@(() => Attach.InvokeAsync(item))">Médias</SfButton>
+                        <SfButton CssClass="danger" OnClick="@(() => Delete.InvokeAsync(item))">Supprimer</SfButton>
+                    </div>
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
 
 @code {
     [Parameter] public IReadOnlyList<MediaCollectionDto> Items { get; set; } = [];

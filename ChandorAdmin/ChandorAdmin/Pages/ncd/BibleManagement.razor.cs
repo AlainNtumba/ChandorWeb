@@ -14,6 +14,7 @@ public partial class BibleManagement : IDisposable
     private BibleVersePageDto _page = new();
     private int _requestedPage = 1;
     private int _pageSize = 20;
+    private readonly int[] _pageSizes = [10, 20, 50];
     private bool _loading;
     private bool _saving;
     private bool _dialogOpen;
@@ -55,6 +56,13 @@ public partial class BibleManagement : IDisposable
     {
         _requestedPage = 1;
         await LoadPageAsync();
+    }
+
+    private async Task OnPageSizeChanged(int size)
+    {
+        if (size == _pageSize) return;
+        _pageSize = size;
+        await ChangePageSizeAsync();
     }
 
     private void OpenCreate()

@@ -1,13 +1,85 @@
 @using ChandorProject.Shared.DTOs.ChurchDirectory
 
-<div class="directory-table-wrap"><table class="directory-table"><thead><tr><th>Image</th><th>Nom</th><th>Type</th><th>Parent</th><th>Département</th><th>Enfants</th><th>Responsable</th><th>Contact</th><th>Ordre</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
-@if (Items.Count == 0) { <tr><td colspan="11" class="directory-empty">Aucun élément.</td></tr> }
-@foreach (var item in Items) { <tr><td>@if (!string.IsNullOrWhiteSpace(item.ImageUrl)) { <img class="directory-thumb" src="@item.ImageUrl" alt="" /> } else { <span class="directory-thumb-empty">—</span> }</td><td class="directory-strong">@item.Name</td><td>@item.TypeCode</td><td>@(item.ParentName ?? "—")</td><td>@(item.DepartmentName ?? "—")</td><td>@item.ChildCount</td><td>@(item.Members.FirstOrDefault(x => x.IsPrimary)?.MemberName ?? "—")</td><td>@Contact(item)</td><td>@item.SortOrder</td><td><span class="directory-status @(item.IsActive ? "active" : "inactive")">@(item.IsActive ? "Actif" : "Inactif")</span></td><td class="directory-actions"><button type="button" @onclick="() => Edit.InvokeAsync(item)">Modifier</button><button type="button" class="danger" @onclick="() => Delete.InvokeAsync(item)">Supprimer</button></td></tr> }
-</tbody></table></div>
+<SfGrid TValue="ChurchDirectoryItemDto" DataSource="@Items" AllowPaging="false" Width="100%">
+    <GridTemplates>
+        <EmptyRecordTemplate><div class="directory-empty">Aucun élément.</div></EmptyRecordTemplate>
+    </GridTemplates>
+    <GridColumns>
+        <GridColumn HeaderText="Image" Width="90">
+            <Template>
+                @{ var item = context as ChurchDirectoryItemDto; }
+                @if (item is not null)
+                {
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img class="directory-thumb" src="@item.ImageUrl" alt="" />
+                    }
+                    else
+                    {
+                        <span class="directory-thumb-empty">—</span>
+                    }
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@nameof(ChurchDirectoryItemDto.Name)" HeaderText="Nom" />
+        <GridColumn Field="@nameof(ChurchDirectoryItemDto.TypeCode)" HeaderText="Type" Width="120" />
+        <GridColumn HeaderText="Parent" Width="140">
+            <Template>
+                @{ var item = context as ChurchDirectoryItemDto; }
+                @(item is null ? null : item.ParentName ?? "—")
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Département" Width="150">
+            <Template>
+                @{ var item = context as ChurchDirectoryItemDto; }
+                @(item is null ? null : item.DepartmentName ?? "—")
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@nameof(ChurchDirectoryItemDto.ChildCount)" HeaderText="Enfants" Width="100" />
+        <GridColumn HeaderText="Responsable" Width="160">
+            <Template>
+                @{ var item = context as ChurchDirectoryItemDto; }
+                @(item is null ? null : item.Members.FirstOrDefault(x => x.IsPrimary)?.MemberName ?? "—")
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Contact" Width="160">
+            <Template>
+                @{ var item = context as ChurchDirectoryItemDto; }
+                @(item is null ? null : Contact(item))
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@nameof(ChurchDirectoryItemDto.SortOrder)" HeaderText="Ordre" Width="90" />
+        <GridColumn HeaderText="Statut" Width="120">
+            <Template>
+                @{ var item = context as ChurchDirectoryItemDto; }
+                @if (item is not null)
+                {
+                    <span class="directory-status @(item.IsActive ? "active" : "inactive")">@(item.IsActive ? "Actif" : "Inactif")</span>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn HeaderText="Actions" Width="220">
+            <Template>
+                @{ var item = context as ChurchDirectoryItemDto; }
+                @if (item is not null)
+                {
+                    <div class="directory-actions">
+                        <SfButton OnClick="@(() => Edit.InvokeAsync(item))">Modifier</SfButton>
+                        <SfButton CssClass="danger" OnClick="@(() => Delete.InvokeAsync(item))">Supprimer</SfButton>
+                    </div>
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
 
 @code {
     [Parameter] public IReadOnlyList<ChurchDirectoryItemDto> Items { get; set; } = [];
     [Parameter] public EventCallback<ChurchDirectoryItemDto> Edit { get; set; }
     [Parameter] public EventCallback<ChurchDirectoryItemDto> Delete { get; set; }
-    private static string Contact(ChurchDirectoryItemDto item) { var value = item.Contacts.FirstOrDefault(x => x.IsPrimary)?.Value ?? item.Contacts.FirstOrDefault()?.Value; return value ?? "—"; }
+    private static string Contact(ChurchDirectoryItemDto item)
+    {
+        var value = item.Contacts.FirstOrDefault(x => x.IsPrimary)?.Value ?? item.Contacts.FirstOrDefault()?.Value;
+        return value ?? "—";
+    }
 }
