@@ -371,7 +371,7 @@ Cette approche fonctionne, mais crée un couplage important entre la grille, le 
 La configuration de l'API se trouve dans [`appsettings.json`](../ChandorAdmin/ChandorAdmin/appsettings.json), section `ChandorApi` :
 
 ```json
-"BaseUrl": "https://chandor.somee.com/api/",
+"BaseUrl": "https://www.chandor.somee.com/api/",
 "VersionPathSegment": "1.0"
 ```
 
@@ -380,9 +380,9 @@ La configuration de l'API se trouve dans [`appsettings.json`](../ChandorAdmin/Ch
 `ChandorApiOptions` construit la racine versionnée :
 
 ```text
-https://chandor.somee.com/api/ + v1.0/
+https://www.chandor.somee.com/api/ + v1.0/
 =
-https://chandor.somee.com/api/v1.0/
+https://www.chandor.somee.com/api/v1.0/
 ```
 
 Les endpoints d'authentification utilisent toutefois directement `/api/Auth/...` sans segment `v1.0`.

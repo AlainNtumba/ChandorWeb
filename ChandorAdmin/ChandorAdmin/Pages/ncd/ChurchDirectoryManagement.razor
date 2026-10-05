@@ -13,9 +13,9 @@
                      Eyebrow="Gestion">
         <HeaderActions>
             <SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>
-            @if (_selectedTab < 2)
+            @if (_selectedTab == 0)
             {
-                <SfButton IsPrimary="true" OnClick="OpenNewDialog" Disabled="@_loading">@(_selectedTab == 0 ? "Nouveau type" : "Nouvel élément")</SfButton>
+                <SfButton IsPrimary="true" OnClick="OpenNewDialog" Disabled="@_loading">Nouveau type</SfButton>
             }
         </HeaderActions>
     </DashboardHeader>
@@ -40,26 +40,6 @@
                         @Pagination("TYPE", _typePage.Page, _typePage.TotalPages, _typePage.TotalCount)
                     </div>
                 </ContentTemplate></TabItem>
-                <TabItem><HeaderTemplate><ChandorTabHeader Text="Éléments" IconCss="e-icons e-table" BadgeCount="_itemPage.TotalCount" /></HeaderTemplate><ContentTemplate>
-                    <div class="directory-tab-content">
-                        <div class="admin-filters">
-                            <div class="admin-filters__search">
-                                <SfTextBox Type="InputType.Search" ShowClearButton="true" Placeholder="Rechercher un élément…" Value="@_itemFilter.Keyword" Input="OnItemKeywordAsync" />
-                            </div>
-                            <div class="admin-filters__dropdowns">
-                                <SfDropDownList TValue="Guid?" TItem="ChurchDirectoryTypeDto" DataSource="@_types" Value="@_itemFilter.TypeId" ValueChanged="OnItemTypeChanged" Placeholder="Tous les types" AllowFiltering="true" ShowClearButton="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList>
-                                <SfDropDownList TValue="bool?" TItem="ActiveChoice" DataSource="@ActiveChoices" Value="@_itemFilter.IsActive" ValueChanged="OnItemActiveChanged" Placeholder="Tous les statuts"><DropDownListFieldSettings Text="Text" Value="Value" /></SfDropDownList>
-                                <SfDropDownList TValue="Guid?" TItem="ChurchDirectoryItemDto" DataSource="@ParentFilterOptions" Value="@_itemFilter.ParentId" ValueChanged="OnItemParentChanged" Placeholder="Tous les parents" AllowFiltering="true" ShowClearButton="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList>
-                            </div>
-                        </div>
-                        <DirectoryItemGrid Items="_itemPage.Items" Edit="EditItem" Delete="DeleteItemAsync" />
-                        @Pagination("ITEM", _itemPage.Page, _itemPage.TotalPages, _itemPage.TotalCount)
-                    </div>
-                </ContentTemplate></TabItem>
-                <TabItem><HeaderTemplate><ChandorTabHeader Text="Hiérarchie" IconCss="e-icons e-people" BadgeCount="_tree.Count" BadgeTone="neutral" /></HeaderTemplate><ContentTemplate>
-                    <div class="directory-tab-content"><div class="admin-filters"><div class="admin-filters__dropdowns"><SfDropDownList TValue="Guid" TItem="ChurchDirectoryTypeDto" DataSource="@_types" Value="@_treeTypeId" ValueChanged="OnTreeTypeChanged" Placeholder="Sélectionnez un type" AllowFiltering="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList></div></div>
-                    @if (_treeTypeId == Guid.Empty) { <div class="directory-empty">Sélectionnez un type.</div> } else if (_tree.Count == 0) { <div class="directory-empty">Aucun élément dans cette hiérarchie.</div> } else { <DirectoryTreeView Nodes="_tree" Edit="EditItem" AddChild="AddTreeChild" /> }</div>
-                </ContentTemplate></TabItem>
                 <TabItem><HeaderTemplate><ChandorTabHeader Text="Prévisualisation" IconCss="e-icons e-eye" /></HeaderTemplate><ContentTemplate>
                     <div class="directory-tab-content"><div class="admin-filters"><div class="admin-filters__row"><div class="admin-filters__dropdowns"><SfDropDownList TValue="Guid" TItem="ChurchDirectoryTypeDto" DataSource="@_publicTypes" Value="@_previewTypeId" ValueChanged="OnPreviewTypeChanged" Placeholder="Sélectionnez un type" AllowFiltering="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList></div><span class="directory-public-label">Données provenant uniquement des routes publiques</span></div></div><DirectoryPublicPreview DirectoryType="PreviewType" Items="_publicItems" Open="OpenPreviewDetail" /></div>
                 </ContentTemplate></TabItem>
@@ -70,17 +50,92 @@
 
 @if (_dialogOpen)
 {
-    <SfDialog @bind-Visible="_dialogOpen" IsModal="true" Width="@(_dialogKind == "TYPE" ? "min(600px, 96vw)" : "min(900px, calc(100vw - 24px))")" Header="@_dialogTitle" ShowCloseIcon="false" CloseOnEscape="false" CssClass="directory-dialog">
+    <SfDialog @bind-Visible="_dialogOpen" IsModal="true" Width="@(_dialogKind == "TYPE" ? "min(1080px, calc(100vw - 24px))" : "min(900px, calc(100vw - 24px))")" Header="@_dialogTitle" ShowCloseIcon="false" CloseOnEscape="false" CssClass="directory-dialog rounded-0">
         <DialogTemplates><Content>
             @if (_dialogKind == "TYPE")
             {
-                <div class="directory-form-grid">
-                    @if (!_editingId.HasValue) { <label><span>Code *</span><input @bind="_typeModel.Code" placeholder="CELL" /></label> }
-                    <label><span>Nom *</span><input @bind="_typeModel.Name" /></label>
-                    <label><span>Affichage *</span><select @bind="_typeModel.DisplayKind">@foreach (var kind in DisplayKinds) { <option value="@kind">@kind</option> }</select></label>
-                    <label class="span-2"><span>Description</span><textarea rows="4" @bind="_typeModel.Description"></textarea></label><label><span>Ordre</span><input type="number" @bind="_typeModel.SortOrder" /></label><label class="directory-check"><input type="checkbox" @bind="_typeModel.IsActive" /> Type actif</label>
-                </div>
-                <h4 class="directory-section-title">Image Hero</h4><DirectoryImagePicker ExistingImageUrl="_typeModel.HeroImageUrl" @bind-SelectedImage="_selectedImage" @bind-DeleteRequested="_deleteImage" />
+                <EditForm EditContext="_typeEditContext" class="directory-simple-form">
+                    <DataAnnotationsValidator />
+                    @if (!string.IsNullOrWhiteSpace(_notice) && _noticeIsError)
+                    {
+                        <div class="directory-form-error" role="alert">@_notice</div>
+                    }
+                    <div class="directory-form-tabs" role="tablist" aria-label="Création de l’annuaire">
+                        <button type="button" class="@TypeFormTabClass("INFO")" @onclick='() => _typeFormTab = "INFO"'>
+                            <span class="e-icons e-circle-info" aria-hidden="true"></span>
+                            Informations
+                        </button>
+                        <button type="button" class="@TypeFormTabClass("ITEMS")" @onclick='() => _typeFormTab = "ITEMS"'>
+                            <span class="e-icons e-list-unordered" aria-hidden="true"></span>
+                            Éléments
+                            <span class="directory-form-tabs__count">@_typeFormModel.Items.Count</span>
+                        </button>
+                    </div>
+
+                    @if (_typeFormTab == "INFO")
+                    {
+                        <div class="directory-simple-section">
+                            <div class="directory-simple-heading">
+                                <div><strong>Informations générales</strong><span>Donnez un nom clair à cette section de l’annuaire.</span></div>
+                            </div>
+                            <div class="directory-form-grid">
+                                <label class="span-2"><span>Nom *</span><InputText @bind-Value="_typeFormModel.Name" placeholder="Ex. Nos cellules" /><ValidationMessage For="@(() => _typeFormModel.Name)" /></label>
+                                <label class="span-2"><span>Description</span><InputTextArea rows="4" @bind-Value="_typeFormModel.Description" placeholder="Présentez brièvement cette section…" /><ValidationMessage For="@(() => _typeFormModel.Description)" /></label>
+                            </div>
+                            <h4 class="directory-section-title">Image de couverture</h4>
+                            <DirectoryImagePicker ExistingImageUrl="_typeFormModel.HeroImageUrl" @bind-SelectedImage="_selectedImage" @bind-DeleteRequested="_deleteImage" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="directory-simple-section">
+                            <div class="directory-simple-heading directory-simple-heading--items">
+                                <div><strong>Éléments de l’annuaire</strong><span>Ajoutez les informations essentielles. L’ordre affiché ici sera conservé.</span></div>
+                                <button type="button" class="directory-add-button" @onclick="AddSimpleItem"><span class="e-icons e-plus" aria-hidden="true"></span>Ajouter un élément</button>
+                            </div>
+
+                            @if (_typeFormModel.Items.Count == 0)
+                            {
+                                <button type="button" class="directory-simple-empty" @onclick="AddSimpleItem">
+                                    <span class="e-icons e-plus" aria-hidden="true"></span>
+                                    <strong>Ajouter le premier élément</strong>
+                                    <small>Nom, responsable, adresse et contact uniquement.</small>
+                                </button>
+                            }
+                            else
+                            {
+                                <div class="directory-simple-items">
+                                    @for (var index = 0; index < _typeFormModel.Items.Count; index++)
+                                    {
+                                        var itemIndex = index;
+                                        var item = _typeFormModel.Items[itemIndex];
+                                        <section class="directory-simple-item" @key="item">
+                                            <div class="directory-simple-item__header">
+                                                <span class="directory-simple-item__number">@(itemIndex + 1)</span>
+                                                <strong>@(string.IsNullOrWhiteSpace(item.Name) ? "Nouvel élément" : item.Name)</strong>
+                                                <label class="directory-simple-item__active" title="Activer ou désactiver cet élément">
+                                                    <InputCheckbox @bind-Value="item.IsActive" />
+                                                    <span>@(item.IsActive ? "Actif" : "Inactif")</span>
+                                                </label>
+                                                <div class="directory-simple-item__actions">
+                                                    <button type="button" title="Monter" disabled="@(itemIndex == 0)" @onclick="() => MoveSimpleItem(itemIndex, -1)">↑</button>
+                                                    <button type="button" title="Descendre" disabled="@(itemIndex == _typeFormModel.Items.Count - 1)" @onclick="() => MoveSimpleItem(itemIndex, 1)">↓</button>
+                                                    <button type="button" class="danger" title="Supprimer" @onclick="() => RemoveSimpleItem(item)"><span class="e-icons e-trash" aria-hidden="true"></span></button>
+                                                </div>
+                                            </div>
+                                            <div class="directory-simple-item__fields">
+                                                <label><span>Nom *</span><InputText @bind-Value="item.Name" placeholder="Ex. Cellule Île de Patmos" /></label>
+                                                <label><span>Responsable *</span><select class="directory-responsible-native" @bind="item.ResponsibleMemberId"><option value="@Guid.Empty">Sélectionnez un membre</option>@foreach (var member in _members) { <option value="@member.Id">@MemberDisplayName(member)</option> }</select></label>
+                                                <label><span>Adresse *</span><InputText @bind-Value="item.Address" placeholder="Adresse complète" /></label>
+                                                <label><span>Contact *</span><InputText @bind-Value="item.Contact" placeholder="Téléphone ou autre contact" /></label>
+                                            </div>
+                                        </section>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </EditForm>
             }
             else if (_dialogKind == "ITEM")
             {

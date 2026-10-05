@@ -27,6 +27,12 @@ public sealed class ChurchDirectoryService(ChandorApiHttp api) : IChurchDirector
     public Task<DataResponse<ChurchDirectoryTypeDto>?> UpdateTypeAsync(Guid id, ChurchDirectoryTypeInputDto input, CancellationToken cancellationToken = default)
         => api.PutDataResponseAsync<ChurchDirectoryTypeDto>($"{Types}/{id:D}", JsonContent.Create(input), cancellationToken);
 
+    public Task<DataResponse<ChurchDirectoryTypeWithItemsDto>?> CreateTypeWithItemsAsync(ChurchDirectoryTypeWithItemsInputDto input, CancellationToken cancellationToken = default)
+        => api.PostDataResponseAsync<ChurchDirectoryTypeWithItemsDto>($"{Types}/with-items", JsonContent.Create(input), cancellationToken);
+
+    public Task<DataResponse<ChurchDirectoryTypeWithItemsDto>?> UpdateTypeWithItemsAsync(Guid id, ChurchDirectoryTypeWithItemsInputDto input, CancellationToken cancellationToken = default)
+        => api.PutDataResponseAsync<ChurchDirectoryTypeWithItemsDto>($"{Types}/{id:D}/with-items", JsonContent.Create(input), cancellationToken);
+
     public Task<DataResponse<ChurchDirectoryTypeDto>?> UploadTypeHeroAsync(Guid id, DirectoryImageUpload image, CancellationToken cancellationToken = default)
         => UploadAsync<ChurchDirectoryTypeDto>($"{Types}/{id:D}/hero-image", image, cancellationToken);
 
