@@ -141,7 +141,7 @@
                                             </div>
                                             <div class="directory-simple-item__fields">
                                                 <label><span>Nom *</span><InputText @bind-Value="item.Name" placeholder="Ex. Cellule Île de Patmos" /></label>
-                                                <label><span>Responsable *</span><InputSelect @bind-Value="item.ResponsibleMemberId"><option value="@Guid.Empty">Sélectionnez un membre</option>@foreach (var member in _members) { <option value="@member.Id">@MemberDisplayName(member)</option> }</InputSelect></label>
+                                                <label><span>Responsable *</span><InputSelect class="directory-responsible-native" @bind-Value="item.ResponsibleMemberId"><option value="@Guid.Empty">Sélectionnez un membre</option>@foreach (var member in _members) { <option value="@member.Id">@MemberDisplayName(member)</option> }</InputSelect></label>
                                                 <label><span>Adresse *</span><InputText @bind-Value="item.Address" placeholder="Adresse complète" /></label>
                                                 <label><span>Contact *</span><InputText @bind-Value="item.Contact" placeholder="Téléphone ou autre contact" /></label>
                                             </div>
