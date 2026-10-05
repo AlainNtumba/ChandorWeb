@@ -163,8 +163,7 @@ public partial class ChurchDirectoryManagement : IDisposable
     private async Task OnSelectedTabChangedAsync()
     {
         _notice = null;
-        if (_selectedTab == 2 && _tree.Count == 0) await LoadTreeAsync();
-        if (_selectedTab == 3 && _publicItems.Count == 0) await LoadPreviewAsync();
+        if (_selectedTab == 1 && _publicItems.Count == 0) await LoadPreviewAsync();
     }
 
     private async Task RefreshSelectedAsync()
@@ -175,9 +174,7 @@ public partial class ChurchDirectoryManagement : IDisposable
             switch (_selectedTab)
             {
                 case 0: await Task.WhenAll(LoadTypesCoreAsync(), LoadTypeLookupAsync()); break;
-                case 1: await Task.WhenAll(LoadItemsCoreAsync(), LoadItemLookupAsync()); break;
-                case 2: await LoadTreeAsync(); break;
-                case 3: await Task.WhenAll(LoadPublicTypesAsync(), LoadPreviewAsync()); break;
+                case 1: await Task.WhenAll(LoadPublicTypesAsync(), LoadPreviewAsync()); break;
             }
         }
         finally { _loading = false; }
@@ -217,7 +214,6 @@ public partial class ChurchDirectoryManagement : IDisposable
     private void OpenNewDialog()
     {
         if (_selectedTab == 0) OpenNewType();
-        else if (_selectedTab == 1) OpenNewItem();
     }
 
     private void OpenNewType()

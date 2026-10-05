@@ -13,9 +13,9 @@
                      Eyebrow="Gestion">
         <HeaderActions>
             <SfButton OnClick="RefreshSelectedAsync" Disabled="@_loading">Actualiser</SfButton>
-            @if (_selectedTab < 2)
+            @if (_selectedTab == 0)
             {
-                <SfButton IsPrimary="true" OnClick="OpenNewDialog" Disabled="@_loading">@(_selectedTab == 0 ? "Nouveau type" : "Nouvel élément")</SfButton>
+                <SfButton IsPrimary="true" OnClick="OpenNewDialog" Disabled="@_loading">Nouveau type</SfButton>
             }
         </HeaderActions>
     </DashboardHeader>
@@ -39,26 +39,6 @@
                         <DirectoryTypeGrid Items="_typePage.Items" Edit="EditType" Delete="DeleteTypeAsync" />
                         @Pagination("TYPE", _typePage.Page, _typePage.TotalPages, _typePage.TotalCount)
                     </div>
-                </ContentTemplate></TabItem>
-                <TabItem><HeaderTemplate><ChandorTabHeader Text="Éléments" IconCss="e-icons e-table" BadgeCount="_itemPage.TotalCount" /></HeaderTemplate><ContentTemplate>
-                    <div class="directory-tab-content">
-                        <div class="admin-filters">
-                            <div class="admin-filters__search">
-                                <SfTextBox Type="InputType.Search" ShowClearButton="true" Placeholder="Rechercher un élément…" Value="@_itemFilter.Keyword" Input="OnItemKeywordAsync" />
-                            </div>
-                            <div class="admin-filters__dropdowns">
-                                <SfDropDownList TValue="Guid?" TItem="ChurchDirectoryTypeDto" DataSource="@_types" Value="@_itemFilter.TypeId" ValueChanged="OnItemTypeChanged" Placeholder="Tous les types" AllowFiltering="true" ShowClearButton="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList>
-                                <SfDropDownList TValue="bool?" TItem="ActiveChoice" DataSource="@ActiveChoices" Value="@_itemFilter.IsActive" ValueChanged="OnItemActiveChanged" Placeholder="Tous les statuts"><DropDownListFieldSettings Text="Text" Value="Value" /></SfDropDownList>
-                                <SfDropDownList TValue="Guid?" TItem="ChurchDirectoryItemDto" DataSource="@ParentFilterOptions" Value="@_itemFilter.ParentId" ValueChanged="OnItemParentChanged" Placeholder="Tous les parents" AllowFiltering="true" ShowClearButton="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList>
-                            </div>
-                        </div>
-                        <DirectoryItemGrid Items="_itemPage.Items" Edit="EditItem" Delete="DeleteItemAsync" />
-                        @Pagination("ITEM", _itemPage.Page, _itemPage.TotalPages, _itemPage.TotalCount)
-                    </div>
-                </ContentTemplate></TabItem>
-                <TabItem><HeaderTemplate><ChandorTabHeader Text="Hiérarchie" IconCss="e-icons e-people" BadgeCount="_tree.Count" BadgeTone="neutral" /></HeaderTemplate><ContentTemplate>
-                    <div class="directory-tab-content"><div class="admin-filters"><div class="admin-filters__dropdowns"><SfDropDownList TValue="Guid" TItem="ChurchDirectoryTypeDto" DataSource="@_types" Value="@_treeTypeId" ValueChanged="OnTreeTypeChanged" Placeholder="Sélectionnez un type" AllowFiltering="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList></div></div>
-                    @if (_treeTypeId == Guid.Empty) { <div class="directory-empty">Sélectionnez un type.</div> } else if (_tree.Count == 0) { <div class="directory-empty">Aucun élément dans cette hiérarchie.</div> } else { <DirectoryTreeView Nodes="_tree" Edit="EditItem" AddChild="AddTreeChild" /> }</div>
                 </ContentTemplate></TabItem>
                 <TabItem><HeaderTemplate><ChandorTabHeader Text="Prévisualisation" IconCss="e-icons e-eye" /></HeaderTemplate><ContentTemplate>
                     <div class="directory-tab-content"><div class="admin-filters"><div class="admin-filters__row"><div class="admin-filters__dropdowns"><SfDropDownList TValue="Guid" TItem="ChurchDirectoryTypeDto" DataSource="@_publicTypes" Value="@_previewTypeId" ValueChanged="OnPreviewTypeChanged" Placeholder="Sélectionnez un type" AllowFiltering="true"><DropDownListFieldSettings Text="Name" Value="Id" /></SfDropDownList></div><span class="directory-public-label">Données provenant uniquement des routes publiques</span></div></div><DirectoryPublicPreview DirectoryType="PreviewType" Items="_publicItems" Open="OpenPreviewDetail" /></div>
