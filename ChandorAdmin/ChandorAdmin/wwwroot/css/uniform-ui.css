@@ -1,0 +1,274 @@
+/*
+ * Uniform administration UI
+ * This file is intentionally loaded after component-scoped and vendor styles.
+ */
+
+:root {
+    --chandor-control-height: 40px;
+    --chandor-control-border: #c7cdd6;
+    --chandor-control-text: #293244;
+    --chandor-control-placeholder: #7a8495;
+    --chandor-control-focus: #7224a8;
+}
+
+/* Native Blazor/HTML fields ------------------------------------------------ */
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not(.e-input),
+select:not([multiple]):not(.searchable-select__native),
+.form-control:not(textarea),
+.form-select,
+.searchable-select,
+.searchable-select__trigger {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: var(--chandor-control-height) !important;
+    min-height: var(--chandor-control-height) !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not(.e-input),
+select:not([multiple]):not(.searchable-select__native),
+.form-control:not(textarea),
+.form-select,
+.searchable-select__trigger {
+    padding: 0 18px !important;
+    border: 1px solid var(--chandor-control-border) !important;
+    outline: 0 !important;
+    background-color: #fff !important;
+    color: var(--chandor-control-text) !important;
+    font-family: inherit !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+    box-shadow: none !important;
+}
+
+textarea,
+textarea.form-control {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 140px !important;
+    margin: 0 !important;
+    padding: 16px 18px !important;
+    border: 1px solid var(--chandor-control-border) !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    background: #fff !important;
+    color: var(--chandor-control-text) !important;
+    font-family: inherit !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    line-height: 1.45 !important;
+    box-shadow: none !important;
+}
+
+input::placeholder,
+textarea::placeholder,
+.form-control::placeholder {
+    color: var(--chandor-control-placeholder) !important;
+    opacity: 1 !important;
+}
+
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not(.e-input):focus,
+select:not([multiple]):not(.searchable-select__native):focus,
+textarea:focus,
+.form-control:focus,
+.form-select:focus,
+.searchable-select.is-open .searchable-select__trigger,
+.searchable-select__trigger:focus-visible {
+    border-color: var(--chandor-control-focus) !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 1px var(--chandor-control-focus) !important;
+}
+
+/* Keep the native value source accessible to Blazor but visually hidden. */
+select.searchable-select__native,
+select.directory-responsible-native,
+select.directory-responsible-native.searchable-select__native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    min-width: 1px !important;
+    min-height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* SearchableSelect --------------------------------------------------------- */
+.searchable-select,
+.searchable-select__trigger,
+.searchable-select__panel,
+.searchable-select__search-box,
+.searchable-select__search,
+.searchable-select__clear,
+.searchable-select__option {
+    border-radius: 0 !important;
+}
+
+.searchable-select__value {
+    color: inherit !important;
+    font: inherit !important;
+}
+
+.searchable-select__panel {
+    border-color: var(--chandor-control-border) !important;
+}
+
+.searchable-select__search {
+    height: var(--chandor-control-height) !important;
+    min-height: var(--chandor-control-height) !important;
+    padding: 0 48px 0 18px !important;
+}
+
+.searchable-select__clear {
+    top: 10px !important;
+    width: var(--chandor-control-height) !important;
+    height: var(--chandor-control-height) !important;
+}
+
+/* Syncfusion fields use the same dimensions as native fields. */
+.e-input-group,
+.e-control-wrapper.e-input-group,
+.e-ddl.e-input-group,
+.e-date-wrapper.e-input-group,
+.e-daterangepicker.e-input-group,
+.e-numeric.e-input-group {
+    box-sizing: border-box !important;
+    min-height: var(--chandor-control-height) !important;
+    border: 1px solid var(--chandor-control-border) !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+}
+
+.e-input-group:not(.e-multi-line-input),
+.e-control-wrapper.e-input-group:not(.e-multi-line-input) {
+    height: var(--chandor-control-height) !important;
+}
+
+.e-input-group input.e-input,
+.e-control-wrapper input.e-input {
+    height: calc(var(--chandor-control-height) - 2px) !important;
+    min-height: calc(var(--chandor-control-height) - 2px) !important;
+    padding: 0 18px !important;
+    color: var(--chandor-control-text) !important;
+    font-family: inherit !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+}
+
+.e-input-group textarea.e-input,
+.e-control-wrapper textarea.e-input,
+.e-input-group.e-multi-line-input,
+.e-control-wrapper.e-multi-line-input {
+    min-height: 140px !important;
+    border-radius: 0 !important;
+}
+
+.e-input-group textarea.e-input,
+.e-control-wrapper textarea.e-input {
+    padding: 16px 18px !important;
+    line-height: 1.45 !important;
+}
+
+.e-input-group .e-input-group-icon,
+.e-control-wrapper .e-input-group-icon {
+    min-width: 48px !important;
+    min-height: calc(var(--chandor-control-height) - 2px) !important;
+    border-radius: 0 !important;
+}
+
+.e-input-group.e-input-focus,
+.e-control-wrapper.e-input-focus {
+    border-color: var(--chandor-control-focus) !important;
+    box-shadow: 0 0 0 1px var(--chandor-control-focus) !important;
+}
+
+.e-popup,
+.e-popup-open,
+.e-dropdownbase,
+.e-ddl.e-popup,
+.e-datepicker.e-popup,
+.e-daterangepicker.e-popup {
+    border-radius: 0 !important;
+}
+
+/* Buttons ------------------------------------------------------------------ */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn,
+.e-btn,
+[role="button"] {
+    border-radius: 0 !important;
+}
+
+/* Forms, dialogs, cards and grids ----------------------------------------- */
+form,
+.modal,
+.modal-dialog,
+.modal-content,
+.modal-header,
+.modal-body,
+.modal-footer,
+[role="dialog"],
+.e-dialog,
+.e-dlg-header-content,
+.e-dlg-content,
+.e-footer-content,
+.e-grid,
+.e-gridheader,
+.e-gridcontent,
+.e-gridfooter,
+.e-pager,
+.e-toolbar,
+.table,
+.table-responsive,
+.card,
+.e-card,
+.directory-surface,
+.media-surface,
+.notification-surface,
+.request-surface,
+.bible-admin-surface,
+.dashboard-card,
+.stat-card,
+.manage-department-card,
+.directory-public-card,
+.media-feed-card,
+.media-attached-card,
+.notification-summary-card,
+.request-summary-card,
+.bible-verse-card,
+.event-card,
+.church-admin-chart-card,
+.request-chart-card,
+.church-admin-events-panel,
+.church-admin-grid-panel,
+.church-admin-grid-host,
+.finance-mgmt-grid-host,
+.expense-grid-container,
+.image-cropper-dialog {
+    border-radius: 0 !important;
+}
+
+/* Bootstrap input groups and appended controls must also stay square. */
+.input-group,
+.input-group > *,
+.input-group-text {
+    border-radius: 0 !important;
+}
+
+@media (max-width: 640px) {
+    :root {
+        --chandor-control-height: 52px;
+    }
+}
