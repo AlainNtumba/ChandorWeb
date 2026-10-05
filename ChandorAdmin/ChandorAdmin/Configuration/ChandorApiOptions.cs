@@ -10,7 +10,7 @@ public sealed class ChandorApiOptions
     /// <summary>
     /// Root URL including the <c>/api/</c> segment (e.g. https://chandor.somee.com/api/ https://localhost:7145/api/).
     /// </summary>
-    public string BaseUrl { get; set; } = "https://chandor.somee.com/api/";
+    public string BaseUrl { get; set; } = "http://192.168.11.105:5227/api/";
 
     /// <summary>
     /// Version segment for <c>v{segment}/</c> after the base URL (matches routes such as <c>/api/v1.0/...</c>).

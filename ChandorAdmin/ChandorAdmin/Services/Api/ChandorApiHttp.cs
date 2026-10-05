@@ -130,10 +130,14 @@ public sealed class ChandorApiHttp
             return null;
 
         var errorMessage = await TryReadProblemDetailsMessageAsync(response, cancellationToken).ConfigureAwait(false);
+        var requestUri = response.RequestMessage?.RequestUri?.ToString();
+        var fallbackMessage = string.IsNullOrWhiteSpace(requestUri)
+            ? $"Request failed ({(int)response.StatusCode})."
+            : $"Request failed ({(int)response.StatusCode}) on {requestUri}.";
         return new DataResponse<T>
         {
             Success = false,
-            Message = errorMessage ?? $"Request failed ({(int)response.StatusCode}).",
+            Message = errorMessage ?? fallbackMessage,
             Error = [errorMessage ?? response.ReasonPhrase ?? string.Empty]
         };
     }

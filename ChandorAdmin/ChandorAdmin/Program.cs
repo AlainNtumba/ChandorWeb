@@ -22,7 +22,14 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddSyncfusionBlazor();
 builder.Services.AddScoped<SfDialogService>();
-builder.Services.Configure<ChandorApiOptions>(builder.Configuration.GetSection(ChandorApiOptions.SectionName));
+var chandorApiOptions = builder.Configuration
+    .GetSection(ChandorApiOptions.SectionName)
+    .Get<ChandorApiOptions>() ?? new ChandorApiOptions();
+builder.Services.Configure<ChandorApiOptions>(options =>
+{
+    options.BaseUrl = chandorApiOptions.BaseUrl;
+    options.VersionPathSegment = chandorApiOptions.VersionPathSegment;
+});
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
@@ -31,8 +38,7 @@ builder.Services.AddScoped<InactivityMonitor>();
 
 void ConfigureChandorBase(HttpClient client)
 {
-    var o = builder.Configuration.GetSection(ChandorApiOptions.SectionName).Get<ChandorApiOptions>() ?? new ChandorApiOptions();
-    client.BaseAddress = new Uri(o.BaseUrl.TrimEnd('/') + "/");
+    client.BaseAddress = new Uri(chandorApiOptions.BaseUrl.TrimEnd('/') + "/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }
 

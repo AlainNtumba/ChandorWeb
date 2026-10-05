@@ -5,7 +5,9 @@ using ChandorProject.Shared.DTOs.Department;
 using ChandorProject.Shared.DTOs.Member;
 using ChandorProject.Shared.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Syncfusion.Blazor.Popups;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChandorAdmin.Pages.ncd;
 
@@ -35,12 +37,14 @@ public partial class ChurchDirectoryManagement : IDisposable
     private string _dialogKind = string.Empty;
     private string _dialogTitle = string.Empty;
     private string _itemSubTab = "GENERAL";
+    private string _typeFormTab = "INFO";
     private string? _notice;
     private bool _noticeIsError;
     private CancellationTokenSource? _searchCts;
 
     private Guid? _editingId;
-    private ChurchDirectoryTypeInputDto _typeModel = NewTypeModel();
+    private DirectoryTypeFormModel _typeFormModel = new();
+    private EditContext _typeEditContext = default!;
     private ChurchDirectoryItemInputDto _itemModel = NewItemModel();
     private DirectoryImageUpload? _selectedImage;
     private bool _deleteImage;
@@ -48,13 +52,16 @@ public partial class ChurchDirectoryManagement : IDisposable
     private Guid _previewTypeId;
     private ChurchDirectoryItemDto? _previewDetail;
 
-    private static readonly string[] DisplayKinds = ["LOCATION", "ORGANIZATION"];
     private ChurchDirectoryTypeDto? PreviewType => _publicTypes.FirstOrDefault(x => x.Id == _previewTypeId);
     private string CurrentDisplayKind => _types.FirstOrDefault(x => x.Id == _itemModel.TypeId)?.DisplayKind ?? "LOCATION";
     private IEnumerable<ChurchDirectoryItemDto> ParentOptions => _itemLookup.Where(x => x.TypeId == _itemModel.TypeId && x.Id != _editingId);
     private IEnumerable<ChurchDirectoryItemDto> ParentFilterOptions => _itemLookup.Where(x => !_itemFilter.TypeId.HasValue || x.TypeId == _itemFilter.TypeId.Value);
 
-    protected override async Task OnInitializedAsync() => await LoadInitialAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        ResetTypeForm();
+        await LoadInitialAsync();
+    }
 
     private async Task LoadInitialAsync()
     {
@@ -92,6 +99,31 @@ public partial class ChurchDirectoryManagement : IDisposable
     {
         var response = await DirectoryService.GetAdminItemsAsync(new DirectoryFilterState { PageSize = 100 }, token);
         if (response is { Success: true, Data: not null }) _itemLookup = response.Data.Items;
+    }
+
+    private async Task<IReadOnlyList<ChurchDirectoryItemDto>?> LoadAllItemsForTypeAsync(Guid typeId)
+    {
+        const int pageSize = 100;
+        var items = new List<ChurchDirectoryItemDto>();
+        var page = 1;
+        var totalPages = 1;
+
+        do
+        {
+            var response = await DirectoryService.GetAdminItemsAsync(new DirectoryFilterState { TypeId = typeId, Page = page, PageSize = pageSize });
+            if (response is not { Success: true, Data: not null })
+            {
+                ShowError(response, "Impossible de charger tous les éléments de ce type.");
+                return null;
+            }
+
+            items.AddRange(response.Data.Items);
+            totalPages = Math.Max(1, response.Data.TotalPages);
+            page++;
+        }
+        while (page <= totalPages);
+
+        return items;
     }
 
     private async Task LoadMembersAsync()
@@ -190,7 +222,7 @@ public partial class ChurchDirectoryManagement : IDisposable
 
     private void OpenNewType()
     {
-        _editingId = null; _typeModel = NewTypeModel(); _selectedImage = null; _deleteImage = false;
+        _editingId = null; ResetTypeForm(); _selectedImage = null; _deleteImage = false; _notice = null;
         _dialogKind = "TYPE"; _dialogTitle = "Nouveau type"; _dialogOpen = true;
     }
 
@@ -206,9 +238,21 @@ public partial class ChurchDirectoryManagement : IDisposable
                 return;
             }
 
+            var typeItems = await LoadAllItemsForTypeAsync(item.Id);
+            if (typeItems is null) return;
+
             var detail = response.Data;
-            _editingId = detail.Id; _selectedImage = null; _deleteImage = false; _dialogKind = "TYPE"; _dialogTitle = "Modifier le type";
-            _typeModel = MapTypeToForm(detail);
+            _editingId = detail.Id; _selectedImage = null; _deleteImage = false; _notice = null; _dialogKind = "TYPE"; _dialogTitle = "Modifier l’annuaire";
+            _typeFormModel = new DirectoryTypeFormModel
+            {
+                Id = detail.Id,
+                Name = detail.Name,
+                Description = detail.Description,
+                HeroImageUrl = detail.HeroImageUrl,
+                Items = typeItems.OrderBy(x => x.SortOrder).Select(MapItemToSimpleForm).ToList()
+            };
+            _typeEditContext = new EditContext(_typeFormModel);
+            _typeFormTab = "INFO";
             _dialogOpen = true;
         }
         finally
@@ -217,17 +261,23 @@ public partial class ChurchDirectoryManagement : IDisposable
         }
     }
 
-    private static ChurchDirectoryTypeInputDto MapTypeToForm(ChurchDirectoryTypeDto item) => new()
+    private static DirectoryItemFormModel MapItemToSimpleForm(ChurchDirectoryItemDto item)
     {
-        Code = item.Code,
-        Name = item.Name,
-        Description = item.Description,
-        DisplayKind = item.DisplayKind,
-        Icon = item.Icon,
-        HeroImageUrl = item.HeroImageUrl,
-        SortOrder = item.SortOrder,
-        IsActive = item.IsActive
-    };
+        var responsible = item.Members.FirstOrDefault(x => x.IsPrimary) ?? item.Members.FirstOrDefault();
+        var contact = item.Contacts.FirstOrDefault(x => x.IsPrimary && x.Type == "PHONE")
+            ?? item.Contacts.FirstOrDefault(x => x.Type == "PHONE")
+            ?? item.Contacts.FirstOrDefault(x => x.IsPrimary)
+            ?? item.Contacts.FirstOrDefault();
+
+        return new DirectoryItemFormModel
+        {
+            Id = item.Id,
+            Name = item.Name,
+            ResponsibleMemberId = responsible?.MemberId ?? Guid.Empty,
+            Address = item.LocationDetails?.Address ?? string.Empty,
+            Contact = contact?.Value ?? string.Empty
+        };
+    }
 
     private void OpenNewItem(Guid? parentId = null, Guid? typeId = null)
     {
@@ -268,28 +318,100 @@ public partial class ChurchDirectoryManagement : IDisposable
     {
         if (_saving) return;
         _saving = true;
-        try { if (_dialogKind == "TYPE") await SaveTypeAsync(); else if (_dialogKind == "ITEM") await SaveItemAsync(); }
+        try { if (_dialogKind == "TYPE") await SaveTypeWithItemsAsync(); else if (_dialogKind == "ITEM") await SaveItemAsync(); }
         finally { _saving = false; }
     }
 
-    private async Task SaveTypeAsync()
+    private async Task SaveTypeWithItemsAsync()
     {
-        if (string.IsNullOrWhiteSpace(_typeModel.Code) || string.IsNullOrWhiteSpace(_typeModel.Name)) { Error("Le code et le nom sont obligatoires."); return; }
-        var response = _editingId.HasValue ? await DirectoryService.UpdateTypeAsync(_editingId.Value, _typeModel) : await DirectoryService.CreateTypeAsync(_typeModel);
-        if (response is not { Success: true, Data: not null }) { ShowError(response, "Impossible d’enregistrer le type."); return; }
+        if (!_typeEditContext.Validate())
+        {
+            _typeFormTab = "INFO";
+            Error("Vérifiez les informations générales du type.");
+            return;
+        }
+
+        for (var index = 0; index < _typeFormModel.Items.Count; index++)
+        {
+            var item = _typeFormModel.Items[index];
+            var validationResults = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(item, new ValidationContext(item), validationResults, validateAllProperties: true);
+            if (item.ResponsibleMemberId == Guid.Empty)
+            {
+                isValid = false;
+                validationResults.Add(new ValidationResult("Sélectionnez un responsable."));
+            }
+
+            if (!isValid)
+            {
+                _typeFormTab = "ITEMS";
+                Error($"Élément {index + 1} : {validationResults.First().ErrorMessage}");
+                return;
+            }
+        }
+
+        var input = new ChurchDirectoryTypeWithItemsInputDto
+        {
+            Name = _typeFormModel.Name.Trim(),
+            Description = string.IsNullOrWhiteSpace(_typeFormModel.Description) ? null : _typeFormModel.Description.Trim(),
+            Items = _typeFormModel.Items.Select(item => new ChurchDirectorySimpleItemInputDto
+            {
+                Id = item.Id,
+                Name = item.Name.Trim(),
+                ResponsibleMemberId = item.ResponsibleMemberId,
+                Address = item.Address.Trim(),
+                Contact = item.Contact.Trim()
+            }).ToList()
+        };
+
+        var isUpdate = _typeFormModel.Id.HasValue;
+        var requestLabel = isUpdate
+            ? $"PUT church-directory/types/{_typeFormModel.Id!.Value:D}/with-items"
+            : "POST church-directory/types/with-items";
+        var response = isUpdate
+            ? await DirectoryService.UpdateTypeWithItemsAsync(_typeFormModel.Id!.Value, input)
+            : await DirectoryService.CreateTypeWithItemsAsync(input);
+        if (response is not { Success: true, Data: not null })
+        {
+            Error($"{requestLabel} — {ResponseMessage(response, "Impossible d’enregistrer l’annuaire.")}");
+            return;
+        }
+
         var id = response.Data.Id;
+        _typeFormModel.Id = id;
+        _typeFormModel.HeroImageUrl = response.Data.HeroImageUrl;
+        _typeFormModel.Items = response.Data.Items.OrderBy(x => x.SortOrder).Select(item => new DirectoryItemFormModel
+        {
+            Id = item.Id,
+            Name = item.Name,
+            ResponsibleMemberId = item.ResponsibleMemberId,
+            Address = item.Address,
+            Contact = item.Contact
+        }).ToList();
+
         if (_selectedImage is not null)
         {
             var upload = await DirectoryService.UploadTypeHeroAsync(id, _selectedImage);
-            if (upload is not { Success: true, Data: not null }) { ShowError(upload, "Le type est enregistré, mais l’image Hero n’a pas pu être envoyée."); return; }
-            _typeModel = MapTypeToForm(upload.Data);
+            if (upload is not { Success: true, Data: not null })
+            {
+                Error($"PUT church-directory/types/{id:D}/hero-image — {ResponseMessage(upload, "L’annuaire est enregistré, mais l’image de couverture n’a pas pu être envoyée.")}");
+                return;
+            }
+            _typeFormModel.HeroImageUrl = upload.Data.HeroImageUrl;
         }
-        else if (_editingId.HasValue && _deleteImage)
+        else if (_typeFormModel.Id.HasValue && _deleteImage)
         {
             var deletion = await DirectoryService.DeleteTypeHeroAsync(id);
-            if (deletion is not { Success: true }) { ShowError(deletion, "Le type est enregistré, mais l’image Hero n’a pas pu être supprimée."); return; }
+            if (deletion is not { Success: true })
+            {
+                Error($"DELETE church-directory/types/{id:D}/hero-image — {ResponseMessage(deletion, "L’annuaire est enregistré, mais l’image de couverture n’a pas pu être supprimée.")}");
+                return;
+            }
         }
-        Success("Type enregistré."); CloseDialogCore(); await ReloadAfterTypeMutationAsync();
+        Success(string.IsNullOrWhiteSpace(response.Message) ? "Annuaire enregistré." : response.Message);
+        CloseDialogCore();
+        await Task.WhenAll(ReloadAfterTypeMutationAsync(), LoadItemsCoreAsync(), LoadItemLookupAsync());
+        if (_previewTypeId == id) await LoadPreviewAsync();
     }
 
     private async Task SaveItemAsync()
@@ -354,7 +476,33 @@ public partial class ChurchDirectoryManagement : IDisposable
     }
     private void Error(string text) { _notice = text; _noticeIsError = true; }
     private void Success(string text) { _notice = text; _noticeIsError = false; }
-    private static ChurchDirectoryTypeInputDto NewTypeModel() => new() { DisplayKind = "LOCATION", IsActive = true };
     private static ChurchDirectoryItemInputDto NewItemModel() => new() { IsActive = true };
+
+    private void ResetTypeForm()
+    {
+        _typeFormModel = new DirectoryTypeFormModel();
+        _typeEditContext = new EditContext(_typeFormModel);
+        _typeFormTab = "INFO";
+    }
+
+    private void AddSimpleItem()
+    {
+        _typeFormModel.Items.Add(new DirectoryItemFormModel());
+        _typeFormTab = "ITEMS";
+    }
+
+    private void RemoveSimpleItem(DirectoryItemFormModel item) => _typeFormModel.Items.Remove(item);
+
+    private void MoveSimpleItem(int index, int offset)
+    {
+        var target = index + offset;
+        if (index < 0 || index >= _typeFormModel.Items.Count || target < 0 || target >= _typeFormModel.Items.Count) return;
+        var item = _typeFormModel.Items[index];
+        _typeFormModel.Items.RemoveAt(index);
+        _typeFormModel.Items.Insert(target, item);
+    }
+
+    private string TypeFormTabClass(string value) => _typeFormTab == value ? "active" : string.Empty;
+    private static string MemberDisplayName(MemberDto member) => string.Join(" ", new[] { member.Name, member.Postname, member.Surname }.Where(x => !string.IsNullOrWhiteSpace(x)));
     public void Dispose() { _searchCts?.Cancel(); _searchCts?.Dispose(); }
 }
