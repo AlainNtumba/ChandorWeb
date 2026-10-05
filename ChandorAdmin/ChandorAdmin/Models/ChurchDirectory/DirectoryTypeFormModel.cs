@@ -21,6 +21,8 @@ public sealed class DirectoryItemFormModel
 {
     public Guid? Id { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
     [Required(ErrorMessage = "Le nom de l’élément est obligatoire.")]
     [MaxLength(150, ErrorMessage = "Le nom ne peut pas dépasser 150 caractères.")]
     public string Name { get; set; } = string.Empty;

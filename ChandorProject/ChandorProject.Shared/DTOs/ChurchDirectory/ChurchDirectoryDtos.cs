@@ -99,6 +99,8 @@ public class ChurchDirectoryTypeWithItemsInputDto
 {
     [Required, MaxLength(150)] public string Name { get; set; } = string.Empty;
     [MaxLength(500)] public string? Description { get; set; }
+    // null keeps the current value on update; creation defaults to true.
+    public bool? IsActive { get; set; }
     public List<ChurchDirectorySimpleItemInputDto> Items { get; set; } = [];
 }
 
@@ -109,6 +111,8 @@ public class ChurchDirectorySimpleItemInputDto
     [Required] public Guid ResponsibleMemberId { get; set; }
     [Required, MaxLength(500)] public string Address { get; set; } = string.Empty;
     [Required, MaxLength(250)] public string Contact { get; set; } = string.Empty;
+    // null keeps the current value on update; a new item defaults to true.
+    public bool? IsActive { get; set; }
 }
 
 public class ChurchDirectoryTypeWithItemsDto
@@ -119,6 +123,7 @@ public class ChurchDirectoryTypeWithItemsDto
     public string? Description { get; set; }
     public string DisplayKind { get; set; } = string.Empty;
     public string? HeroImageUrl { get; set; }
+    public bool IsActive { get; set; }
     public List<ChurchDirectorySimpleItemDto> Items { get; set; } = [];
 }
 
@@ -132,4 +137,5 @@ public class ChurchDirectorySimpleItemDto
     public string Address { get; set; } = string.Empty;
     public string Contact { get; set; } = string.Empty;
     public int SortOrder { get; set; }
+    public bool IsActive { get; set; }
 }

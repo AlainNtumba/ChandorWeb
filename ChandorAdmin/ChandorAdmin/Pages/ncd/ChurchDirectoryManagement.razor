@@ -113,6 +113,10 @@
                                             <div class="directory-simple-item__header">
                                                 <span class="directory-simple-item__number">@(itemIndex + 1)</span>
                                                 <strong>@(string.IsNullOrWhiteSpace(item.Name) ? "Nouvel élément" : item.Name)</strong>
+                                                <label class="directory-simple-item__active" title="Activer ou désactiver cet élément">
+                                                    <InputCheckbox @bind-Value="item.IsActive" />
+                                                    <span>@(item.IsActive ? "Actif" : "Inactif")</span>
+                                                </label>
                                                 <div class="directory-simple-item__actions">
                                                     <button type="button" title="Monter" disabled="@(itemIndex == 0)" @onclick="() => MoveSimpleItem(itemIndex, -1)">↑</button>
                                                     <button type="button" title="Descendre" disabled="@(itemIndex == _typeFormModel.Items.Count - 1)" @onclick="() => MoveSimpleItem(itemIndex, 1)">↓</button>

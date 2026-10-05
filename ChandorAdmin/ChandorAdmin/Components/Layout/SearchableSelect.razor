@@ -12,7 +12,7 @@
             return;
 
         _module = await JS.InvokeAsync<IJSObjectReference>(
-            "import", "./js/searchable-select.js");
+            "import", "./js/searchable-select.js?v=20261005-2");
         await _module.InvokeVoidAsync("initialize");
     }
 

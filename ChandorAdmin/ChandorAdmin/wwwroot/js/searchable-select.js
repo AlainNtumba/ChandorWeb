@@ -32,6 +32,23 @@ function optionText(option) {
     return (option.textContent || option.label || "").trim();
 }
 
+function matchDirectoryFieldHeight(widget) {
+    if (!widget.select.classList.contains("directory-responsible-native")) return;
+
+    const fields = widget.select.closest(".directory-simple-item__fields");
+    const reference = fields?.querySelector("input:not([type='checkbox']):not([type='hidden'])");
+    if (!reference) return;
+
+    const height = getComputedStyle(reference).height;
+    if (!height || height === "0px") return;
+
+    [widget.root, widget.button].forEach(element => {
+        element.style.setProperty("height", height, "important");
+        element.style.setProperty("min-height", height, "important");
+        element.style.setProperty("max-height", height, "important");
+    });
+}
+
 function refresh(widget) {
     const { select, button, value, list, search, empty } = widget;
     const options = Array.from(select.options);
@@ -40,6 +57,7 @@ function refresh(widget) {
     value.classList.toggle("is-placeholder", !selected || selected.value === "" || selected.value === "00000000-0000-0000-0000-000000000000");
     button.disabled = select.disabled;
     button.setAttribute("aria-disabled", select.disabled ? "true" : "false");
+    matchDirectoryFieldHeight(widget);
     list.replaceChildren();
 
     const query = normalize(search.value);
@@ -94,6 +112,8 @@ function enhance(select) {
 
     const root = document.createElement("div");
     root.className = "searchable-select";
+    if (select.classList.contains("directory-responsible-native"))
+        root.classList.add("directory-responsible-select");
     const button = document.createElement("button");
     button.type = "button";
     button.className = "searchable-select__trigger";

@@ -336,3 +336,30 @@ form,
     padding: 0 !important;
     transform: translateY(-50%) !important;
 }
+
+/* Directory item fields: the searchable member control matches every input. */
+#app .directory-simple-item__fields .searchable-select {
+    display: block !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: var(--chandor-control-height) !important;
+    min-height: var(--chandor-control-height) !important;
+    max-height: var(--chandor-control-height) !important;
+    margin: 0 !important;
+}
+
+#app .directory-simple-item__fields .searchable-select__trigger {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: var(--chandor-control-height) !important;
+    min-height: var(--chandor-control-height) !important;
+    max-height: var(--chandor-control-height) !important;
+    margin: 0 !important;
+    padding: 0 18px !important;
+    border: 1px solid var(--chandor-control-border) !important;
+    line-height: 1.2 !important;
+}
+
+#app .directory-simple-item__fields .searchable-select__value {
+    line-height: 1.2 !important;
+}

@@ -271,7 +271,8 @@ public partial class ChurchDirectoryManagement : IDisposable
             Name = item.Name,
             ResponsibleMemberId = responsible?.MemberId ?? Guid.Empty,
             Address = item.LocationDetails?.Address ?? string.Empty,
-            Contact = contact?.Value ?? string.Empty
+            Contact = contact?.Value ?? string.Empty,
+            IsActive = item.IsActive
         };
     }
 
@@ -356,7 +357,8 @@ public partial class ChurchDirectoryManagement : IDisposable
                 Name = item.Name.Trim(),
                 ResponsibleMemberId = item.ResponsibleMemberId,
                 Address = item.Address.Trim(),
-                Contact = item.Contact.Trim()
+                Contact = item.Contact.Trim(),
+                IsActive = item.IsActive
             }).ToList()
         };
 
@@ -382,7 +384,8 @@ public partial class ChurchDirectoryManagement : IDisposable
             Name = item.Name,
             ResponsibleMemberId = item.ResponsibleMemberId,
             Address = item.Address,
-            Contact = item.Contact
+            Contact = item.Contact,
+            IsActive = item.IsActive
         }).ToList();
 
         if (_selectedImage is not null)
