@@ -272,3 +272,67 @@ form,
         --chandor-control-height: 52px;
     }
 }
+
+/* Login exception: keep its icons inside the fields and use a softer card. */
+.modern-login__card,
+.modern-login__shine,
+.modern-login__overlay {
+    border-radius: 10px !important;
+}
+
+.modern-login__card {
+    overflow: hidden;
+}
+
+.modern-login__control {
+    position: relative !important;
+    isolation: isolate;
+}
+
+.modern-login__control .modern-login__icon {
+    position: absolute !important;
+    z-index: 2;
+    top: 50% !important;
+    left: 18px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 20px !important;
+    height: 20px !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none;
+}
+
+.modern-login__control .modern-login__icon svg,
+.modern-login__toggle .modern-login__toggle-ic,
+.modern-login__toggle .modern-login__toggle-ic svg {
+    display: block;
+    width: 20px !important;
+    height: 20px !important;
+}
+
+#app .modern-login .modern-login__control input.modern-login__input {
+    box-sizing: border-box !important;
+    padding-right: 22px !important;
+    padding-left: 64px !important;
+    text-indent: 0 !important;
+}
+
+#app .modern-login .modern-login__control input.modern-login__input--password {
+    padding-right: 66px !important;
+}
+
+.modern-login__control .modern-login__toggle {
+    position: absolute !important;
+    z-index: 2;
+    top: 50% !important;
+    right: 7px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 42px !important;
+    height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateY(-50%) !important;
+}
