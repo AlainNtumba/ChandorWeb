@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using ChandorAdmin.Helpers;
 using ChandorAdmin.Interfaces.Api;
+using ChandorAdmin.Models.ChurchProgram;
 using ChandorProject.Shared.DTOs.ChurchProgram;
 using ChandorProject.Shared.Models;
 
@@ -52,6 +54,54 @@ public sealed class ChurchProgramService(ChandorApiHttp api) : IChurchProgramSer
 
     public Task<DataResponse<ChurchProgramDto>?> AddCongregationProgramAsync(NewChurchProgramDto dto, CancellationToken cancellationToken = default)
         => api.PostDataResponseAsync<ChurchProgramDto>($"{C}/add-church-program", JsonContent.Create(dto), cancellationToken);
+
+    public async Task<DataResponse<ChurchProgramDto>?> CreateCongregationProgramAsync(
+        CongregationProgramDto program,
+        ChurchProgramPosterUpload poster,
+        CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent();
+        form.Add(new StringContent(program.StartTime.ToString("O")), "startTime");
+        form.Add(new StringContent(program.EndTime.ToString("O")), "endTime");
+        form.Add(new StringContent(program.Theme ?? string.Empty), "theme");
+        form.Add(new StringContent(program.Lieu ?? string.Empty), "lieu");
+        form.Add(new StringContent(program.Description ?? string.Empty), "description");
+        form.Add(new StringContent(program.RecurrenceRule ?? string.Empty), "recurrenceRule");
+        form.Add(new StringContent(program.RecurrenceException ?? string.Empty), "recurrenceException");
+        form.Add(new StringContent(program.VideoLink ?? string.Empty), "videoLink");
+        form.Add(new StringContent(program.IsApproved.ToString().ToLowerInvariant()), "isApproved");
+        form.Add(new StringContent(program.ProgramTypeId.ToString()), "programTypeId");
+        form.Add(new StringContent(program.DepartmentId.ToString()), "departmentId");
+        form.Add(new StringContent(program.DepartmentTeamId.ToString()), "departmentTeamId");
+
+        var content = new ByteArrayContent(poster.Content);
+        content.Headers.ContentType = new MediaTypeHeaderValue(poster.ContentType);
+        form.Add(content, "posterLink", poster.FileName);
+
+        return await api.PostMultipartDataResponseAsync<ChurchProgramDto>(
+            $"{C}/add-congregation-program",
+            form,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<DataResponse<ChurchProgramDto>?> AddOrReplacePosterAsync(
+        Guid programId,
+        ChurchProgramPosterUpload poster,
+        CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent();
+        var content = new ByteArrayContent(poster.Content);
+        content.Headers.ContentType = new MediaTypeHeaderValue(poster.ContentType);
+        form.Add(content, "posterLink", poster.FileName);
+
+        return await api.PutDataResponseAsync<ChurchProgramDto>(
+            $"{C}/{programId:D}/poster",
+            form,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<DataResponse<bool>?> DeletePosterAsync(Guid programId, CancellationToken cancellationToken = default)
+        => api.DeleteDataResponseAsync<bool>($"{C}/{programId:D}/poster", cancellationToken);
 
     public Task<DataResponse<IEnumerable<ChurchProgramDto>>?> GetPaginatedCongregationProgramsFeedAsync(
         DateTime? fromDate,

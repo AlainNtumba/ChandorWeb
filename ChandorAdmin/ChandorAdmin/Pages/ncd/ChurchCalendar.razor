@@ -3,7 +3,10 @@
 @using Syncfusion.Blazor.Data
 @using Syncfusion.Blazor.Schedule
 @using ChandorAdmin.Data
+@using ChandorAdmin.Components.ChurchProgram
+@using ChandorAdmin.Services
 @using ChandorProject.Shared.DTOs.ChurchProgram
+@inject ChurchProgramPosterEditorState PosterEditor
 
 <PageTitle>Calendrier</PageTitle>
 
@@ -29,7 +32,80 @@
                 <FieldDescription Name="Description" Title="Détails" Validation="@DescriptionValidationRules"></FieldDescription>
             </ScheduleField>
         </ScheduleEventSettings>
-        <ScheduleEvents TValue="ChurchProgramDto" OnActionFailure="OnScheduleActionFailure" ActionCompleted="OnScheduleActionCompleted" />
+        <ScheduleTemplates>
+            <EditorHeaderTemplate>
+                <div class="church-program-editor__header">
+                    <strong>@(PosterEditor.ProgramId == Guid.Empty ? "Nouvel événement" : "Modifier l’événement")</strong>
+                </div>
+            </EditorHeaderTemplate>
+            <EditorTemplate>
+                @if (context is ChurchProgramDto program)
+                {
+                    <div class="church-program-editor">
+                        @if (!string.IsNullOrWhiteSpace(_editorMessage))
+                        {
+                            <div class="church-program-editor__notice church-program-editor__notice--error" role="alert">@_editorMessage</div>
+                        }
+
+                        <div class="church-program-editor__tabs" role="tablist" aria-label="Gestion du programme">
+                            <button type="button" role="tab" aria-selected="@(_editorTab == "INFORMATION")" class="@EditorTabClass("INFORMATION")" @onclick='() => SelectEditorTab("INFORMATION")'>Informations</button>
+                            <button type="button" role="tab" aria-selected="@(_editorTab == "POSTER")" class="@EditorTabClass("POSTER")" @onclick='() => SelectEditorTab("POSTER")'>Poster</button>
+                        </div>
+
+                        @if (_editorTab == "INFORMATION")
+                        {
+                            <div class="church-program-editor__panel" role="tabpanel">
+                                <div class="church-program-editor__grid">
+                                    <div class="church-program-editor__field">
+                                        <label>Thème *</label>
+                                        <SfTextBox @bind-Value="program.Theme" CssClass="e-field" Placeholder="Thème du programme" />
+                                    </div>
+                                    <div class="church-program-editor__field">
+                                        <label>Lieu *</label>
+                                        <SfTextBox @bind-Value="program.Lieu" CssClass="e-field" Placeholder="Lieu du programme" />
+                                    </div>
+                                    <div class="church-program-editor__field">
+                                        <label>Début *</label>
+                                        <SfDateTimePicker TValue="DateTime" @bind-Value="program.StartTime" CssClass="e-field" />
+                                    </div>
+                                    <div class="church-program-editor__field">
+                                        <label>Fin *</label>
+                                        <SfDateTimePicker TValue="DateTime" @bind-Value="program.EndTime" CssClass="e-field" />
+                                    </div>
+                                </div>
+                                <div class="church-program-editor__field">
+                                    <label>Détails *</label>
+                                    <SfTextBox @bind-Value="program.Description" Multiline="true" CssClass="e-field church-program-editor__description" Placeholder="Description du programme" />
+                                </div>
+                                <label class="church-program-editor__approval">
+                                    <input type="checkbox" @bind="program.IsApproved" />
+                                    Programme approuvé
+                                </label>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="church-program-editor__panel church-program-editor__poster" role="tabpanel">
+                                <div class="church-program-editor__field church-program-editor__video-link">
+                                    <label>Lien vidéo</label>
+                                    <SfTextBox @bind-Value="program.VideoLink"
+                                               CssClass="e-field"
+                                               Placeholder="https://youtube.com/…" />
+                                    <small>Ajoutez le lien YouTube, Facebook ou une autre URL de la vidéo.</small>
+                                </div>
+                                <ChurchProgramPosterPicker State="PosterEditor" />
+                            </div>
+                        }
+                    </div>
+                }
+            </EditorTemplate>
+        </ScheduleTemplates>
+        <ScheduleEvents TValue="ChurchProgramDto"
+                        OnPopupOpen="OnSchedulePopupOpen"
+                        OnPopupClose="OnSchedulePopupClose"
+                        OnActionBegin="OnScheduleActionBegin"
+                        OnActionFailure="OnScheduleActionFailure"
+                        ActionCompleted="OnScheduleActionCompleted" />
         <ScheduleViews>
             <ScheduleView Option="View.Month" DisplayName="Calendrier"></ScheduleView>
             <ScheduleView Option="View.MonthAgenda" DisplayName="Agenda"></ScheduleView>

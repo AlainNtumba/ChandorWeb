@@ -137,6 +137,25 @@ select.searchable-select__native {
     border: 0 !important;
 }
 
+/* Keep the Blazor value source in the DOM while only showing the searchable widget. */
+select.directory-responsible-native,
+select.directory-responsible-native.searchable-select__native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    min-width: 1px !important;
+    min-height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 .searchable-select {
     position: relative;
     display: inline-block;
@@ -358,4 +377,87 @@ select.searchable-select__native {
     .admin-filters__dates {
         flex-wrap: wrap;
     }
+}
+
+/* Church directory simplified form: one visual language for every field. */
+.directory-simple-item__fields input:not([type="checkbox"]):not([type="file"]),
+.directory-simple-item__fields select:not(.directory-responsible-native):not(.searchable-select__native),
+.directory-simple-item__fields .searchable-select,
+.directory-simple-item__fields .searchable-select__trigger {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+.directory-simple-item__fields input:not([type="checkbox"]):not([type="file"]),
+.directory-simple-item__fields select:not(.directory-responsible-native):not(.searchable-select__native),
+.directory-simple-item__fields .searchable-select__trigger {
+    padding: 0 18px !important;
+    border: 1px solid #c7cdd6 !important;
+    outline: 0 !important;
+    background: #fff !important;
+    color: #293244 !important;
+    font-family: inherit !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+    box-shadow: none !important;
+}
+
+.directory-simple-item__fields .searchable-select__value {
+    color: inherit !important;
+    font: inherit !important;
+}
+
+.directory-simple-item__fields input:not([type="checkbox"]):not([type="file"]):focus,
+.directory-simple-item__fields select:not(.directory-responsible-native):not(.searchable-select__native):focus,
+.directory-simple-item__fields .searchable-select.is-open .searchable-select__trigger,
+.directory-simple-item__fields .searchable-select__trigger:focus-visible {
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 0 0 1px var(--brand-primary) !important;
+}
+
+.directory-simple-form .directory-form-grid input:not([type="checkbox"]):not([type="file"]),
+.directory-simple-form .directory-form-grid textarea {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 18px !important;
+    border: 1px solid #c7cdd6 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    background: #fff !important;
+    color: #293244 !important;
+    font-family: inherit !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+    box-shadow: none !important;
+}
+
+.directory-simple-form .directory-form-grid input:not([type="checkbox"]):not([type="file"]) {
+    height: 56px !important;
+    min-height: 56px !important;
+}
+
+.directory-simple-form .directory-form-grid textarea {
+    min-height: 140px !important;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    line-height: 1.45 !important;
+}
+
+.directory-simple-form .directory-form-grid input::placeholder,
+.directory-simple-form .directory-form-grid textarea::placeholder {
+    color: #7a8495 !important;
+    opacity: 1 !important;
+}
+
+.directory-simple-form .directory-form-grid input:not([type="checkbox"]):not([type="file"]):focus,
+.directory-simple-form .directory-form-grid textarea:focus {
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 0 0 1px var(--brand-primary) !important;
 }

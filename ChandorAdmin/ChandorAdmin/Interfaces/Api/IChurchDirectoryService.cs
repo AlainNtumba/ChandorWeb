@@ -11,6 +11,8 @@ public interface IChurchDirectoryService
     Task<DataResponse<PagedResult<ChurchDirectoryTypeDto>>?> GetPublicTypesAsync(DirectoryFilterState filter, CancellationToken cancellationToken = default);
     Task<DataResponse<ChurchDirectoryTypeDto>?> CreateTypeAsync(ChurchDirectoryTypeInputDto input, CancellationToken cancellationToken = default);
     Task<DataResponse<ChurchDirectoryTypeDto>?> UpdateTypeAsync(Guid id, ChurchDirectoryTypeInputDto input, CancellationToken cancellationToken = default);
+    Task<DataResponse<ChurchDirectoryTypeWithItemsDto>?> CreateTypeWithItemsAsync(ChurchDirectoryTypeWithItemsInputDto input, CancellationToken cancellationToken = default);
+    Task<DataResponse<ChurchDirectoryTypeWithItemsDto>?> UpdateTypeWithItemsAsync(Guid id, ChurchDirectoryTypeWithItemsInputDto input, CancellationToken cancellationToken = default);
     Task<DataResponse<ChurchDirectoryTypeDto>?> UploadTypeHeroAsync(Guid id, DirectoryImageUpload image, CancellationToken cancellationToken = default);
     Task<DataResponse<bool>?> DeleteTypeHeroAsync(Guid id, CancellationToken cancellationToken = default);
     Task<DataResponse<bool>?> DeleteTypeAsync(Guid id, CancellationToken cancellationToken = default);

@@ -1,8 +1,47 @@
 .church-program-editor {
-    width: min(680px, 100%);
+    width: min(760px, 100%);
     max-height: 68vh;
     padding: .25rem .15rem .75rem;
     overflow-y: auto;
+}
+
+.church-program-editor__header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 56px;
+}
+
+.church-program-editor__header strong {
+    color: #20242b;
+    font-size: 1.15rem;
+}
+
+.church-program-editor__tabs {
+    display: flex;
+    align-items: stretch;
+    margin: 0 0 1rem;
+    border-bottom: 1px solid #d8dee8;
+}
+
+.church-program-editor__tab {
+    min-height: 48px;
+    padding: 0 1.25rem;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: #fff;
+    color: #64748b;
+    font: inherit;
+    font-weight: 700;
+}
+
+.church-program-editor__tab.active {
+    border-bottom-color: #7224a8;
+    color: #7224a8;
+}
+
+.church-program-editor__panel {
+    padding: .25rem 0;
 }
 
 .church-program-editor__grid {
@@ -21,6 +60,10 @@
     color: #374151;
     font-size: .82rem;
     font-weight: 600;
+}
+
+.church-program-editor__description {
+    min-height: 140px;
 }
 
 .church-program-editor__approval {
@@ -42,6 +85,23 @@
 .church-program-editor__notice--error {
     color: #991b1b;
     background: #fef2f2;
+}
+
+.church-program-editor__poster ::deep .poster-picker {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.church-program-editor__video-link {
+    margin-bottom: 0;
+}
+
+.church-program-editor__video-link small {
+    display: block;
+    margin-top: .4rem;
+    color: #64748b;
+    font-size: .76rem;
 }
 
 @media (max-width: 640px) {
